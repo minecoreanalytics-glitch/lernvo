@@ -158,6 +158,13 @@ router.post('/refresh', validate(RefreshSchema), async (req, res) => {
       return res.status(401).json({ error: 'Invalid or expired refresh token' })
     }
 
+    // Host lock (same rule as /login): on <slug>.<DOMAIN> only that tenant's users
+    const hostSlug = tenantSlugFromRequest(req)
+    if (hostSlug && stored.user.role !== 'SUPER_ADMIN') {
+      const t = await tenantStore.run({ tenantId: null, superAdmin: true }, () =>
+        prisma.tenant.findUnique({ where: { id: stored.user.tenantId }, select: { slug: true } }))
+      if (!t || t.slug !== hostSlug) return res.status(401).json({ error: 'Invalid or expired refresh token' })
+    }
     const accessToken = signAccess(stored.user.id, stored.user.email, stored.user.role, stored.user.tenantId, stored.user.departmentId ?? null)
     res.json({ accessToken })
   } catch {

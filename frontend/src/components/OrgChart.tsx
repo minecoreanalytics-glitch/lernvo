@@ -24,7 +24,7 @@ export function buildTree(flat: FlatDept[]): Node[] {
 }
 
 function normalize(s: string) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 }
 
 function DeptCard({ d, onClick, parentName }: { d: Node; onClick: (id: string) => void; parentName?: string }) {

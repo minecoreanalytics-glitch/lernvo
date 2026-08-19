@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import rateLimit from 'express-rate-limit'
 import { prisma } from '../utils/prisma'
 import { tenantStore } from '../utils/tenantContext'
 import { tenantSlugFromRequest, tenantSlugFromHost, BASE_DOMAIN } from '../utils/tenantHost'
@@ -6,10 +7,10 @@ import { tenantSlugFromRequest, tenantSlugFromHost, BASE_DOMAIN } from '../utils
 const router = Router()
 const PLATFORM_NAME = process.env.PLATFORM_NAME || 'Lernvo'
 
-// GET /api/branding — public. Resolves the tenant from the Host header (<slug>.<DOMAIN>)
-// or from ?slug=. Returns platform branding on the apex.
+// GET /api/branding — public. Resolves the tenant from the Host header (<slug>.<DOMAIN>) only
+// (no ?slug= param: avoids tenant enumeration). Returns platform branding on the apex.
 router.get('/', async (req, res) => {
-  const slug = (typeof req.query.slug === 'string' && req.query.slug) || tenantSlugFromRequest(req)
+  const slug = tenantSlugFromRequest(req)
   if (!slug) {
     return res.json({ platformName: PLATFORM_NAME, baseDomain: BASE_DOMAIN, tenant: null })
   }
@@ -28,7 +29,8 @@ router.get('/', async (req, res) => {
 
 // GET /api/branding/tls-check?domain=<host> — Caddy on_demand_tls "ask" endpoint.
 // 200 = issue a certificate (apex, www, or an ACTIVE tenant subdomain); 404 otherwise.
-router.get('/tls-check', async (req, res) => {
+const tlsCheckLimiter = rateLimit({ windowMs: 60_000, max: 60, standardHeaders: true, legacyHeaders: false })
+router.get('/tls-check', tlsCheckLimiter, async (req, res) => {
   const domain = typeof req.query.domain === 'string' ? req.query.domain.toLowerCase() : ''
   if (!domain) return res.status(400).end()
   if (domain === BASE_DOMAIN || domain === `www.${BASE_DOMAIN}`) return res.status(200).end()

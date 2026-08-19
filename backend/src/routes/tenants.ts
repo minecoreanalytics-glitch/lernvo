@@ -14,7 +14,7 @@ router.use(authenticate)
 // ── Tenant self-service (PLATFORM_MANAGER of the tenant) ─────────────────────
 const BrandingSchema = z.object({
   name: z.string().min(2).max(80).optional(),
-  logoUrl: z.string().url().max(500).nullable().optional(),
+  logoUrl: z.string().url().max(500).regex(/^https?:\/\//, 'http(s) URL only').nullable().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
   supportEmail: z.string().email().max(200).nullable().optional(),
 })

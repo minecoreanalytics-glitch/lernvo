@@ -30,6 +30,7 @@ import tenantRoutes from './routes/tenants'
 import brandingRoutes from './routes/branding'
 import approvalRoutes from './routes/approvals'
 import hrRoutes from './routes/hr'
+import publicRoutes from './routes/public'
 import { runDueConnectors } from './services/hr/connectors'
 import chatRoutes from './routes/chat'
 
@@ -46,6 +47,8 @@ app.set('trust proxy', 1)
 
 // ─── Security & Parsing ───────────────────────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
+// Public read API: mounted BEFORE the platform CORS policy (open CORS, GET only, its own rate limit)
+app.use('/api/public', express.json(), publicRoutes)
 app.use(cors({
   origin: process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? false : 'http://localhost:3000'),
   credentials: true

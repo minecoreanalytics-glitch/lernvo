@@ -144,6 +144,7 @@ export interface KbArticle {
   body?: string
   tags: string[]
   isPublished: boolean
+  isPublic?: boolean
   updatedAt: string
   category?: Category
   _count?: { views: number }

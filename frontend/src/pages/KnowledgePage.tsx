@@ -72,6 +72,7 @@ export default function KnowledgePage() {
   const [editBody, setEditBody] = useState('')
   const [editTags, setEditTags] = useState('')
   const [editPublished, setEditPublished] = useState(true)
+  const [editPublic, setEditPublic] = useState(false)
   const [showCreateArticle, setShowCreateArticle] = useState(false)
   const [showCreateGroup, setShowCreateGroup] = useState(false)
 
@@ -121,6 +122,7 @@ export default function KnowledgePage() {
     setEditBody(a.body ?? '')
     setEditTags(a.tags.join(', '))
     setEditPublished(a.isPublished)
+    setEditPublic(!!a.isPublic)
     setIsEditing(true)
   }
 
@@ -132,6 +134,7 @@ export default function KnowledgePage() {
         body: editBody.trim(),
         tags: editTags.split(',').map(t => t.trim()).filter(Boolean),
         isPublished: editPublished,
+        isPublic: editPublic,
         categoryId: a.category?.id || undefined,
       }
     })
@@ -211,10 +214,16 @@ export default function KnowledgePage() {
                 <label className="label">Tags (séparés par des virgules)</label>
                 <input className="input" value={editTags} onChange={e => setEditTags(e.target.value)} />
               </div>
-              <label className="flex items-center gap-2 text-sm text-gray-700 mt-6">
-                <input type="checkbox" checked={editPublished} onChange={e => setEditPublished(e.target.checked)} />
-                Publié (visible par les employés)
-              </label>
+              <div className="space-y-2 mt-6">
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={editPublished} onChange={e => setEditPublished(e.target.checked)} />
+                  Publié (visible par les employés)
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700" title="Exposé en lecture par l'API publique (site web) une fois approuvé">
+                  <input type="checkbox" checked={editPublic} onChange={e => setEditPublic(e.target.checked)} />
+                  Publiable sur le site web (API publique, après approbation)
+                </label>
+              </div>
             </div>
             {updateArticle.isError && <p className="text-xs text-red-600">Enregistrement impossible. Réessayez.</p>}
             <div className="flex gap-2 justify-end">
@@ -234,6 +243,7 @@ export default function KnowledgePage() {
                 {article.category.icon} {article.category.name}
               </span>
             )}
+            {article.isPublic && <span className="chip bg-teal-50 text-teal-700 border border-teal-200 text-[9px]">Public (site web)</span>}
             <span className="text-xs text-gray-300">·</span>
             <span className="text-xs text-gray-400 flex items-center gap-1">
               <Eye size={10} /> {article._count?.views ?? 0} vues

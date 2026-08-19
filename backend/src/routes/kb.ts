@@ -42,7 +42,8 @@ const ArticleSchema = z.object({
   body: z.string().min(1),
   categoryId: z.string().uuid().optional(),
   tags: z.array(z.string()).default([]),
-  isPublished: z.boolean().default(false)
+  isPublished: z.boolean().default(false),
+  isPublic: z.boolean().optional()
 })
 
 function toSlug(title: string) {

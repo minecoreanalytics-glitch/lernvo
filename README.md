@@ -80,6 +80,10 @@ scripts/            check-tenant-neutral.sh (CI gate)
 See [CONTRIBUTING.md](CONTRIBUTING.md) — fork → branch → PR. Every PR must keep the test suite,
 the TypeScript build and the tenant-neutrality gate green.
 
+## Public API (website)
+
+See [docs/PUBLIC_API.md](docs/PUBLIC_API.md) — approved, publiable articles (products, prices, FAQ) served read-only per tenant.
+
 ## Operating a new tenant
 
 See [docs/NEW_TENANT.md](docs/NEW_TENANT.md).

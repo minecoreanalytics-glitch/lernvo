@@ -282,6 +282,7 @@ export default function ModuleDetailPage() {
   const [activeContent, setActiveContent] = useState<Content | null>(null)
   const [videoUploadProgress, setVideoUploadProgress] = useState<number | null>(null)
   const [videoUploadError, setVideoUploadError] = useState<string | null>(null)
+  const [audioGen, setAudioGen] = useState<{ busy: boolean; msg: string | null; err: boolean }>({ busy: false, msg: null, err: false })
 
   // Track section states: 'slides' | 'passed'
   const [sectionStates, setSectionStates] = useState<Record<number, 'slides' | 'passed'>>({ 0: 'slides' })
@@ -403,6 +404,14 @@ export default function ModuleDetailPage() {
     },
     onError: () => setEditError('Erreur lors de la sauvegarde. Réessayez.')
   })
+
+  // Admin: generate an audio version (TTS) of a text/slides section → sibling AUDIO section
+  function handleGenerateAudio(contentId: string) {
+    setAudioGen({ busy: true, msg: null, err: false })
+    api.post(`/content/${contentId}/generate-audio`)
+      .then(r => { setAudioGen({ busy: false, msg: `Audio généré (${r.data.seconds}s). Une section 🎧 a été ajoutée.`, err: false }); qc.invalidateQueries({ queryKey: ['content', id] }) })
+      .catch(err => setAudioGen({ busy: false, msg: err.response?.data?.error || 'Échec de la génération audio', err: true }))
+  }
 
   // Admin: upload a .mp4 to an existing VIDEO section that has no url yet
   function handleVideoUpload(contentId: string, file: File) {
@@ -794,6 +803,12 @@ export default function ModuleDetailPage() {
                   <audio controls src={selected.url ?? undefined} className="w-full" />
                 </div>
               )}
+              {selected.type === 'PRESENTATION' && selected.body && isAdmin && (
+                <div className="px-6 pt-4 flex items-center justify-end gap-3">
+                  {audioGen.msg && <span className={`text-xs ${audioGen.err ? 'text-red-600' : 'text-green-700'}`}>{audioGen.msg}</span>}
+                  <button onClick={() => handleGenerateAudio(selected.id)} disabled={audioGen.busy} className="btn-outline text-xs px-2.5 py-1.5" title="Créer une version audio de ce diaporama (IA)">{audioGen.busy ? 'Génération…' : '🎧 Générer l\'audio'}</button>
+                </div>
+              )}
               {selected.type === 'PRESENTATION' && selected.body && (
                 <SlideViewer body={selected.body} title={selected.title}
                   onComplete={isEnrolled && !selected.progress?.completed
@@ -802,7 +817,15 @@ export default function ModuleDetailPage() {
               )}
               {(selected.type === 'TEXT' || selected.type === 'PDF') && (
                 <div className="p-6">
-                  <h3 className="font-semibold text-gray-900 mb-4">{selected.title}</h3>
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <h3 className="font-semibold text-gray-900">{selected.title}</h3>
+                    {isAdmin && selected.body && (
+                      <button onClick={() => handleGenerateAudio(selected.id)} disabled={audioGen.busy} className="btn-outline text-xs px-2.5 py-1.5 shrink-0" title="Créer une version audio de cette section (IA)">
+                        {audioGen.busy ? 'Génération…' : '🎧 Générer l\'audio'}
+                      </button>
+                    )}
+                  </div>
+                  {audioGen.msg && <p className={`text-xs mb-3 ${audioGen.err ? 'text-red-600' : 'text-green-700'}`}>{audioGen.msg}</p>}
                   {selected.body && (
                     <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{selected.body}</ReactMarkdown>

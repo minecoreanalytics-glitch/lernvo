@@ -15,7 +15,9 @@ subdomain (`<slug>.lernvo.com`), branding, users and data.
 |---|---|
 | Backend | Node 20 · Express · TypeScript · Prisma 5 · PostgreSQL 16 · Redis |
 | Frontend | React 18 · Vite · TypeScript · Tailwind · TanStack Query · PWA |
-| AI (optional) | Google Gemini (`GEMINI_API_KEY`) — module/quiz/KB generation, chatbot |
+| AI (optional) | Google Gemini (`GEMINI_API_KEY`) — module/quiz/KB generation, chatbot, **text-to-speech** (audio version of any section) |
+| Morpheus (optional) | `MORPHEUS_CORE_URL` + `MORPHEUS_API_KEY` — knowledge-assurance signals & recommendations (see docs/mcore) |
+| HRIS (optional) | Odoo connector, push API key, CSV import (see docs/specs/2026-08-19-hris-sync.md) |
 | Email (optional) | any SMTP (`SMTP_*`) |
 | Tests | Vitest + Supertest (backend), `tsc` + build (frontend), tenant-neutrality gate |
 

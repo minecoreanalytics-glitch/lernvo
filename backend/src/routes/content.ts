@@ -10,6 +10,7 @@ import { authenticate, authorize, reenterTenant } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 import { OnboardingService } from '../services/onboarding'
 import { logger } from '../utils/logger'
+import { TTS_CONFIGURED, markdownToSpeech, synthesizeToFile } from '../services/tts'
 import { getCtx, isSuperAdmin } from '../utils/tenantContext'
 
 const router = Router()
@@ -260,6 +261,31 @@ router.delete('/:id', authorize('PLATFORM_MANAGER'), async (req, res) => {
     res.json({ message: 'Content deleted' })
   } catch {
     res.status(500).json({ error: 'Failed to delete content' })
+  }
+})
+
+// POST /api/content/:id/generate-audio — TTS of a TEXT/PRESENTATION section → sibling AUDIO section
+router.post('/:id/generate-audio', authorize('PLATFORM_MANAGER', 'HR'), async (req, res) => {
+  try {
+    if (!TTS_CONFIGURED) return res.status(503).json({ error: 'Génération audio non configurée (GEMINI_API_KEY).' })
+    const content = await prisma.content.findFirst({ where: { id: req.params.id }, include: { module: true } })
+    if (!content || !content.module) return res.status(404).json({ error: 'Content not found' })
+    if (!isSuperAdmin() && content.module.tenantId !== (getCtx()?.tenantId ?? null)) return res.status(404).json({ error: 'Content not found' })
+    const text = markdownToSpeech(content.body || '')
+    if (text.length < 20) return res.status(400).json({ error: 'Section sans texte à lire.' })
+    if (text.length > 30_000) return res.status(400).json({ error: 'Texte trop long pour une seule piste (30 000 caractères max).' })
+    const filename = `tts-${content.id}-${Date.now()}.wav`
+    const out = await synthesizeToFile(text, { filename, voice: typeof req.body?.voice === 'string' ? req.body.voice : undefined })
+    // Reuse an existing generated audio sibling, else create one right after the source section
+    const existing = await prisma.content.findFirst({ where: { moduleId: content.moduleId, type: 'AUDIO', title: `🎧 ${content.title}` } })
+    const audio = existing
+      ? await prisma.content.update({ where: { id: existing.id }, data: { url: out.url, duration: out.seconds } })
+      : await prisma.content.create({ data: { moduleId: content.moduleId, title: `🎧 ${content.title}`, type: 'AUDIO', url: out.url, duration: out.seconds, order: content.order + 1, isRequired: false, createdById: req.user!.userId } })
+    res.json({ id: audio.id, url: audio.url, seconds: out.seconds, chunks: out.chunks })
+  } catch (e) {
+    const status = (e as { status?: number }).status ?? 500
+    if (status === 500) logger.error('generate-audio failed', e)
+    res.status(status).json({ error: status === 503 ? 'Génération audio non configurée' : (e as Error).message })
   }
 })
 

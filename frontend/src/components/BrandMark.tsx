@@ -25,7 +25,7 @@ const CLOSURE_COMPACT = 'M18 36.5l7.5 7.5L47 28'
 export default function BrandMark({
   size = 36,
   tone = 'chip',
-  compact = false,
+  compact,
   className,
   title = 'Lernvo',
 }: {
@@ -36,7 +36,9 @@ export default function BrandMark({
   title?: string
 }) {
   const maskId = useId()
-  const useCompact = compact || tone === 'chip'
+  // La variante 3 (fermoir-coche) est la marque. La variante simplifiée n'intervient que
+  // lorsque la ligne de fermeture ne peut plus se lire — sous ~22 px — ou si on la force.
+  const useCompact = compact ?? size < 22
   const fill = tone === 'navy' ? NAVY : tone === 'white' ? '#FFFFFF' : AMBER
 
   const briefcase = (

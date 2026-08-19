@@ -5,7 +5,7 @@ const SCOPED = new Set([
   'Department', 'User', 'Category', 'Module',
   'CareerPath', 'KbArticle', 'OnboardingPlan',
   'ApprovalItem', 'ContentVersion', 'Acknowledgment',
-  'HrConnector', 'HrSyncRun'
+  'HrConnector', 'HrSyncRun', 'ChatQuestionLog'
 ])
 
 /** Lowercase only the first character of a model name to get the delegate key. */

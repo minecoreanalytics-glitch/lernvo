@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma'
 import { authenticate } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 import { logger } from '../utils/logger'
+import { getTenantId } from '../utils/tenantContext'
 import type { Request } from 'express'
 
 const router = Router()
@@ -360,6 +361,8 @@ router.post('/', chatLimiter, validate(MessageSchema), async (req, res) => {
 
     // ── KB: retrieve relevant articles first (priority context) ───────────
     const kbMatches = await findRelevantKbArticles(message, 5)
+    // Signal for the head: what employees ask, and whether the KB had an answer
+    prisma.chatQuestionLog.create({ data: { tenantId: getTenantId(), userId, departmentId: user.department ? (await prisma.user.findFirst({ where: { id: userId }, select: { departmentId: true } }))?.departmentId ?? null : null, question: message.slice(0, 300), kbHits: kbMatches.length } }).catch(() => {})
     const kbContext = formatKbContext(kbMatches)
     const catalogLines = await getKbCatalogTitles(kbMatches.map(a => a.id))
     const kbQuestion = isKbRelatedQuestion(message)

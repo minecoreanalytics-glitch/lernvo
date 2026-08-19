@@ -53,6 +53,8 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-}
+      MORPHEUS_CORE_URL: ${MORPHEUS_CORE_URL:-}
+      MORPHEUS_API_KEY: ${MORPHEUS_API_KEY:-}
     volumes:
       - lernvo_uploads:/app/uploads
     depends_on:

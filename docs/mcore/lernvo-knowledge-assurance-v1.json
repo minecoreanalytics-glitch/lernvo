@@ -1,0 +1,86 @@
+{
+  "tenant_id": "_template_lernvo",
+  "framework_id": "lernvo-knowledge-assurance-v1.0",
+  "name": "Lernvo — Knowledge Assurance Doctrine",
+  "version": "1.0.0",
+  "languages": ["fr", "en"],
+  "description": "Tentacle template: Lernvo ships per-department knowledge signals (acknowledgment coverage of approved procedures, quiz failure rate, overdue assignments, unanswered assistant questions, stale documents) into M-Core and turns knowledge pressure into training/documentation actions. Onboard a company by copying this framework under its tenant id — no head code changes.",
+  "applies_to": ["platform_manager", "hr", "manager"],
+  "signal_glossary": {
+    "coverage_pct": "0..1 — share of active employees of the department who acknowledged the current version of every approved procedure",
+    "quiz_fail_rate": "0..1 — failed / total quiz attempts in the department over the window",
+    "overdue_ratio": "0..1 — overdue assignments / open assignments in the department",
+    "unanswered_questions": "count — assistant questions from the department with zero KB match over the window",
+    "stale_docs": "count — approved documents not re-approved for more than 180 days",
+    "pending_reviews": "count — knowledge items waiting for approval for more than 7 days",
+    "headcount": "count — active employees in the department"
+  },
+  "policies": [
+    {
+      "id": "coverage-gap-reinforce",
+      "name": "Coverage gap — reinforce acknowledgment",
+      "eligibility": { "all": [ { "field": "coverage_pct", "lte": 0.7 }, { "field": "headcount", "gte": 3 } ] },
+      "action": { "type": "reinforce_acknowledgment", "tier": "P1", "window_days": 7, "notify_roles": ["manager", "hr"] },
+      "priority": 1,
+      "framing": {
+        "fr": "Moins de 70 % de l'équipe a validé les procédures en vigueur : relancer les retardataires et vérifier avec le manager.",
+        "en": "Less than 70% of the team acknowledged the current procedures: chase the laggards and check with the manager."
+      }
+    },
+    {
+      "id": "procedure-misunderstood-rewrite",
+      "name": "Procedure misunderstood — review the document",
+      "eligibility": { "all": [ { "field": "quiz_fail_rate", "gte": 0.4 } ] },
+      "action": { "type": "review_procedure", "tier": "P1", "notify_roles": ["hr", "platform_manager"] },
+      "priority": 1,
+      "framing": {
+        "fr": "Taux d'échec élevé aux quiz : la procédure est probablement ambiguë ou mal expliquée — la réécrire ou ajouter un module.",
+        "en": "High quiz failure rate: the procedure is likely ambiguous or badly explained — rewrite it or add a module."
+      }
+    },
+    {
+      "id": "knowledge-gap-from-questions",
+      "name": "Knowledge gap — employees ask what the KB does not answer",
+      "eligibility": { "all": [ { "field": "unanswered_questions", "gte": 5 } ] },
+      "action": { "type": "create_kb_article", "tier": "P2", "notify_roles": ["hr", "platform_manager"] },
+      "priority": 2,
+      "framing": {
+        "fr": "Plusieurs questions posées à l'assistant n'ont trouvé aucun article : documenter ce sujet dans la base de connaissances.",
+        "en": "Several assistant questions found no article: document this topic in the knowledge base."
+      }
+    },
+    {
+      "id": "overdue-assignments-escalate",
+      "name": "Overdue assignments — escalate to the manager",
+      "eligibility": { "all": [ { "field": "overdue_ratio", "gte": 0.3 } ] },
+      "action": { "type": "escalate_manager", "tier": "P2", "notify_roles": ["manager"] },
+      "priority": 2,
+      "framing": {
+        "fr": "Plus de 30 % des formations assignées sont en retard : le manager doit arbitrer (charge, priorité, échéances).",
+        "en": "More than 30% of assigned trainings are overdue: the manager must arbitrate (workload, priority, deadlines)."
+      }
+    },
+    {
+      "id": "stale-documents-reapprove",
+      "name": "Stale documents — schedule a review",
+      "eligibility": { "all": [ { "field": "stale_docs", "gte": 1 } ] },
+      "action": { "type": "schedule_review", "tier": "P3", "window_days": 30, "notify_roles": ["hr"] },
+      "priority": 3,
+      "framing": {
+        "fr": "Des documents approuvés n'ont pas été revus depuis plus de 6 mois : planifier une relecture et une ré-approbation.",
+        "en": "Approved documents have not been reviewed for over 6 months: schedule a review and re-approval."
+      }
+    },
+    {
+      "id": "review-backlog",
+      "name": "Review backlog — approvals waiting",
+      "eligibility": { "all": [ { "field": "pending_reviews", "gte": 1 } ] },
+      "action": { "type": "clear_review_queue", "tier": "P3", "notify_roles": ["platform_manager", "hr"] },
+      "priority": 3,
+      "framing": {
+        "fr": "Des contenus attendent une approbation depuis plus de 7 jours : les employés continuent d'appliquer l'ancienne version.",
+        "en": "Content has been waiting for approval for over 7 days: employees keep applying the old version."
+      }
+    }
+  ]
+}

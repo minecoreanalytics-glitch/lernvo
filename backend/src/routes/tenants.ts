@@ -52,6 +52,14 @@ router.patch('/me', authorize('PLATFORM_MANAGER'), validate(BrandingSchema), asy
 
 router.use(authorize('SUPER_ADMIN'))
 
+// PATCH /api/tenants/:id/mcore — enable/disable the Morpheus tentacle for a tenant (platform staff)
+router.patch('/:id/mcore', validate(z.object({ mcoreTenant: z.string().min(2).max(64).regex(/^[a-z0-9-]+$/).nullable() })), async (req, res) => {
+  try {
+    const t = await asSA(() => prisma.tenant.update({ where: { id: req.params.id }, data: { mcoreTenant: req.body.mcoreTenant }, select: { id: true, slug: true, mcoreTenant: true } }))
+    res.json(t)
+  } catch (e) { logger.error('tenant mcore', e); res.status(500).json({ error: 'Failed' }) }
+})
+
 const asSA = <T>(fn: () => Promise<T>) =>
   tenantStore.run({ tenantId: null, superAdmin: true }, fn)
 

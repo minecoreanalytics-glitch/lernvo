@@ -31,6 +31,7 @@ import brandingRoutes from './routes/branding'
 import approvalRoutes from './routes/approvals'
 import hrRoutes from './routes/hr'
 import publicRoutes from './routes/public'
+import mcoreRoutes from './routes/mcore'
 import { runDueConnectors } from './services/hr/connectors'
 import chatRoutes from './routes/chat'
 
@@ -91,6 +92,7 @@ app.use('/api/tenants', tenantRoutes)
 app.use('/api/branding', brandingRoutes)
 app.use('/api/approvals', approvalRoutes)
 app.use('/api/hr', hrRoutes)
+app.use('/api/mcore', mcoreRoutes)
 app.use('/api/chat', chatRoutes)
 
 // ─── Health Check (both /health and /api/health) ─────────────────────────────

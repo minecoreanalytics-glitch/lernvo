@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   LayoutDashboard, BookOpen, Route, BookMarked, Building2,
   Trophy, User, Users, FileText, LogOut, GraduationCap, Award, Sparkles,
-  ClipboardList, UsersRound, BarChart3, Activity, Bell, ShieldCheck, Plug
+  ClipboardList, UsersRound, BarChart3, Activity, Bell, ShieldCheck, Plug, Brain
 } from 'lucide-react'
 import { useBranding } from '../../hooks/useBranding'
 import { useAuthStore } from '../../store/auth'
@@ -30,6 +30,7 @@ const adminOnlyItems = [
   { to: '/departments',       icon: Building2,       label: 'Départements' },
   { to: '/admin/content',     icon: FileText,        label: 'Contenus' },
   { to: '/admin/approvals',   icon: ShieldCheck,     label: 'Approbations' },
+  { to: '/admin/insights',    icon: Brain,           label: 'Signaux' },
   { to: '/admin/integrations', icon: Plug,           label: 'Intégrations RH' },
   { to: '/admin/reports',     icon: BarChart3,       label: 'Rapports' },
   { to: '/admin/analytics',   icon: Activity,        label: 'Analytics' },
@@ -55,6 +56,7 @@ const hrAdminItems = [
   { to: '/admin/users',      icon: Users,     label: 'Utilisateurs' },
   { to: '/admin/content',    icon: FileText,  label: 'Contenus' },
   { to: '/admin/approvals',  icon: ShieldCheck, label: 'Approbations' },
+  { to: '/admin/insights',   icon: Brain,     label: 'Signaux' },
   { to: '/admin/reports',    icon: BarChart3, label: 'Rapports' },
   { to: '/admin/analytics',  icon: Activity,  label: 'Analytics' },
 ]

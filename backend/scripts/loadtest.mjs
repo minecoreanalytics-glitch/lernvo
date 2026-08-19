@@ -1,5 +1,5 @@
 // Scénario réel : 9 h du matin, l'équipe se connecte puis lit et valide la procédure du jour.
-const BASE = 'http://127.0.0.1:4010'
+const BASE = process.env.BASE ?? 'http://127.0.0.1:4010'
 const N = Number(process.argv[2] ?? 50)
 
 const t0 = Date.now()

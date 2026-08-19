@@ -39,6 +39,10 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      # bcrypt s'exécute sur le pool de threads libuv (4 par défaut) : c'est lui qui plafonne les
+      # connexions simultanées, pas la base de données. La machine a 8 cœurs.
+      UV_THREADPOOL_SIZE: "8"
+
       PORT: 4000
       DATABASE_URL: postgresql://${POSTGRES_USER:-lernvo}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-lernvo}
       REDIS_HOST: redis

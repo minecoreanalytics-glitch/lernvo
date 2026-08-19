@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, GraduationCap, LogOut, User, Building2, Award, FileText, Route, Search } from 'lucide-react'
+import { Bell, LogOut, User, Building2, Award, FileText, Route, Search } from 'lucide-react'
 import { useBranding } from '../../hooks/useBranding'
+import BrandMark from '../BrandMark'
 import { useAuthStore } from '../../store/auth'
 import { api } from '../../utils/api'
 import type { Notification } from '../../types'
@@ -66,9 +67,7 @@ export default function TopBar() {
         {branding.logoUrl ? (
           <img src={branding.logoUrl} alt={branding.displayName} className="h-9 max-w-[140px] object-contain shrink-0" />
         ) : (
-          <div className="w-9 h-9 rounded-xl bg-primary-700 flex items-center justify-center shrink-0">
-            <GraduationCap size={18} className="text-white" />
-          </div>
+          <BrandMark size={36} className="rounded-xl shrink-0" />
         )}
         <span className="text-base font-bold text-gray-900 truncate">{branding.displayName}</span>
       </div>

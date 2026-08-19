@@ -2,10 +2,11 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   LayoutDashboard, BookOpen, Route, BookMarked, Building2,
-  Trophy, User, Users, FileText, LogOut, GraduationCap, Award, Sparkles,
+  Trophy, User, Users, FileText, LogOut, Award, Sparkles,
   ClipboardList, UsersRound, BarChart3, Activity, Bell, ShieldCheck, Plug, Brain
 } from 'lucide-react'
 import { useBranding } from '../../hooks/useBranding'
+import BrandMark from '../BrandMark'
 import { useAuthStore } from '../../store/auth'
 import { api } from '../../utils/api'
 
@@ -92,9 +93,7 @@ export default function Sidebar() {
         {branding.logoUrl ? (
           <img src={branding.logoUrl} alt={branding.displayName} className="h-9 max-w-[150px] object-contain" />
         ) : (
-          <div className="w-9 h-9 rounded-2xl bg-primary-700 flex items-center justify-center shadow-sm">
-            <GraduationCap size={18} className="text-white" />
-          </div>
+          <BrandMark size={36} className="rounded-2xl shadow-sm" />
         )}
         <div>
           <div className="text-sm font-bold text-gray-900 leading-tight">{branding.displayName}</div>

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Eye, EyeOff, Loader2, GraduationCap } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useBranding } from '../hooks/useBranding'
 import { useAuthStore } from '../store/auth'
 import { api } from '../utils/api'
+import BrandMark from '../components/BrandMark'
 
 export default function LoginPage() {
   const branding = useBranding()
@@ -43,9 +44,7 @@ export default function LoginPage() {
           {branding.logoUrl ? (
             <img src={branding.logoUrl} alt={branding.displayName} className="h-16 max-w-[220px] object-contain mb-4" />
           ) : (
-            <div className="w-16 h-16 rounded-3xl bg-primary-700 flex items-center justify-center shadow-card-md mb-4">
-              <GraduationCap size={28} className="text-white" />
-            </div>
+            <BrandMark size={64} className="rounded-3xl shadow-card-md mb-4" />
           )}
           <h1 className="text-2xl font-bold text-gray-900">{branding.displayName}</h1>
           <p className="text-sm text-gray-500 mt-1">

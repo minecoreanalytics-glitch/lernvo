@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { GraduationCap, ShieldCheck, BookOpenCheck, MessageSquareText, Activity, Plug, Globe, Award, CheckCircle2, ArrowRight, Loader2, ChevronDown } from 'lucide-react'
+import { ShieldCheck, BookOpenCheck, MessageSquareText, Activity, Plug, Globe, Award, CheckCircle2, ArrowRight, Loader2, ChevronDown } from 'lucide-react'
 import { api } from '../utils/api'
+import BrandMark from '../components/BrandMark'
 
 type Lang = 'fr' | 'en'
 
@@ -174,8 +175,8 @@ function Nav({ t, lang, setLang }: { t: Copy; lang: Lang; setLang: (l: Lang) => 
     <header className="sticky top-0 z-40 bg-white/85 backdrop-blur border-b border-gray-100">
       <div className="max-w-6xl mx-auto px-5 h-16 flex items-center gap-6">
         <a href="#top" className="flex items-center gap-2.5 shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-primary-700 flex items-center justify-center"><GraduationCap size={18} className="text-white" /></div>
-          <span className="text-lg font-extrabold tracking-tight text-gray-900">Lernvo</span>
+          <BrandMark size={36} className="rounded-xl" />
+          <span className="text-lg font-extrabold tracking-[-0.04em] text-gray-900 lowercase">Lernvo</span>
         </a>
         <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 ml-4">
           <a href="#how" className="hover:text-gray-900">{t.nav.how}</a>
@@ -405,7 +406,7 @@ function LeadForm({ t, lang }: { t: Copy; lang: Lang }) {
 function Footer({ t }: { t: Copy }) {
   return (
     <footer className="max-w-6xl mx-auto px-5 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
-      <div className="flex items-center gap-2"><GraduationCap size={14} className="text-primary-700" /> {t.footer.tag}</div>
+      <div className="flex items-center gap-2"><BrandMark size={18} tone="navy" compact /> {t.footer.tag}</div>
       <div className="flex gap-5">
         {t.footer.links.map(([l, href]) => href.startsWith('http')
           ? <a key={l} href={href} target="_blank" rel="noreferrer" className="hover:text-gray-800">{l}</a>

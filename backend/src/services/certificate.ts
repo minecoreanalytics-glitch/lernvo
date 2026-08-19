@@ -65,14 +65,25 @@ function generateCertificateSVG(data: {
   <circle cx="40" cy="555" r="4" fill="url(#gold)" opacity="0.6" />
   <circle cx="802" cy="555" r="4" fill="url(#gold)" opacity="0.6" />
 
+  <!-- Brand mark (briefcase with the clasp check) -->
+  <mask id="lvmark">
+    <rect x="393" y="34" width="56" height="56" fill="#000" />
+    <g fill="#fff" transform="translate(393 34) scale(0.875)">
+      <path d="M25 11h14a5 5 0 0 1 5 5v4h-5.5v-2.5a1.5 1.5 0 0 0-1.5-1.5h-10a1.5 1.5 0 0 0-1.5 1.5V20H20v-4a5 5 0 0 1 5-5z" />
+      <rect x="5" y="20" width="54" height="33" rx="5" />
+    </g>
+    <path d="M5 35H16M35 35H59 M17.5 35l5 5 16-12.5" transform="translate(393 34) scale(0.875)" fill="none" stroke="#000" stroke-width="5" />
+  </mask>
+  <rect x="393" y="34" width="56" height="56" fill="url(#gold)" mask="url(#lvmark)" />
+
   <!-- Logo area -->
-  <text x="421" y="80" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#D4A574" letter-spacing="8">${(process.env.PLATFORM_NAME || 'Lernvo').toUpperCase()}</text>
+  <text x="421" y="112" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#D4A574" letter-spacing="8">${(process.env.PLATFORM_NAME || 'Lernvo').toUpperCase()}</text>
 
   <!-- Decorative line -->
-  <line x1="250" y1="100" x2="592" y2="100" stroke="url(#gold)" stroke-width="0.5" />
+  <line x1="250" y1="128" x2="592" y2="100" stroke="url(#gold)" stroke-width="0.5" />
 
   <!-- Certificate title -->
-  <text x="421" y="150" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="url(#gold)" letter-spacing="4">CERTIFICAT</text>
+  <text x="421" y="170" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="url(#gold)" letter-spacing="4">CERTIFICAT</text>
   <text x="421" y="175" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#8BA3B9" letter-spacing="6">DE FORMATION</text>
 
   <!-- Decorative line -->

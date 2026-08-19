@@ -31,7 +31,7 @@ function wrap(title: string, body: string): string {
   <!-- Header -->
   <tr><td style="background:#0f1923;padding:24px 32px">
     <table cellpadding="0" cellspacing="0"><tr>
-      <td style="width:36px;height:36px;background:#3b82f6;border-radius:8px;text-align:center;vertical-align:middle;font-size:18px">🎓</td>
+      <td style="width:36px;height:36px;vertical-align:middle"><img src="${BASE_URL}/apple-touch-icon.png" width="36" height="36" alt="" style="display:block;border-radius:8px" /></td>
       <td style="padding-left:12px;color:#ffffff;font-size:18px;font-weight:bold">${PLATFORM_NAME}</td>
     </tr></table>
   </td></tr>

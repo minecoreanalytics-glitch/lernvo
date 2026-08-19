@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Loader2, GraduationCap } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { api } from '../utils/api'
+import BrandMark from '../components/BrandMark'
 
 export default function SignupPage() {
   const [companyName, setCompanyName] = useState('')
@@ -43,9 +44,7 @@ export default function SignupPage() {
       <div className="w-full max-w-sm animate-slide-up">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-3xl bg-primary-700 flex items-center justify-center shadow-card-md mb-4">
-            <GraduationCap size={28} className="text-white" />
-          </div>
+          <BrandMark size={64} className="rounded-3xl shadow-card-md mb-4" />
           <h1 className="text-2xl font-bold text-gray-900">Lernvo</h1>
           <p className="text-sm text-gray-500 mt-1">Créer un compte entreprise</p>
         </div>

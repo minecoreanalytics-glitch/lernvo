@@ -851,3 +851,22 @@ model ChatQuestionLog {
   @@index([tenantId, createdAt])
   @@index([departmentId])
 }
+
+// ─── Marketing leads (platform-global: captured on the public landing page, before any tenant exists) ──
+model Lead {
+  id        String   @id @default(uuid())
+  email     String
+  name      String?
+  company   String?
+  size      String?
+  phone     String?
+  message   String?
+  intent    String // demo | pilot | contact
+  source    String? // utm / referrer
+  locale    String?
+  host      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}

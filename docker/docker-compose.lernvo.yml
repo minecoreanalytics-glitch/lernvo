@@ -55,6 +55,7 @@ services:
       SMTP_FROM: ${SMTP_FROM:-}
       MORPHEUS_CORE_URL: ${MORPHEUS_CORE_URL:-}
       MORPHEUS_API_KEY: ${MORPHEUS_API_KEY:-}
+      LEADS_WEBHOOK_URL: ${LEADS_WEBHOOK_URL:-}
     volumes:
       - lernvo_uploads:/app/uploads
     healthcheck:

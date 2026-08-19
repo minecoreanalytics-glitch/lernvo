@@ -57,3 +57,14 @@ describe('public read API', () => {
     expect((await request(app).get('/api/public/articles?tag=nope').set('Host', host)).body).toEqual([])
   })
 })
+
+describe('public leads', () => {
+  it('stores a lead, rejects bad email, swallows honeypot', async () => {
+    expect((await request(app).post('/api/public/leads').send({ email: 'nope' })).status).toBe(400)
+    expect((await request(app).post('/api/public/leads').send({ email: `bot${Date.now()}@x.test`, website: 'http://spam' })).status).toBe(200)
+    const r = await request(app).post('/api/public/leads').send({ email: `lead${Date.now()}@x.test`, name: 'L', company: 'C', size: '100-500', intent: 'pilot', locale: 'fr' })
+    expect(r.status).toBe(201)
+    const n = await tenantStore.run({ tenantId: null, superAdmin: true }, () => prisma.lead.count({ where: { intent: 'pilot', company: 'C' } }))
+    expect(n).toBeGreaterThanOrEqual(1)
+  })
+})

@@ -1,9 +1,11 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth'
+import { useBranding } from './hooks/useBranding'
 import Layout from './components/layout/Layout'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+const LandingPage = lazy(() => import('./pages/LandingPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
 const ModulesPage = lazy(() => import('./pages/ModulesPage'))
@@ -39,6 +41,16 @@ function RequireRole({ roles, children }: { roles: string[]; children: React.Rea
   return <>{children}</>
 }
 
+/** Apex `/`: marketing landing for visitors; tenant subdomains go straight to the branded login. */
+function Home() {
+  const user = useAuthStore(s => s.user)
+  const { isTenantHost, isLoading } = useBranding()
+  if (user) return <Navigate to="/dashboard" replace />
+  if (isLoading) return null
+  if (isTenantHost) return <Navigate to="/login" replace />
+  return <LandingPage />
+}
+
 function SmartDashboard() {
   const user = useAuthStore(s => s.user)
   // Only PLATFORM_MANAGER gets the admin-only dashboard (they're not employees)
@@ -51,10 +63,10 @@ export default function App() {
   return (
     <Suspense fallback={<div className="min-h-dvh flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary-200 border-t-primary-700 animate-spin" /></div>}>
     <Routes>
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<SmartDashboard />} />
         <Route path="departments" element={<DepartmentsPage />} />
         <Route path="modules" element={<ModulesPage />} />

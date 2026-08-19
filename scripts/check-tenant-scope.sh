@@ -4,7 +4,7 @@
 set -euo pipefail
 SCHEMA=backend/prisma/schema.prisma
 EXT=backend/src/utils/prismaTenant.ts
-GLOBAL_ALLOWLIST="Tenant Badge RefreshToken"   # the only models that may live without tenantId
+GLOBAL_ALLOWLIST="Tenant Badge RefreshToken Lead"   # Lead = marketing form submissions, pre-tenant   # the only models that may live without tenantId
 
 models=$(grep -E '^model ' "$SCHEMA" | awk '{print $2}')
 scoped=$(sed -n '/const SCOPED = new Set(\[/,/\])/p' "$EXT" | grep -oE "'[A-Za-z]+'" | tr -d "'")

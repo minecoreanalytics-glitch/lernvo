@@ -1,4 +1,5 @@
 import express from 'express'
+import path from 'path'
 import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
@@ -48,6 +49,9 @@ app.set('trust proxy', 1)
 
 // ─── Security & Parsing ───────────────────────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
+// Uploaded media (videos, audio, files, certificates). Filenames are unguessable (uuid / cert number /
+// content-id+timestamp); served without auth so <video>/<audio> tags can load them. TODO: signed URLs.
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), { maxAge: '30d', immutable: true, index: false, dotfiles: 'deny' }))
 // Public read API: mounted BEFORE the platform CORS policy (open CORS, GET only, its own rate limit)
 app.use('/api/public', express.json(), publicRoutes)
 app.use(cors({

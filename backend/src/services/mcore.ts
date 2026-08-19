@@ -87,7 +87,7 @@ export async function pushSignals(mcoreTenant: string, contexts: DeptContext[]):
     const get = await fetch(`${BASE}/subjects/by-external/${encodeURIComponent(ext)}`, { headers, signal: AbortSignal.timeout(15_000) })
     if (get.ok) subjectId = ((await get.json()) as { subject_id?: string; id?: string }).subject_id ?? null
     if (!subjectId) {
-      const cr = await fetch(`${BASE}/subjects`, { method: 'POST', headers, body: JSON.stringify({ external_id: ext, tags: ['lernvo', 'department'], metadata: { name: c.department_name, tenant: mcoreTenant } }), signal: AbortSignal.timeout(15_000) })
+      const cr = await fetch(`${BASE}/subjects/`, { method: 'POST', headers, body: JSON.stringify({ external_id: ext, tags: ['lernvo', 'department'], metadata: { name: c.department_name, tenant: mcoreTenant } }), signal: AbortSignal.timeout(15_000) })
       if (!cr.ok) { logger.warn(`m-core subject create ${cr.status}`); continue }
       subjectId = ((await cr.json()) as { subject_id?: string }).subject_id ?? null
     }

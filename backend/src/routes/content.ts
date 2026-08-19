@@ -2,7 +2,6 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { ContentType } from '@prisma/client'
 import multer from 'multer'
-import path from 'path'
 import fs from 'fs'
 import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '../utils/prisma'
@@ -11,29 +10,35 @@ import { validate } from '../middleware/validate'
 import { OnboardingService } from '../services/onboarding'
 import { logger } from '../utils/logger'
 import { TTS_CONFIGURED, markdownToSpeech, synthesizeToFile } from '../services/tts'
-import { getCtx, isSuperAdmin } from '../utils/tenantContext'
+import { getCtx, isSuperAdmin, getTenantId } from '../utils/tenantContext'
+import { requireModule, ownershipError } from '../utils/ownership'
 
 const router = Router()
 router.use(authenticate)
 
+// Extension is derived from the declared MIME type (allow-list), never from the client filename (LRN-09)
+const UPLOAD_MIME_TO_EXT: Record<string, string> = {
+  'video/mp4': '.mp4', 'video/webm': '.webm', 'video/quicktime': '.mov', 'video/x-matroska': '.mkv', 'video/ogg': '.ogv',
+  'audio/mpeg': '.mp3', 'audio/mp4': '.m4a', 'audio/wav': '.wav', 'audio/x-wav': '.wav', 'audio/ogg': '.ogg', 'audio/webm': '.weba',
+  'application/pdf': '.pdf',
+  'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp', 'image/gif': '.gif',
+}
 const storage = multer.diskStorage({
-  destination: (req, _file, cb) => {
-    const type = req.body.type as string
-    const dir = type === 'VIDEO' ? 'uploads/videos' : type === 'AUDIO' ? 'uploads/audio' : 'uploads/files'
+  destination: (_req, file, cb) => {
+    const dir = file.mimetype.startsWith('video/') ? 'uploads/videos' : file.mimetype.startsWith('audio/') ? 'uploads/audio' : 'uploads/files'
+    fs.mkdirSync(dir, { recursive: true })
     cb(null, dir)
   },
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `${uuidv4()}${ext}`)
+    cb(null, `${uuidv4()}${UPLOAD_MIME_TO_EXT[file.mimetype] || '.bin'}`)
   }
 })
 
 const upload = multer({
   storage,
-  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2GB max
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB max (videos have their own endpoint with the same cap)
   fileFilter: (_req, file, cb) => {
-    const allowed = /video\/|audio\/|application\/pdf|image\//
-    cb(null, allowed.test(file.mimetype))
+    cb(null, !!UPLOAD_MIME_TO_EXT[file.mimetype])
   }
 })
 
@@ -63,7 +68,8 @@ router.get('/module/:moduleId', async (req, res) => {
     const progressMap = Object.fromEntries(progressLogs.map(p => [p.contentId, p]))
 
     res.json(contents.map(c => ({ ...c, progress: progressMap[c.id] || null })))
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch content' })
   }
 })
@@ -71,9 +77,11 @@ router.get('/module/:moduleId', async (req, res) => {
 // POST /api/content — text/rich content
 router.post('/', authorize('PLATFORM_MANAGER', 'HR'), validate(ContentSchema), async (req, res) => {
   try {
-    const content = await prisma.content.create({ data: { ...req.body, createdById: req.user!.userId } })
+    await requireModule(req.body.moduleId) // the target module must belong to the caller's tenant
+    const content = await prisma.content.create({ data: { tenantId: getTenantId(), ...req.body, createdById: req.user!.userId } })
     res.status(201).json(content)
-  } catch {
+  } catch (e) {
+    if (ownershipError(res, e)) return
     res.status(500).json({ error: 'Failed to create content' })
   }
 })
@@ -83,17 +91,20 @@ router.post('/upload', authorize('PLATFORM_MANAGER', 'HR'), upload.single('file'
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
     const { moduleId, title, type, order, isRequired } = req.body
+    if (!(await prisma.module.findFirst({ where: { id: moduleId }, select: { id: true } }))) return res.status(404).json({ error: 'Module not found' })
     const url = `/${req.file.path}`
 
     const content = await prisma.content.create({
       data: {
+        tenantId: getTenantId(),
         moduleId, title, type, url, order: parseInt(order) || 0,
         isRequired: isRequired !== 'false',
         createdById: req.user!.userId
       }
     })
     res.status(201).json(content)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to upload content' })
   }
 })
@@ -209,7 +220,7 @@ router.post('/:id/progress', async (req, res) => {
 
     const log = await prisma.progressLog.upsert({
       where: { userId_contentId: { userId: req.user!.userId, contentId: req.params.id } },
-      create: { userId: req.user!.userId, contentId: req.params.id, progressPct, watchedSeconds, completed },
+      create: { tenantId: getTenantId(), userId: req.user!.userId, contentId: req.params.id, progressPct, watchedSeconds, completed },
       update: { progressPct, watchedSeconds, completed }
     })
 
@@ -239,7 +250,8 @@ router.post('/:id/progress', async (req, res) => {
     }
 
     res.json(log)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to update progress' })
   }
 })
@@ -249,7 +261,8 @@ router.put('/:id', authorize('PLATFORM_MANAGER', 'HR'), validate(ContentSchema.p
   try {
     const content = await prisma.content.update({ where: { id: req.params.id }, data: req.body })
     res.json(content)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to update content' })
   }
 })
@@ -259,7 +272,8 @@ router.delete('/:id', authorize('PLATFORM_MANAGER'), async (req, res) => {
   try {
     await prisma.content.delete({ where: { id: req.params.id } })
     res.json({ message: 'Content deleted' })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to delete content' })
   }
 })
@@ -279,8 +293,8 @@ router.post('/:id/generate-audio', authorize('PLATFORM_MANAGER', 'HR'), async (r
     // Reuse an existing generated audio sibling, else create one right after the source section
     const existing = await prisma.content.findFirst({ where: { moduleId: content.moduleId, type: 'AUDIO', title: `🎧 ${content.title}` } })
     const audio = existing
-      ? await prisma.content.update({ where: { id: existing.id }, data: { url: out.url, duration: out.seconds } })
-      : await prisma.content.create({ data: { moduleId: content.moduleId, title: `🎧 ${content.title}`, type: 'AUDIO', url: out.url, duration: out.seconds, order: content.order + 1, isRequired: false, createdById: req.user!.userId } })
+      ? await prisma.content.update({ where: { id: existing.id }, data: { tenantId: getTenantId(), url: out.url, duration: out.seconds } })
+      : await prisma.content.create({ data: { tenantId: getTenantId(), moduleId: content.moduleId, title: `🎧 ${content.title}`, type: 'AUDIO', url: out.url, duration: out.seconds, order: content.order + 1, isRequired: false, createdById: req.user!.userId } })
     res.json({ id: audio.id, url: audio.url, seconds: out.seconds, chunks: out.chunks })
   } catch (e) {
     const status = (e as { status?: number }).status ?? 500

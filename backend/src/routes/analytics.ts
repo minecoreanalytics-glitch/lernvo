@@ -24,7 +24,8 @@ router.get('/pages', authorize('PLATFORM_MANAGER', 'HR'), async (req, res) => {
   try {
     const days = parseInt(req.query.days as string) || 30
     res.json(await AnalyticsService.getEntryExitPages(days))
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch pages' })
   }
 })
@@ -34,7 +35,8 @@ router.get('/courses', authorize('PLATFORM_MANAGER', 'HR'), async (req, res) => 
   try {
     const days = parseInt(req.query.days as string) || 30
     res.json(await AnalyticsService.getCourseStats(days))
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch course stats' })
   }
 })
@@ -44,7 +46,8 @@ router.get('/timeline', authorize('PLATFORM_MANAGER', 'HR'), async (req, res) =>
   try {
     const days = parseInt(req.query.days as string) || 30
     res.json(await AnalyticsService.getTimeline(days))
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch timeline' })
   }
 })
@@ -54,7 +57,8 @@ router.get('/logs', authorize('PLATFORM_MANAGER', 'HR'), async (req, res) => {
   try {
     const limit = parseInt(req.query.limit as string) || 50
     res.json(await AnalyticsService.getRecentLogs(limit))
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch logs' })
   }
 })
@@ -67,7 +71,8 @@ router.post('/session/start', async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' })
     const sessionId = await AnalyticsService.startSession(userId, entryPage || '/', device)
     res.json({ sessionId })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to start session' })
   }
 })
@@ -79,7 +84,8 @@ router.post('/session/end', async (req, res) => {
     if (!sessionId) return res.status(400).json({ error: 'sessionId required' })
     await AnalyticsService.endSession(sessionId, exitPage || '/')
     res.json({ ok: true })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to end session' })
   }
 })
@@ -92,7 +98,8 @@ router.post('/event', async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' })
     await AnalyticsService.log(userId, sessionId, event, page, referenceId, metadata)
     res.json({ ok: true })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to log event' })
   }
 })

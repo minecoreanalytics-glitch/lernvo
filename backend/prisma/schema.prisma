@@ -39,19 +39,38 @@ model Tenant {
   supportEmail String?
   mcoreTenant  String? // Morpheus head tenant id (null = tentacle disabled for this tenant)
 
-  departments     Department[]
-  users           User[]
-  categories      Category[]
-  modules         Module[]
-  careerPaths     CareerPath[]
-  kbArticles      KbArticle[]
-  onboardingPlans OnboardingPlan[]
-  approvalItems   ApprovalItem[]
-  contentVersions ContentVersion[]
-  acknowledgments Acknowledgment[]
-  hrConnectors    HrConnector[]
-  hrSyncRuns      HrSyncRun[]
-  chatQuestions   ChatQuestionLog[]
+  departments             Department[]
+  users                   User[]
+  categories              Category[]
+  modules                 Module[]
+  careerPaths             CareerPath[]
+  kbArticles              KbArticle[]
+  onboardingPlans         OnboardingPlan[]
+  approvalItems           ApprovalItem[]
+  contentVersions         ContentVersion[]
+  acknowledgments         Acknowledgment[]
+  hrConnectors            HrConnector[]
+  hrSyncRuns              HrSyncRun[]
+  chatQuestions           ChatQuestionLog[]
+  contents                Content[]
+  enrollments             Enrollment[]
+  quizzes                 Quiz[]
+  questions               Question[]
+  quizAttempts            QuizAttempt[]
+  progressLogs            ProgressLog[]
+  certificates            Certificate[]
+  notifications           Notification[]
+  pointTransactions       PointTransaction[]
+  userBadges              UserBadge[]
+  kbArticleViews          KbArticleView[]
+  moduleFeedbacks         ModuleFeedback[]
+  userSessions            UserSession[]
+  userActivityLogs        UserActivityLog[]
+  userOnboardings         UserOnboarding[]
+  careerPathModules       CareerPathModule[]
+  careerPathEnrollments   CareerPathEnrollment[]
+  careerPathPrerequisites CareerPathPrerequisite[]
+  onboardingPlanModules   OnboardingPlanModule[]
 }
 
 enum ContentType {
@@ -255,6 +274,8 @@ model Module {
 
 model Content {
   id           String        @id @default(uuid())
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
   moduleId     String
   module       Module        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   title        String
@@ -269,10 +290,14 @@ model Content {
   createdBy    User?         @relation("ContentCreator", fields: [createdById], references: [id])
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+
+  @@index([tenantId])
 }
 
 model ProgressLog {
   id             String   @id @default(uuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
   userId         String
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   contentId      String
@@ -285,10 +310,13 @@ model ProgressLog {
 
   @@unique([userId, contentId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 model Enrollment {
   id          String           @id @default(uuid())
+  tenantId    String
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
   userId      String
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   moduleId    String
@@ -305,12 +333,15 @@ model Enrollment {
   @@unique([userId, moduleId])
   @@index([userId])
   @@index([moduleId])
+  @@index([tenantId])
 }
 
 // ─── Quiz Engine ─────────────────────────────────────────────────────────────
 
 model Quiz {
   id               String        @id @default(uuid())
+  tenantId         String
+  tenant           Tenant        @relation(fields: [tenantId], references: [id])
   moduleId         String?
   module           Module?       @relation(fields: [moduleId], references: [id], onDelete: SetNull)
   title            String
@@ -324,10 +355,14 @@ model Quiz {
   attempts         QuizAttempt[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+
+  @@index([tenantId])
 }
 
 model Question {
   id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
   quizId      String
   quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   text        String
@@ -340,10 +375,14 @@ model Question {
   difficulty  Int      @default(2) // 1=easy 2=medium 3=hard
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 model QuizAttempt {
   id           String    @id @default(uuid())
+  tenantId     String
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
   userId       String
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   quizId       String
@@ -360,6 +399,7 @@ model QuizAttempt {
   @@index([userId])
   @@index([quizId])
   @@index([userId, quizId, sectionIndex])
+  @@index([tenantId])
 }
 
 // ─── Career Paths ─────────────────────────────────────────────────────────────
@@ -387,6 +427,8 @@ model CareerPath {
 
 model CareerPathModule {
   id         String     @id @default(uuid())
+  tenantId   String
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
   pathId     String
   path       CareerPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
   moduleId   String
@@ -395,20 +437,26 @@ model CareerPathModule {
   isRequired Boolean    @default(true)
 
   @@unique([pathId, moduleId])
+  @@index([tenantId])
 }
 
 model CareerPathPrerequisite {
   id             String     @id @default(uuid())
+  tenantId       String
+  tenant         Tenant     @relation(fields: [tenantId], references: [id])
   pathId         String
   path           CareerPath @relation("PathPrereqs", fields: [pathId], references: [id], onDelete: Cascade)
   prerequisiteId String
   prerequisite   CareerPath @relation("RequiredByPath", fields: [prerequisiteId], references: [id], onDelete: Cascade)
 
   @@unique([pathId, prerequisiteId])
+  @@index([tenantId])
 }
 
 model CareerPathEnrollment {
   id          String           @id @default(uuid())
+  tenantId    String
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
   userId      String
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   pathId      String
@@ -422,6 +470,7 @@ model CareerPathEnrollment {
 
   @@unique([userId, pathId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 // ─── Knowledge Base ───────────────────────────────────────────────────────────
@@ -448,6 +497,8 @@ model KbArticle {
 
 model KbArticleView {
   id        String    @id @default(uuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
   articleId String
   article   KbArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
   userId    String
@@ -456,6 +507,7 @@ model KbArticleView {
 
   @@index([articleId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 // ─── Gamification ─────────────────────────────────────────────────────────────
@@ -474,6 +526,8 @@ model Badge {
 
 model UserBadge {
   id       String   @id @default(uuid())
+  tenantId String
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
   userId   String
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   badgeId  String
@@ -482,10 +536,13 @@ model UserBadge {
 
   @@unique([userId, badgeId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 model PointTransaction {
   id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
   userId      String
   points      Int
   reason      String // "quiz_completion", "streak_bonus", "module_complete", etc.
@@ -493,12 +550,15 @@ model PointTransaction {
   createdAt   DateTime @default(now())
 
   @@index([userId])
+  @@index([tenantId])
 }
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 model Notification {
   id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
@@ -509,12 +569,15 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+  @@index([tenantId])
 }
 
 // ─── Certificates ────────────────────────────────────────────────────────────
 
 model Certificate {
   id          String      @id @default(uuid())
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
   userId      String
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   moduleId    String?
@@ -530,12 +593,15 @@ model Certificate {
 
   @@index([userId])
   @@index([certNumber])
+  @@index([tenantId])
 }
 
 // ─── Module Feedback ─────────────────────────────────────────────────────────
 
 model ModuleFeedback {
   id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   moduleId  String
   module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   userId    String
@@ -546,6 +612,7 @@ model ModuleFeedback {
 
   @@unique([moduleId, userId])
   @@index([moduleId])
+  @@index([tenantId])
 }
 
 // ─── Onboarding ──────────────────────────────────────────────────────────────
@@ -582,6 +649,8 @@ model OnboardingPlan {
 
 model OnboardingPlanModule {
   id              String         @id @default(uuid())
+  tenantId        String
+  tenant          Tenant         @relation(fields: [tenantId], references: [id])
   planId          String
   plan            OnboardingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
   moduleId        String
@@ -593,10 +662,13 @@ model OnboardingPlanModule {
 
   @@unique([planId, moduleId])
   @@index([planId])
+  @@index([tenantId])
 }
 
 model UserOnboarding {
   id            String           @id @default(uuid())
+  tenantId      String
+  tenant        Tenant           @relation(fields: [tenantId], references: [id])
   userId        String
   user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   planId        String
@@ -612,12 +684,15 @@ model UserOnboarding {
   @@unique([userId, planId])
   @@index([userId])
   @@index([status])
+  @@index([tenantId])
 }
 
 // ─── Analytics ────────────────────────────────────────────────────────────────
 
 model UserSession {
   id         String            @id @default(uuid())
+  tenantId   String
+  tenant     Tenant            @relation(fields: [tenantId], references: [id])
   userId     String
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   startedAt  DateTime          @default(now())
@@ -629,10 +704,14 @@ model UserSession {
   activities UserActivityLog[]
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
+
+  @@index([tenantId])
 }
 
 model UserActivityLog {
   id          String        @id @default(uuid())
+  tenantId    String
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
   userId      String
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   sessionId   String?
@@ -645,6 +724,7 @@ model UserActivityLog {
 
   @@index([userId, createdAt])
   @@index([event, createdAt])
+  @@index([tenantId])
 }
 
 // ─── Approval workflow, versioning & acknowledgment (source de vérité) ────────

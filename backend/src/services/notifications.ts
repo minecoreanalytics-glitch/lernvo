@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prisma'
+import { getTenantId } from '../utils/tenantContext'
 import { EmailService } from './email'
 
 export class NotificationService {
@@ -6,6 +7,7 @@ export class NotificationService {
     EmailService.sendWelcome(userId, tempPassword).catch(() => {})
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'welcome',
         title: 'Bienvenue !',
@@ -24,6 +26,7 @@ export class NotificationService {
     EmailService.sendAssignmentReminder(userId, moduleTitle, dueAt).catch(() => {})
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'reminder',
         title: 'Rappel de devoir',
@@ -36,6 +39,7 @@ export class NotificationService {
   static async sendOverdueAlert(userId: string, moduleTitle: string) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'deadline',
         title: 'Devoir en retard',
@@ -49,6 +53,7 @@ export class NotificationService {
     const status = passed ? 'Réussi' : 'Échoué'
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'quiz',
         title: 'Résultat de quiz',
@@ -61,6 +66,7 @@ export class NotificationService {
   static async sendBadgeEarned(userId: string, badgeName: string, badgeIcon: string) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'badge',
         title: 'Nouveau badge !',
@@ -76,6 +82,7 @@ export class NotificationService {
     }
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'certificate',
         title: 'Certificat obtenu',
@@ -88,6 +95,7 @@ export class NotificationService {
   static async sendStreakMilestone(userId: string, days: number) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'streak',
         title: 'Série maintenue !',
@@ -100,6 +108,7 @@ export class NotificationService {
   static async sendModuleCompleted(userId: string, moduleTitle: string, pointsEarned: number) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'completion',
         title: 'Module complété',
@@ -114,6 +123,7 @@ export class NotificationService {
   static async sendOnboardingStarted(userId: string, planName: string, expectedDays: number) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'onboarding',
         title: 'Bienvenue — Votre plan d\'intégration est prêt !',
@@ -126,6 +136,7 @@ export class NotificationService {
   static async sendNewHireAlert(managerId: string, employeeName: string, planName: string, moduleCount: number) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId: managerId,
         type: 'onboarding',
         title: 'Nouvel employé en intégration',
@@ -138,6 +149,7 @@ export class NotificationService {
   static async sendOnboardingCompleted(userId: string, planName: string) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'onboarding',
         title: 'Intégration terminée !',
@@ -150,6 +162,7 @@ export class NotificationService {
   static async sendOnboardingCompletedManager(managerId: string, employeeName: string, planName: string) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId: managerId,
         type: 'onboarding',
         title: 'Intégration terminée',
@@ -162,6 +175,7 @@ export class NotificationService {
   static async sendOnboardingOverdue(userId: string, planName: string) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         type: 'onboarding',
         title: 'Intégration en retard',
@@ -174,6 +188,7 @@ export class NotificationService {
   static async sendOnboardingOverdueManager(managerId: string, employeeName: string, planName: string) {
     return prisma.notification.create({
       data: {
+        tenantId: getTenantId(),
         userId: managerId,
         type: 'onboarding',
         title: 'Intégration en retard',

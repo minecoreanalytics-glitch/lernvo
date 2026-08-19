@@ -5,6 +5,7 @@
  */
 
 import { prisma } from '../utils/prisma'
+import { getTenantId } from '../utils/tenantContext'
 import { NotificationService } from './notifications'
 import { logger } from '../utils/logger'
 import type { Role } from '@prisma/client'
@@ -37,6 +38,7 @@ export class OnboardingService {
       const userOnboarding = await prisma.userOnboarding.upsert({
         where: { userId_planId: { userId, planId: plan.id } },
         create: {
+          tenantId: getTenantId(),
           userId,
           planId: plan.id,
           status: 'IN_PROGRESS',
@@ -54,6 +56,7 @@ export class OnboardingService {
         await prisma.enrollment.upsert({
           where: { userId_moduleId: { userId, moduleId: pm.moduleId } },
           create: {
+            tenantId: getTenantId(),
             userId,
             moduleId: pm.moduleId,
             status: 'NOT_STARTED',

@@ -3,6 +3,7 @@
  * Generates professional certificates using SVG → HTML approach (no heavy deps)
  */
 import { prisma } from '../utils/prisma'
+import { getTenantId } from '../utils/tenantContext'
 import { pushCertificate } from './hr/connectors'
 import fs from 'fs'
 import path from 'path'
@@ -179,6 +180,7 @@ export class CertificateService {
     // Save to DB
     const cert = await prisma.certificate.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         moduleId,
         title: module.title,
@@ -227,6 +229,7 @@ export class CertificateService {
 
     const cert = await prisma.certificate.create({
       data: {
+        tenantId: getTenantId(),
         userId,
         pathId,
         title: careerPath.title,

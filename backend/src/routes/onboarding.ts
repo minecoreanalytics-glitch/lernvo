@@ -126,6 +126,7 @@ router.post('/plans/generate',
           for (const section of generated.module.sections) {
             await prisma.content.create({
               data: {
+                tenantId: getTenantId(),
                 moduleId: dbModule.id,
                 title: section.title,
                 type: 'TEXT',
@@ -140,6 +141,7 @@ router.post('/plans/generate',
           // Create quiz
           const quiz = await prisma.quiz.create({
             data: {
+              tenantId: getTenantId(),
               moduleId: dbModule.id,
               title: generated.quiz.title,
               description: generated.quiz.description,
@@ -153,6 +155,7 @@ router.post('/plans/generate',
           for (const q of generated.quiz.questions) {
             await prisma.question.create({
               data: {
+                tenantId: getTenantId(),
                 quizId: quiz.id,
                 text: q.text,
                 options: q.options,
@@ -187,6 +190,7 @@ router.post('/plans/generate',
           tenantId: getTenantId(),
           modules: autoCreateModules ? {
             create: createdModules.map(m => ({
+              tenantId: getTenantId(),
               moduleId: m.moduleId,
               dueDaysFromHire: m.dueDaysFromHire,
               order: m.order,
@@ -230,7 +234,8 @@ router.get('/plans', authorize('PLATFORM_MANAGER', 'HR'), async (_req, res) => {
       orderBy: { createdAt: 'desc' }
     })
     res.json(plans)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch onboarding plans' })
   }
 })
@@ -257,7 +262,8 @@ router.get('/plans/:id', authorize('PLATFORM_MANAGER', 'HR'), async (req, res) =
     })
     if (!plan) return res.status(404).json({ error: 'Plan not found' })
     res.json(plan)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch plan' })
   }
 })
@@ -290,7 +296,8 @@ router.post('/plans',
         }
       })
       res.status(201).json(plan)
-    } catch {
+    } catch (e) {
+      if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
       res.status(500).json({ error: 'Failed to create plan' })
     }
   }
@@ -336,7 +343,8 @@ router.put('/plans/:id',
       })
 
       res.json(updated)
-    } catch {
+    } catch (e) {
+      if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
       res.status(500).json({ error: 'Failed to update plan' })
     }
   }
@@ -347,7 +355,8 @@ router.delete('/plans/:id', authorize('PLATFORM_MANAGER'), async (req, res) => {
   try {
     await prisma.onboardingPlan.delete({ where: { id: req.params.id } })
     res.json({ message: 'Plan deleted' })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to delete plan' })
   }
 })
@@ -422,7 +431,8 @@ router.get('/my', async (req, res) => {
         phases: Object.fromEntries(phases)
       }
     })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch onboarding' })
   }
 })
@@ -460,7 +470,8 @@ router.get('/team',
       })
 
       res.json(onboardings)
-    } catch {
+    } catch (e) {
+      if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
       res.status(500).json({ error: 'Failed to fetch team onboarding' })
     }
   }
@@ -490,7 +501,8 @@ router.get('/stats',
         averageProgress: Math.round(avgProgress._avg.progressPct ?? 0),
         activePlans
       })
-    } catch {
+    } catch (e) {
+      if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
       res.status(500).json({ error: 'Failed to fetch onboarding stats' })
     }
   }
@@ -503,7 +515,8 @@ router.post('/check-overdue',
     try {
       const result = await OnboardingService.checkOverdue()
       res.json(result)
-    } catch {
+    } catch (e) {
+      if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
       res.status(500).json({ error: 'Failed to check overdue' })
     }
   }

@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prisma'
+import { getTenantId } from '../utils/tenantContext'
 import { redis } from '../utils/redis'
 import { BadgeType } from '@prisma/client'
 
@@ -7,12 +8,13 @@ export const GamificationService = {
     if (points <= 0) return
 
     await prisma.$transaction([
-      prisma.pointTransaction.create({ data: { userId, points, reason, referenceId } }),
+      prisma.pointTransaction.create({ data: { tenantId: getTenantId(), userId, points, reason, referenceId } }),
       prisma.user.update({ where: { id: userId }, data: { totalPoints: { increment: points } } })
     ])
 
     // Invalidate leaderboard cache
-    await redis.del('leaderboard:global')
+    // invalidate every cached leaderboard variant of this tenant
+    try { const keys = await redis.keys(`leaderboard:${getTenantId()}:*`); if (keys.length) await redis.del(...keys) } catch { /* cache only */ }
 
     // Check badge conditions
     await this.checkAndAwardBadges(userId, reason)
@@ -99,10 +101,11 @@ export const GamificationService = {
       }
 
       if (earned) {
-        await prisma.userBadge.create({ data: { userId, badgeId: badge.id } })
+        await prisma.userBadge.create({ data: { tenantId: getTenantId(), userId, badgeId: badge.id } })
         await this.awardPoints(userId, badge.points, `badge_${badge.id}`)
         await prisma.notification.create({
           data: {
+            tenantId: getTenantId(),
             userId,
             title: `Badge unlocked: ${badge.name}!`,
             body: badge.description,
@@ -115,7 +118,7 @@ export const GamificationService = {
   },
 
   async getLeaderboard(limit = 20, departmentId?: string) {
-    const cacheKey = `leaderboard:global:${departmentId || 'all'}`
+    const cacheKey = `leaderboard:${getTenantId()}:${departmentId || 'all'}`
     const cached = await redis.get(cacheKey)
     if (cached) return JSON.parse(cached)
 

@@ -135,7 +135,7 @@ router.get('/:id', async (req, res) => {
     }
 
     const isAdmin = ['PLATFORM_MANAGER', 'HR'].includes(req.user!.role)
-    if (!isAdmin && !isInlineMode) {
+    if (!isAdmin) { // answer key never leaves the server for learners (inline mode included — grading is server-side)
       questions = questions.map(q => ({
         ...q,
         options: (q.options as Array<{ id: string; text: string; isCorrect: boolean }>).map(o => ({

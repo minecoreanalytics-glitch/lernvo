@@ -1,11 +1,19 @@
 import { PrismaClient } from '@prisma/client'
 import { getCtx, isSuperAdmin } from './tenantContext'
 
+// Every business model carries tenantId and is scoped here. Deliberately NOT scoped:
+// Tenant (the root), Badge (platform-wide catalogue), RefreshToken (looked up by unguessable
+// token before any tenant context exists; ownership is verified through the user).
+// CI (scripts/check-tenant-scope.sh) fails if a model with tenantId is missing from this set.
 const SCOPED = new Set([
   'Department', 'User', 'Category', 'Module',
   'CareerPath', 'KbArticle', 'OnboardingPlan',
   'ApprovalItem', 'ContentVersion', 'Acknowledgment',
-  'HrConnector', 'HrSyncRun', 'ChatQuestionLog'
+  'HrConnector', 'HrSyncRun', 'ChatQuestionLog',
+  'Content', 'Enrollment', 'Quiz', 'Question', 'QuizAttempt', 'ProgressLog', 'Certificate',
+  'Notification', 'PointTransaction', 'UserBadge', 'KbArticleView', 'ModuleFeedback',
+  'UserSession', 'UserActivityLog', 'UserOnboarding', 'CareerPathModule', 'CareerPathEnrollment',
+  'CareerPathPrerequisite', 'OnboardingPlanModule'
 ])
 
 /** Lowercase only the first character of a model name to get the delegate key. */

@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../utils/prisma'
+import { getTenantId } from '../utils/tenantContext'
 import { authenticate, authorize } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 
@@ -103,7 +104,8 @@ router.get('/', async (req, res) => {
     }))
 
     res.json({ modules: enriched, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch modules' })
   }
 })
@@ -151,7 +153,8 @@ router.get('/:id', async (req, res) => {
       averageRating: ratingAgg._avg.rating ?? null,
       feedbackCount: ratingAgg._count.rating
     })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch module' })
   }
 })
@@ -163,7 +166,8 @@ router.post('/', authorize('PLATFORM_MANAGER', 'HR'), validate(ModuleSchema), as
       data: { ...req.body, createdById: req.user!.userId }
     })
     res.status(201).json(module)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to create module' })
   }
 })
@@ -173,7 +177,8 @@ router.put('/:id', authorize('PLATFORM_MANAGER', 'HR'), validate(ModuleSchema.pa
   try {
     const module = await prisma.module.update({ where: { id: req.params.id }, data: req.body })
     res.json(module)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to update module' })
   }
 })
@@ -183,7 +188,8 @@ router.delete('/:id', authorize('PLATFORM_MANAGER'), async (req, res) => {
   try {
     await prisma.module.delete({ where: { id: req.params.id } })
     res.json({ message: 'Module deleted' })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to delete module' })
   }
 })
@@ -209,7 +215,8 @@ router.get('/:id/enrollments', authorize('PLATFORM_MANAGER', 'HR', 'MANAGER', 'S
       orderBy: { createdAt: 'desc' }
     })
     res.json(enrollments)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch enrollments' })
   }
 })
@@ -219,11 +226,12 @@ router.post('/:id/enroll', async (req, res) => {
   try {
     const enrollment = await prisma.enrollment.upsert({
       where: { userId_moduleId: { userId: req.user!.userId, moduleId: req.params.id } },
-      create: { userId: req.user!.userId, moduleId: req.params.id, status: 'IN_PROGRESS', startedAt: new Date() },
+      create: { tenantId: getTenantId(), userId: req.user!.userId, moduleId: req.params.id, status: 'IN_PROGRESS', startedAt: new Date() },
       update: { status: 'IN_PROGRESS', startedAt: new Date() }
     })
     res.json(enrollment)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to enroll' })
   }
 })
@@ -251,7 +259,8 @@ router.get('/:id/feedback', async (req, res) => {
       averageRating: ratingAgg._avg.rating ?? null,
       feedbackCount: ratingAgg._count.rating
     })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch feedback' })
   }
 })
@@ -273,6 +282,7 @@ router.post('/:id/feedback', validate(FeedbackSchema), async (req, res) => {
         moduleId_userId: { moduleId: req.params.id, userId: req.user!.userId }
       },
       create: {
+        tenantId: getTenantId(),
         moduleId: req.params.id,
         userId: req.user!.userId,
         rating: req.body.rating,
@@ -288,7 +298,8 @@ router.post('/:id/feedback', validate(FeedbackSchema), async (req, res) => {
     })
 
     res.status(201).json(feedback)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to submit feedback' })
   }
 })

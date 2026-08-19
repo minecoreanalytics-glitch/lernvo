@@ -33,7 +33,7 @@ api.interceptors.response.use(
         if (!refreshPromise) {
           refreshPromise = axios.post('/api/auth/refresh', { refreshToken })
             .then(({ data }) => {
-              if (user) setAuth(user, data.accessToken, refreshToken)
+              if (user) setAuth(user, data.accessToken, data.refreshToken || refreshToken)
               return data.accessToken as string
             })
             .finally(() => { refreshPromise = null })

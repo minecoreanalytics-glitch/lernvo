@@ -153,7 +153,8 @@ router.get('/', async (req, res) => {
       departments: toResult(departments.map(d => ({ ...d, title: d.name })), 'department', d => `/departments/${d.id}`),
       paths: toResult(paths, 'path', p => `/career/${p.id}`)
     })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Search failed' })
   }
 })

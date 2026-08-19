@@ -2,11 +2,11 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../utils/prisma'
+import { getTenantId } from '../utils/tenantContext'
 import { authenticate, authorize } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 import { NotificationService } from '../services/notifications'
 import { logger } from '../utils/logger'
-import { hasSectionIndexColumn } from '../utils/quizAttempts'
 
 const router = Router()
 router.use(authenticate)
@@ -53,12 +53,11 @@ router.get('/', async (req, res) => {
       (e.module as { quizzes: Array<{ id: string }> }).quizzes.map((q: { id: string }) => q.id)
     )
 
-    const sectionIndexOk = await hasSectionIndexColumn()
     const quizAttempts = await prisma.quizAttempt.findMany({
       where: {
         userId,
         passed: true,
-        ...(sectionIndexOk ? { sectionIndex: null } : {}),
+        sectionIndex: null,
         quizId: { in: quizIds }
       },
       select: { quizId: true }
@@ -111,6 +110,7 @@ router.post('/',
           prisma.enrollment.upsert({
             where: { userId_moduleId: { userId, moduleId } },
             create: {
+              tenantId: getTenantId(),
               userId,
               moduleId,
               ...(dueDate ? { dueAt: dueDate } : {}),
@@ -178,7 +178,8 @@ router.delete('/:enrollmentId',
       if (!enrollment) return
       await prisma.enrollment.delete({ where: { id: enrollment.id } })
       res.json({ message: 'Enrollment removed' })
-    } catch {
+    } catch (e) {
+      if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
       res.status(500).json({ error: 'Failed to remove enrollment' })
     }
   }
@@ -198,7 +199,8 @@ router.patch('/:enrollmentId/due',
         data: { dueAt: dueAt ? new Date(dueAt) : null }
       })
       res.json(updated)
-    } catch {
+    } catch (e) {
+      if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
       res.status(500).json({ error: 'Failed to update due date' })
     }
   }
@@ -221,7 +223,8 @@ router.get('/summary',
       ])
 
       res.json({ overdueCount, todayCount, totalAssigned })
-    } catch {
+    } catch (e) {
+      if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
       res.status(500).json({ error: 'Failed to fetch summary' })
     }
   }
@@ -267,6 +270,7 @@ router.post('/bulk',
           prisma.enrollment.upsert({
             where: { userId_moduleId: { userId: u.id, moduleId } },
             create: {
+              tenantId: getTenantId(),
               userId: u.id,
               moduleId,
               dueAt: dueDate,

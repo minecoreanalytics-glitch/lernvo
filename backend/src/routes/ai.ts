@@ -207,6 +207,7 @@ router.post('/generate-module', aiGenerationLimiter, upload.single('file'), reen
         createdById: req.user!.userId,
         contents: {
           create: generated.module.sections.map(s => ({
+            tenantId: getTenantId(),
             title: s.title,
             type: 'TEXT' as const,
             body: s.body,
@@ -225,6 +226,7 @@ router.post('/generate-module', aiGenerationLimiter, upload.single('file'), reen
     // 3. Save quiz to DB
     const quiz = await prisma.quiz.create({
       data: {
+        tenantId: getTenantId(),
         moduleId: module.id,
         title: generated.quiz.title,
         description: generated.quiz.description,
@@ -233,6 +235,7 @@ router.post('/generate-module', aiGenerationLimiter, upload.single('file'), reen
         status: autoPublish ? 'PUBLISHED' : 'DRAFT',
         questions: {
           create: generated.quiz.questions.map(q => ({
+            tenantId: getTenantId(),
             text: q.text,
             options: q.options,
             explanation: q.explanation,
@@ -344,6 +347,7 @@ router.post('/save-preview', validate(SavePreviewSchema), async (req, res) => {
 
     const quiz = await prisma.quiz.create({
       data: {
+        tenantId: getTenantId(),
         moduleId: module.id,
         title: quizData.title,
         description: quizData.description,
@@ -385,7 +389,7 @@ router.post('/save-preview', validate(SavePreviewSchema), async (req, res) => {
       await Promise.all(members.map(u =>
         prisma.enrollment.upsert({
           where: { userId_moduleId: { userId: u.id, moduleId: module.id } },
-          create: { userId: u.id, moduleId: module.id, status: 'IN_PROGRESS', startedAt: new Date() },
+          create: { tenantId: getTenantId(), userId: u.id, moduleId: module.id, status: 'IN_PROGRESS', startedAt: new Date() },
           update: {}
         })
       ))
@@ -457,6 +461,7 @@ router.post('/generate-quiz', aiGenerationLimiter, validate(QuizGenSchema), asyn
 
     const quiz = await prisma.quiz.create({
       data: {
+        tenantId: getTenantId(),
         moduleId,
         title: generated.title,
         description: generated.description,
@@ -465,6 +470,7 @@ router.post('/generate-quiz', aiGenerationLimiter, validate(QuizGenSchema), asyn
         status: 'DRAFT',
         questions: {
           create: generated.questions.map(q => ({
+            tenantId: getTenantId(),
             text: q.text,
             options: q.options,
             explanation: q.explanation,

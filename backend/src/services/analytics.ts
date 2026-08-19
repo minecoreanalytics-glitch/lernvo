@@ -1,10 +1,11 @@
 import { prisma } from '../utils/prisma'
+import { getTenantId } from '../utils/tenantContext'
 import { ActivityEvent, Prisma } from '@prisma/client'
 
 export class AnalyticsService {
   static async startSession(userId: string, entryPage: string, device?: string): Promise<string> {
     const session = await prisma.userSession.create({
-      data: { userId, entryPage, device, startedAt: new Date() }
+      data: { tenantId: getTenantId(), userId, entryPage, device, startedAt: new Date() }
     })
     await AnalyticsService.log(userId, session.id, ActivityEvent.SESSION_START, entryPage)
     return session.id
@@ -30,7 +31,7 @@ export class AnalyticsService {
     metadata?: Prisma.InputJsonValue
   ): Promise<void> {
     await prisma.userActivityLog.create({
-      data: { userId, sessionId, event, page, referenceId, metadata }
+      data: { tenantId: getTenantId(), userId, sessionId, event, page, referenceId, metadata }
     }).catch(() => {}) // fire-and-forget, never block request
   }
 

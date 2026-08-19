@@ -24,7 +24,6 @@ import aiRoutes from './routes/ai'
 import certificateRoutes from './routes/certificates'
 import reportRoutes from './routes/reports'
 import searchRoutes from './routes/search'
-import integrationRoutes from './routes/integrations'
 import analyticsRoutes from './routes/analytics'
 import onboardingRoutes from './routes/onboarding'
 import tenantRoutes from './routes/tenants'
@@ -33,6 +32,7 @@ import approvalRoutes from './routes/approvals'
 import hrRoutes from './routes/hr'
 import publicRoutes from './routes/public'
 import mcoreRoutes from './routes/mcore'
+import { mediaGuard } from './middleware/media'
 import { runDueConnectors } from './services/hr/connectors'
 import chatRoutes from './routes/chat'
 
@@ -49,9 +49,8 @@ app.set('trust proxy', 1)
 
 // ─── Security & Parsing ───────────────────────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
-// Uploaded media (videos, audio, files, certificates). Filenames are unguessable (uuid / cert number /
-// content-id+timestamp); served without auth so <video>/<audio> tags can load them. TODO: signed URLs.
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), { maxAge: '30d', immutable: true, index: false, dotfiles: 'deny' }))
+// Uploaded media (videos, audio, files, certificates): cookie-authenticated + tenant-checked (middleware/media.ts)
+app.use('/uploads', mediaGuard, express.static(path.join(process.cwd(), 'uploads'), { maxAge: '30d', immutable: true, index: false, dotfiles: 'deny', setHeaders: (r) => { r.setHeader('X-Content-Type-Options', 'nosniff'); r.setHeader('Content-Disposition', 'inline') } }))
 // Public read API: mounted BEFORE the platform CORS policy (open CORS, GET only, its own rate limit)
 app.use('/api/public', express.json(), publicRoutes)
 app.use(cors({
@@ -67,10 +66,8 @@ app.use(express.urlencoded({ extended: true }))
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 1500, standardHeaders: true, legacyHeaders: false })
 // Auth: strict brute-force protection (20 attempts per 15min per IP)
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false })
-const integrationLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false })
 app.use('/api', limiter)
 app.use('/api/auth', authLimiter)
-app.use('/api/integrations', integrationLimiter)
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes)
@@ -90,7 +87,6 @@ app.use('/api/certificates', certificateRoutes)
 app.use('/api/reports', reportRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/search', searchRoutes)
-app.use('/api/integrations', integrationRoutes)
 app.use('/api/onboarding', onboardingRoutes)
 app.use('/api/tenants', tenantRoutes)
 app.use('/api/branding', brandingRoutes)

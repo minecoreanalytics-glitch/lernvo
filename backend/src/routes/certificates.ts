@@ -15,7 +15,8 @@ router.get('/verify/:certNumber', async (req, res) => {
     const result = await CertificateService.verify(req.params.certNumber)
     if (!result) return res.status(404).json({ error: 'Certificate not found' })
     res.json(result)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Verification failed' })
   }
 })
@@ -29,7 +30,8 @@ router.get('/', async (req, res) => {
   try {
     const certs = await CertificateService.getUserCertificates(req.user!.userId)
     res.json(certs)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch certificates' })
   }
 })
@@ -119,7 +121,8 @@ router.get('/:id/download', async (req, res) => {
     res.setHeader('Content-Type', 'image/svg+xml')
     res.setHeader('Content-Disposition', `attachment; filename="${cert.certNumber}.svg"`)
     fs.createReadStream(filepath).pipe(res)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to download certificate' })
   }
 })

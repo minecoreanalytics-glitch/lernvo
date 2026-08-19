@@ -72,7 +72,8 @@ router.get('/groups', async (_req, res) => {
       include: { _count: { select: { kbArticles: true } } }
     })
     res.json(groups)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch groups' })
   }
 })
@@ -102,7 +103,8 @@ router.put('/groups/:id', authorize('PLATFORM_MANAGER', 'HR'), async (req, res) 
       data: req.body
     })
     res.json(group)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to update group' })
   }
 })
@@ -141,7 +143,8 @@ router.get('/', async (req, res) => {
     ])
 
     res.json({ articles, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch articles' })
   }
 })
@@ -225,7 +228,7 @@ router.get('/:slug', async (req, res) => {
 
     // Log view
     await prisma.kbArticleView.create({
-      data: { articleId: article.id, userId: req.user!.userId }
+      data: { tenantId: getTenantId(), articleId: article.id, userId: req.user!.userId }
     }).catch(() => {}) // non-blocking
 
     // Employees always read the LAST APPROVED version while a newer draft is pending
@@ -239,7 +242,8 @@ router.get('/:slug', async (req, res) => {
     }
 
     res.json(article)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch article' })
   }
 })
@@ -268,7 +272,8 @@ router.put('/:slug', authorize('PLATFORM_MANAGER', 'HR'), validate(ArticleSchema
       await Approval.markEdited('KB_ARTICLE', article.id).catch(() => {})
     }
     res.json(article)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to update article' })
   }
 })
@@ -278,7 +283,8 @@ router.delete('/:slug', authorize('PLATFORM_MANAGER'), async (req, res) => {
   try {
     await prisma.kbArticle.delete({ where: { slug: req.params.slug } })
     res.json({ message: 'Article deleted' })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to delete article' })
   }
 })

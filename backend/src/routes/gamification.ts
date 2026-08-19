@@ -23,7 +23,8 @@ router.get('/leaderboard', async (req, res) => {
 
     const leaderboard = await GamificationService.getLeaderboard(parseInt(limit), deptFilter)
     res.json(leaderboard)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch leaderboard' })
   }
 })
@@ -54,7 +55,8 @@ router.get('/my-stats', async (req, res) => {
     }) + 1
 
     res.json({ ...user, rank, recentPoints, badges })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch stats' })
   }
 })
@@ -64,7 +66,8 @@ router.get('/badges', async (_req, res) => {
   try {
     const badges = await prisma.badge.findMany({ orderBy: { points: 'asc' } })
     res.json(badges)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch badges' })
   }
 })
@@ -74,7 +77,8 @@ router.post('/badges', authorize('PLATFORM_MANAGER'), async (req, res) => {
   try {
     const badge = await prisma.badge.create({ data: req.body })
     res.status(201).json(badge)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to create badge' })
   }
 })
@@ -84,7 +88,8 @@ router.post('/streak', async (req, res) => {
   try {
     const streak = await GamificationService.updateStreak(req.user!.userId)
     res.json({ streak })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to update streak' })
   }
 })

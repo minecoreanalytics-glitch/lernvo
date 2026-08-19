@@ -56,6 +56,7 @@ export async function reject(entityType: ApprovalEntity, entityId: string, userI
   if (item.submittedById && item.submittedById !== userId) {
     const ent = await loadEntity(entityType, entityId)
     await prisma.notification.create({ data: {
+      tenantId: getTenantId(),
       userId: item.submittedById, type: 'approval',
       title: 'Modifications refusées', body: `« ${ent?.title ?? 'Élément'} » : ${reason}`, link: ent?.link ?? null
     } })
@@ -95,6 +96,7 @@ export async function approve(entityType: ApprovalEntity, entityId: string, appr
     const isKb = entityType === 'KB_ARTICLE'
     if (employees.length) {
       await prisma.notification.createMany({ data: employees.map(u => ({
+        tenantId: getTenantId(),
         userId: u.id, type: 'approval',
         title: isKb ? `À lire et valider : ${ent.title} (v${nextVersion})` : `Nouvelle formation approuvée : ${ent.title}`,
         body: isKb ? 'Une nouvelle version approuvée est disponible. Lisez-la et confirmez que vous l\'avez comprise.' : 'Une nouvelle version approuvée est disponible.',
@@ -104,6 +106,7 @@ export async function approve(entityType: ApprovalEntity, entityId: string, appr
     if (managers.length) {
       const approver = await prisma.user.findFirst({ where: { id: approverId }, select: { firstName: true, lastName: true } })
       await prisma.notification.createMany({ data: managers.map(u => ({
+        tenantId: getTenantId(),
         userId: u.id, type: 'approval',
         title: `Approuvé : ${ent.title} (v${nextVersion})`,
         body: `Approuvé par ${approver ? `${approver.firstName} ${approver.lastName}` : 'un administrateur'}${note ? ` — ${note}` : ''}.`,

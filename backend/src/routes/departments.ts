@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../utils/prisma'
+import { getTenantId } from '../utils/tenantContext'
 import { authenticate, authorize } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 
@@ -64,7 +65,8 @@ router.get('/', async (req, res) => {
       orderBy: { order: 'asc' }
     })
     res.json(departments)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch departments' })
   }
 })
@@ -110,7 +112,8 @@ router.get('/:id', async (req, res) => {
     })
     if (!department) return res.status(404).json({ error: 'Department not found' })
     res.json(department)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch department' })
   }
 })
@@ -127,7 +130,8 @@ router.get('/:id/members', async (req, res) => {
       orderBy: { firstName: 'asc' }
     })
     res.json(users)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch department members' })
   }
 })
@@ -148,13 +152,14 @@ router.post('/:id/modules', authorize('PLATFORM_MANAGER', 'HR', 'MANAGER', 'SUPE
     await Promise.all(members.map(u =>
       prisma.enrollment.upsert({
         where: { userId_moduleId: { userId: u.id, moduleId } },
-        create: { userId: u.id, moduleId, status: 'IN_PROGRESS', startedAt: new Date() },
+        create: { tenantId: getTenantId(), userId: u.id, moduleId, status: 'IN_PROGRESS', startedAt: new Date() },
         update: {}
       })
     ))
 
     res.status(201).json({ enrolled: members.length })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to assign module to department' })
   }
 })
@@ -164,7 +169,8 @@ router.delete('/:id/modules/:moduleId', authorize('PLATFORM_MANAGER', 'HR', 'MAN
   try {
     await prisma.module.update({ where: { id: req.params.moduleId }, data: { departmentId: null } })
     res.json({ message: 'Module removed from department' })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to remove module from department' })
   }
 })
@@ -185,7 +191,8 @@ router.put('/:id', authorize('PLATFORM_MANAGER', 'HR'), validate(DepartmentSchem
   try {
     const dept = await prisma.department.update({ where: { id: req.params.id }, data: req.body })
     res.json(dept)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to update department' })
   }
 })
@@ -195,7 +202,8 @@ router.delete('/:id', authorize('PLATFORM_MANAGER'), async (req, res) => {
   try {
     await prisma.department.delete({ where: { id: req.params.id } })
     res.json({ message: 'Department deleted' })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to delete department' })
   }
 })

@@ -71,10 +71,11 @@ beforeAll(async () => {
       } as any
     })
 
-    // Content is NOT scoped — use superAdmin context for setup
+    // Content is scoped too — superAdmin context with explicit tenantId for setup
     const contentB = await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
       return (prisma as any).content.create({
         data: {
+          tenantId: tenantBId,
           moduleId: moduleB.id,
           title: 'Video B',
           type: 'VIDEO',

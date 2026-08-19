@@ -1,13 +1,15 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
+import { sha256 } from '../utils/crypto'
 import jwt from 'jsonwebtoken'
-import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '../utils/prisma'
 import { validate } from '../middleware/validate'
 import { authenticate } from '../middleware/auth'
 import { tenantStore } from '../utils/tenantContext'
 import { tenantSlugFromRequest } from '../utils/tenantHost'
+import { MEDIA_COOKIE, signMediaCookie, mediaCookieOptions } from '../middleware/media'
 import { logger } from '../utils/logger'
 
 const router = Router()
@@ -31,9 +33,11 @@ function signAccess(userId: string, email: string, role: string, tenantId: strin
   return jwt.sign({ userId, email, role, tenantId, departmentId }, process.env.JWT_SECRET!, { expiresIn: '15m' })
 }
 
+// Refresh tokens: random 256-bit, stored HASHED (sha256), rotated on every use, revoked on password change (LRN-11)
 function signRefresh() {
-  return uuidv4()
+  return randomBytes(32).toString('base64url')
 }
+const hashToken = (t: string) => sha256(t)
 
 // POST /api/auth/signup — public, creates PENDING tenant + inactive PLATFORM_MANAGER
 router.post('/signup', validate(SignupSchema), async (req, res) => {
@@ -120,10 +124,11 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
 
     await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
-      await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id, expiresAt } })
+      await prisma.refreshToken.create({ data: { token: hashToken(refreshToken), userId: user.id, expiresAt } })
       await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
     })
 
+    res.cookie(MEDIA_COOKIE, signMediaCookie({ userId: user.id, tenantId: user.tenantId, superAdmin: user.role === 'SUPER_ADMIN' }), mediaCookieOptions())
     res.json({
       accessToken,
       refreshToken,
@@ -150,11 +155,11 @@ router.post('/refresh', validate(RefreshSchema), async (req, res) => {
   try {
     const { refreshToken } = req.body
     const stored = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
+      where: { token: hashToken(refreshToken) },
       include: { user: true }
     })
 
-    if (!stored || stored.expiresAt < new Date()) {
+    if (!stored || stored.expiresAt < new Date() || !stored.user.isActive) {
       return res.status(401).json({ error: 'Invalid or expired refresh token' })
     }
 
@@ -165,9 +170,17 @@ router.post('/refresh', validate(RefreshSchema), async (req, res) => {
         await prisma.tenant.findUnique({ where: { id: stored.user.tenantId }, select: { slug: true } }))
       if (!t || t.slug !== hostSlug) return res.status(401).json({ error: 'Invalid or expired refresh token' })
     }
+    // Rotate: the presented token is consumed, a new one is issued (reuse of the old one → 401)
+    const nextRefresh = signRefresh()
+    await prisma.$transaction([
+      prisma.refreshToken.delete({ where: { id: stored.id } }),
+      prisma.refreshToken.create({ data: { token: hashToken(nextRefresh), userId: stored.user.id, expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } }),
+    ])
     const accessToken = signAccess(stored.user.id, stored.user.email, stored.user.role, stored.user.tenantId, stored.user.departmentId ?? null)
-    res.json({ accessToken })
-  } catch {
+    res.cookie(MEDIA_COOKIE, signMediaCookie({ userId: stored.user.id, tenantId: stored.user.tenantId, superAdmin: stored.user.role === 'SUPER_ADMIN' }), mediaCookieOptions())
+    res.json({ accessToken, refreshToken: nextRefresh })
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Token refresh failed' })
   }
 })
@@ -179,13 +192,15 @@ router.post('/logout', authenticate, async (req, res) => {
     if (refreshToken) {
       // Only delete tokens belonging to the authenticated user
       await prisma.refreshToken.deleteMany({
-        where: { token: refreshToken, userId: req.user!.userId }
+        where: { token: hashToken(refreshToken), userId: req.user!.userId }
       })
     }
     // Also revoke all other tokens for this user to force re-login on all devices
     await prisma.refreshToken.deleteMany({ where: { userId: req.user!.userId } })
+    res.clearCookie(MEDIA_COOKIE, { path: '/uploads' })
     res.json({ message: 'Logged out' })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Logout failed' })
   }
 })
@@ -197,8 +212,8 @@ router.post('/change-password', authenticate, async (req, res) => {
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: 'Mot de passe actuel et nouveau requis' })
     }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' })
+    if (newPassword.length < 10) {
+      return res.status(400).json({ error: 'Le nouveau mot de passe doit contenir au moins 10 caractères' })
     }
 
     const user = await prisma.user.findUnique({ where: { id: req.user!.userId } })
@@ -209,9 +224,12 @@ router.post('/change-password', authenticate, async (req, res) => {
 
     const passwordHash = await bcrypt.hash(newPassword, 12)
     await prisma.user.update({ where: { id: user.id }, data: { passwordHash } })
+    // Revoke every session: a password change must end sessions an attacker may hold
+    await prisma.refreshToken.deleteMany({ where: { userId: user.id } })
 
     res.json({ message: 'Mot de passe mis à jour' })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to change password' })
   }
 })
@@ -229,7 +247,8 @@ router.get('/me', authenticate, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' })
     const { passwordHash: _, ...safe } = user
     res.json(safe)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch profile' })
   }
 })

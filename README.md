@@ -23,9 +23,14 @@ subdomain (`<slug>.lernvo.com`), branding, users and data.
 
 ## Multi-tenancy in one paragraph
 
-Every business row carries a `tenantId`. A Prisma client extension (`backend/src/utils/prismaTenant.ts`)
-injects the tenant from the request context (`AsyncLocalStorage`, filled from the JWT) into **every**
-query — you never filter by tenant by hand, and a query outside a tenant context fails closed.
+Every business row carries a `tenantId` (all 32 business models; only `Tenant`, the platform-wide
+`Badge` catalogue and `RefreshToken` are global — enforced by CI `scripts/check-tenant-scope.sh`).
+A Prisma client extension (`backend/src/utils/prismaTenant.ts`) injects the tenant from the request
+context (`AsyncLocalStorage`, filled from the JWT) into **every** query on those models — you never
+filter by tenant by hand, and a query outside a tenant context fails closed. Client-supplied foreign
+keys (`moduleId`, `quizId`…) are resolved through the scoped client (`utils/ownership.ts`), so a row
+of another tenant simply does not exist (404). Uploaded media is served only with a signed httpOnly
+cookie and an ownership check (`middleware/media.ts`).
 `SUPER_ADMIN` (platform staff) is the only role that can operate across tenants
 (`tenantStore.run({ tenantId: null, superAdmin: true }, …)`). Tenant subdomains are resolved from the
 `Host` header (`backend/src/utils/tenantHost.ts`); branding is served by `GET /api/branding`.

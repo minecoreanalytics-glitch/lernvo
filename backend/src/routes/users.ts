@@ -17,14 +17,21 @@ router.use(authenticate)
 
 const CreateUserSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(10),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  role: z.nativeEnum(Role),
+  role: z.enum(['AGENT', 'SUPERVISOR', 'MANAGER', 'HR', 'PLATFORM_MANAGER']), // SUPER_ADMIN is platform staff — never assignable by a tenant
   departmentId: z.string().uuid().optional(),
   managerId: z.string().uuid().optional(),
   hiredAt: z.string().datetime().optional()
 })
+
+// Role ceiling: a caller may only grant roles at or below its own rank (LRN-01)
+const ROLE_RANK: Record<string, number> = { AGENT: 1, SUPERVISOR: 2, MANAGER: 3, HR: 4, PLATFORM_MANAGER: 5, SUPER_ADMIN: 6 }
+function canGrant(callerRole: string, targetRole?: string | null): boolean {
+  if (!targetRole) return true
+  return (ROLE_RANK[targetRole] ?? 99) <= (ROLE_RANK[callerRole] ?? 0)
+}
 
 const UpdateUserSchema = CreateUserSchema.partial().omit({ password: true })
 
@@ -95,8 +102,10 @@ function parseCsv(content: string): Record<string, string>[] {
 // GET /api/users — HR, Manager, Platform Manager
 router.get('/', authorize('PLATFORM_MANAGER', 'HR', 'MANAGER'), async (req, res) => {
   try {
-    const { department, role, search, page = '1', limit = '20' } = req.query as Record<string, string>
-    const skip = (parseInt(page) - 1) * parseInt(limit)
+    const { department, role, search } = req.query as Record<string, string>
+    const pageN = Math.max(1, parseInt(String(req.query.page ?? '1')) || 1)
+    const limitN = Math.min(200, Math.max(1, parseInt(String(req.query.limit ?? '20')) || 20))
+    const skip = (pageN - 1) * limitN
 
     const where: Record<string, unknown> = {}
     if (department) where.departmentId = department
@@ -128,13 +137,14 @@ router.get('/', authorize('PLATFORM_MANAGER', 'HR', 'MANAGER'), async (req, res)
           department: { select: { id: true, name: true } },
           hiredAt: true, createdAt: true
         },
-        skip, take: parseInt(limit), orderBy: { createdAt: 'desc' }
+        skip, take: limitN, orderBy: { createdAt: 'desc' }
       }),
       prisma.user.count({ where })
     ])
 
-    res.json({ users, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) })
-  } catch {
+    res.json({ users, total, page: pageN, pages: Math.ceil(total / limitN) })
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch users' })
   }
 })
@@ -221,8 +231,8 @@ router.post('/import', authorize('PLATFORM_MANAGER', 'HR'), csvUpload.single('fi
       return res.status(400).json({ error: 'Le fichier CSV est vide ou mal formaté' })
     }
 
-    const tempPassword = randomBytes(12).toString('base64url')
-    const passwordHash = await bcrypt.hash(tempPassword, 12)
+    // One temporary password PER USER (sent by email) — never shared across the batch, never returned
+    const tempPasswords = new Map<string, string>()
 
     // Validate all rows first
     const validRows: Array<{ rowNum: number; data: z.infer<typeof ImportRowSchema> }> = []
@@ -249,21 +259,24 @@ router.post('/import', authorize('PLATFORM_MANAGER', 'HR'), csvUpload.single('fi
     let created = 0
     const createdUserIds: string[] = []
     if (validRows.length > 0) {
-      await prisma.$transaction(async (tx) => {
+      // No interactive transaction: a unique violation must not abort the whole batch
+      {
+        const tx = prisma
         for (const { rowNum, data } of validRows) {
           try {
+            const tmp = randomBytes(9).toString('base64url')
             const newUser = await tx.user.create({
               data: {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email.toLowerCase(),
-                passwordHash,
+                passwordHash: await bcrypt.hash(tmp, 12),
                 role: data.role,
                 tenantId: getTenantId(),
                 departmentId: data.departmentId || undefined
               }
             })
-            createdUserIds.push(newUser.id)
+            createdUserIds.push(newUser.id); tempPasswords.set(newUser.id, tmp)
             created++
           } catch (err: unknown) {
             if ((err as { code?: string }).code === 'P2002') {
@@ -273,18 +286,18 @@ router.post('/import', authorize('PLATFORM_MANAGER', 'HR'), csvUpload.single('fi
             }
           }
         }
-      })
+      }
     }
 
     // Welcome email + onboarding for each created user (fire-and-forget)
     let onboarded = 0
     for (const uid of createdUserIds) {
-      NotificationService.sendWelcome(uid, tempPassword).catch(() => {})
+      NotificationService.sendWelcome(uid, tempPasswords.get(uid)).catch(() => {})
       const result = await OnboardingService.triggerOnboarding(uid).catch(() => null)
       if (result) onboarded++
     }
 
-    res.json({ created, onboarded, errors, tempPassword: created > 0 ? tempPassword : undefined })
+    res.json({ created, onboarded, errors })
   } catch (err) {
     logger.error('CSV import error:', err)
     res.status(500).json({ error: "Erreur lors de l'importation CSV" })
@@ -334,7 +347,8 @@ router.get('/:id', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' })
     const { passwordHash: _, ...safe } = user
     res.json(safe)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch user' })
   }
 })
@@ -343,6 +357,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', authorize('PLATFORM_MANAGER', 'HR'), validate(CreateUserSchema), async (req, res) => {
   try {
     const { password, ...rest } = req.body
+    if (!canGrant(req.user!.role, rest.role)) return res.status(403).json({ error: 'Vous ne pouvez pas attribuer un rôle supérieur au vôtre.' })
     const passwordHash = await bcrypt.hash(password, 12)
     const user = await prisma.user.create({
       data: { ...rest, passwordHash },
@@ -362,13 +377,18 @@ router.post('/', authorize('PLATFORM_MANAGER', 'HR'), validate(CreateUserSchema)
 // PUT /api/users/:id
 router.put('/:id', authorize('PLATFORM_MANAGER', 'HR'), validate(UpdateUserSchema), async (req, res) => {
   try {
+    if (!canGrant(req.user!.role, req.body.role)) return res.status(403).json({ error: 'Vous ne pouvez pas attribuer un rôle supérieur au vôtre.' })
+    const target = await prisma.user.findFirst({ where: { id: req.params.id }, select: { role: true } })
+    if (!target) return res.status(404).json({ error: 'User not found' })
+    if (!canGrant(req.user!.role, target.role)) return res.status(403).json({ error: 'Vous ne pouvez pas modifier un utilisateur de rang supérieur.' })
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: req.body,
       select: { id: true, email: true, firstName: true, lastName: true, role: true, isActive: true }
     })
     res.json(user)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to update user' })
   }
 })
@@ -391,7 +411,8 @@ router.post('/:id/reset-password', authorize('PLATFORM_MANAGER', 'HR'), async (r
     EmailService.sendPasswordReset(req.params.id, tempPassword).catch(() => {})
 
     res.json({ tempPassword })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to reset password' })
   }
 })
@@ -401,7 +422,8 @@ router.delete('/:id', authorize('PLATFORM_MANAGER'), async (req, res) => {
   try {
     await prisma.user.update({ where: { id: req.params.id }, data: { isActive: false } })
     res.json({ message: 'User deactivated' })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to deactivate user' })
   }
 })

@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { PathStatus, Role } from '@prisma/client'
 import { prisma } from '../utils/prisma'
+import { getTenantId } from '../utils/tenantContext'
 import { authenticate, authorize } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 import { GamificationService } from '../services/gamification'
@@ -45,7 +46,8 @@ router.get('/paths', async (req, res) => {
       userEnrollment: p.enrollments[0] || null,
       enrollments: undefined
     })))
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch career paths' })
   }
 })
@@ -85,7 +87,8 @@ router.get('/paths/:id', async (req, res) => {
         userStatus: moduleMap[pm.moduleId] || null
       }))
     })
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch career path' })
   }
 })
@@ -95,7 +98,8 @@ router.post('/paths', authorize('PLATFORM_MANAGER', 'HR'), validate(PathSchema),
   try {
     const path = await prisma.careerPath.create({ data: req.body })
     res.status(201).json(path)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to create career path' })
   }
 })
@@ -105,10 +109,11 @@ router.post('/paths/:id/modules', authorize('PLATFORM_MANAGER', 'HR'), async (re
   try {
     const { moduleId, order, isRequired } = req.body
     const pm = await prisma.careerPathModule.create({
-      data: { pathId: req.params.id, moduleId, order: order || 0, isRequired: isRequired !== false }
+      data: { tenantId: getTenantId(), pathId: req.params.id, moduleId, order: order || 0, isRequired: isRequired !== false }
     })
     res.status(201).json(pm)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to add module to path' })
   }
 })
@@ -118,7 +123,7 @@ router.post('/paths/:id/enroll', async (req, res) => {
   try {
     const enrollment = await prisma.careerPathEnrollment.upsert({
       where: { userId_pathId: { userId: req.user!.userId, pathId: req.params.id } },
-      create: { userId: req.user!.userId, pathId: req.params.id, status: 'IN_PROGRESS', startedAt: new Date() },
+      create: { tenantId: getTenantId(), userId: req.user!.userId, pathId: req.params.id, status: 'IN_PROGRESS', startedAt: new Date() },
       update: { status: 'IN_PROGRESS', startedAt: new Date() }
     })
 
@@ -129,13 +134,14 @@ router.post('/paths/:id/enroll', async (req, res) => {
     for (const pm of pathModules) {
       await prisma.enrollment.upsert({
         where: { userId_moduleId: { userId: req.user!.userId, moduleId: pm.moduleId } },
-        create: { userId: req.user!.userId, moduleId: pm.moduleId, status: 'NOT_STARTED' },
+        create: { tenantId: getTenantId(), userId: req.user!.userId, moduleId: pm.moduleId, status: 'NOT_STARTED' },
         update: {}
       })
     }
 
     res.json(enrollment)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to enroll in path' })
   }
 })
@@ -153,7 +159,8 @@ router.get('/my-paths', async (req, res) => {
       orderBy: { createdAt: 'desc' }
     })
     res.json(enrollments)
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch enrolled paths' })
   }
 })

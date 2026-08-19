@@ -19,7 +19,11 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       setAuth: (user, accessToken, refreshToken) => set({ user, accessToken, refreshToken }),
       updateUser: (partial) => set((s) => ({ user: s.user ? { ...s.user, ...partial } : null })),
-      clearAuth: () => set({ user: null, accessToken: null, refreshToken: null })
+      clearAuth: () => {
+        set({ user: null, accessToken: null, refreshToken: null })
+        // Purge PWA runtime caches so the next user on a shared device never sees cached API responses
+        if (typeof caches !== 'undefined') caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {})
+      }
     }),
     { name: 'lernvo-auth', partialize: (s) => ({ user: s.user, accessToken: s.accessToken, refreshToken: s.refreshToken }) }
   )

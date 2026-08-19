@@ -28,6 +28,7 @@ import analyticsRoutes from './routes/analytics'
 import onboardingRoutes from './routes/onboarding'
 import tenantRoutes from './routes/tenants'
 import brandingRoutes from './routes/branding'
+import approvalRoutes from './routes/approvals'
 import chatRoutes from './routes/chat'
 
 dotenv.config()
@@ -83,6 +84,7 @@ app.use('/api/integrations', integrationRoutes)
 app.use('/api/onboarding', onboardingRoutes)
 app.use('/api/tenants', tenantRoutes)
 app.use('/api/branding', brandingRoutes)
+app.use('/api/approvals', approvalRoutes)
 app.use('/api/chat', chatRoutes)
 
 // ─── Health Check (both /health and /api/health) ─────────────────────────────

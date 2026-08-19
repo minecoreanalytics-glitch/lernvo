@@ -4,6 +4,7 @@ import { BookOpen, Trophy, ChevronRight, Target, Clock, AlertTriangle, CalendarC
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { api } from '../utils/api'
+import PendingAcksCard from '../components/approval/PendingAcksCard'
 import type { LeaderboardEntry } from '../types'
 
 type CareerPathEnrollment = {
@@ -187,8 +188,9 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* ── ALERTES TARIFS ─────────────────────────────── */}
+      {/* ── À LIRE ET VALIDER (approbations) ───────────── */}
       <motion.div variants={item}>
+        <PendingAcksCard />
       </motion.div>
 
       {/* ══════════════════════════════════════════════════ */}

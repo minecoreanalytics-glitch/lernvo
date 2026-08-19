@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import ApprovalPanel from '../components/approval/ApprovalPanel'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
@@ -163,6 +165,15 @@ export default function KnowledgePage() {
 
   const allArticles = data?.articles ?? []
 
+  // Deep link: /kb?slug=xxx (notifications, dashboard "À valider")
+  const [searchParams, setSearchParams] = useSearchParams()
+  useEffect(() => {
+    const s = searchParams.get('slug')
+    if (!s || selected?.slug === s) return
+    api.get(`/kb/${s}`).then(({ data }) => setSelected(data as KbArticle)).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
   // Filter by doc type client-side
   const articles = useMemo(() => {
     if (!selectedType) return allArticles
@@ -175,7 +186,7 @@ export default function KnowledgePage() {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <button onClick={() => { setSelected(null); setIsEditing(false) }} className="btn-ghost text-sm flex items-center gap-1.5">
+          <button onClick={() => { setSelected(null); setIsEditing(false); if (searchParams.get('slug')) setSearchParams({}) }} className="btn-ghost text-sm flex items-center gap-1.5">
             <ArrowLeft size={14} /> Base de connaissances
           </button>
           {isAdmin && !isEditing && (
@@ -184,6 +195,7 @@ export default function KnowledgePage() {
             </button>
           )}
         </div>
+        <ApprovalPanel entityType="kb" entityId={article.id} />
         {isEditing ? (
           <div className="card p-6 space-y-4">
             <div>

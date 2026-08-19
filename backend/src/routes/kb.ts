@@ -8,6 +8,7 @@ import { validate } from '../middleware/validate'
 import { AIService } from '../services/ai'
 import { logger } from '../utils/logger'
 import { getTenantId } from '../utils/tenantContext'
+import * as Approval from '../services/approval'
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -226,6 +227,16 @@ router.get('/:slug', async (req, res) => {
       data: { articleId: article.id, userId: req.user!.userId }
     }).catch(() => {}) // non-blocking
 
+    // Employees always read the LAST APPROVED version while a newer draft is pending
+    const isAdmin = ['PLATFORM_MANAGER', 'HR'].includes(req.user!.role)
+    if (!isAdmin) {
+      const latest = await Approval.latestSnapshot('KB_ARTICLE', article.id)
+      if (latest && latest.item.status !== 'APPROVED') {
+        const snap = latest.version.snapshot as { title?: string; body?: string; tags?: string[] }
+        return res.json({ ...article, title: snap.title ?? article.title, body: snap.body ?? article.body, tags: snap.tags ?? article.tags, approvedVersion: latest.item.currentVersion })
+      }
+    }
+
     res.json(article)
   } catch {
     res.status(500).json({ error: 'Failed to fetch article' })
@@ -251,6 +262,10 @@ router.put('/:slug', authorize('PLATFORM_MANAGER', 'HR'), validate(ArticleSchema
       where: { slug: req.params.slug },
       data: req.body
     })
+    // Content changed → back to DRAFT (employees keep the last approved snapshot)
+    if (req.body.title !== undefined || req.body.body !== undefined || req.body.tags !== undefined) {
+      await Approval.markEdited('KB_ARTICLE', article.id).catch(() => {})
+    }
     res.json(article)
   } catch {
     res.status(500).json({ error: 'Failed to update article' })

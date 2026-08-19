@@ -102,6 +102,26 @@ export const EmailService = {
     await send(user.email, `Bienvenue sur ${PLATFORM_NAME}`, html)
   },
 
+  /** Sent when a new version of a knowledge item is approved (employees must read & acknowledge) */
+  async sendVersionApproved(userIds: string[], title: string, version: number, link: string): Promise<void> {
+    if (!transporter || userIds.length === 0) return
+    const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { email: true, firstName: true } })
+    for (const u of users) {
+      const html = wrap('Nouvelle version à valider', `
+        ${greeting(u.firstName)}
+        <p style="color:#374151;font-size:14px;line-height:1.6;margin:16px 0 0">
+          Une nouvelle version d'un document de référence a été approuvée. Merci de la lire et de confirmer que vous l'avez comprise.
+        </p>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:20px 0">
+          <p style="color:#111827;font-size:16px;font-weight:bold;margin:0">${title}</p>
+          <p style="color:#6b7280;font-size:13px;margin:8px 0 0">Version ${version}</p>
+        </div>
+        ${btn('Lire et valider', `${BASE_URL}${link}`)}
+      `)
+      await send(u.email, `À valider : ${title} (v${version})`, html)
+    }
+  },
+
   /** Sent when a manager assigns a module to a user */
   async sendAssignmentReminder(userId: string, moduleTitle: string, dueAt: Date): Promise<void> {
     const user = await getUser(userId)

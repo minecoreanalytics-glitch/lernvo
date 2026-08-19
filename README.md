@@ -1,7 +1,9 @@
 # Lernvo
 
-Multi-tenant corporate learning platform (LMS) — modules, quizzes, learning paths, certificates,
-knowledge base, AI content generation, gamification, onboarding, reporting.
+Multi-tenant platform that makes sure employees actually **know** their company's procedures and
+products: approved single source of truth (workflow **draft → review → approved vN**, immutable
+versions, "read & understood" acknowledgment with coverage KPI), modules & quizzes, learning paths,
+certificates, knowledge base, AI content generation & assistant, gamification, onboarding, reporting.
 One deployment serves many companies; each company is an isolated **tenant** with its own
 subdomain (`<slug>.lernvo.com`), branding, users and data.
 

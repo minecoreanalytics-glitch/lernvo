@@ -45,6 +45,9 @@ model Tenant {
   careerPaths     CareerPath[]
   kbArticles      KbArticle[]
   onboardingPlans OnboardingPlan[]
+  approvalItems   ApprovalItem[]
+  contentVersions ContentVersion[]
+  acknowledgments Acknowledgment[]
 }
 
 enum ContentType {
@@ -330,18 +333,18 @@ model Question {
 }
 
 model QuizAttempt {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   quizId       String
-  quiz         Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  sectionIndex Int?     // null = examen final, 0+ = quiz de section inline
-  answers      Json     // [{questionId, selectedOptionId, isCorrect, pointsEarned}]
-  score        Float    // percent
+  quiz         Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  sectionIndex Int? // null = examen final, 0+ = quiz de section inline
+  answers      Json // [{questionId, selectedOptionId, isCorrect, pointsEarned}]
+  score        Float // percent
   passed       Boolean
-  pointsEarned Int      @default(0)
-  timeTaken    Int?     // seconds
-  startedAt    DateTime @default(now())
+  pointsEarned Int       @default(0)
+  timeTaken    Int? // seconds
+  startedAt    DateTime  @default(now())
   completedAt  DateTime?
 
   @@index([userId])
@@ -631,4 +634,69 @@ model UserActivityLog {
 
   @@index([userId, createdAt])
   @@index([event, createdAt])
+}
+
+// ─── Approval workflow, versioning & acknowledgment (source de vérité) ────────
+
+enum ApprovalEntity {
+  KB_ARTICLE
+  MODULE
+}
+
+enum ApprovalStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model ApprovalItem {
+  id             String         @id @default(uuid())
+  tenantId       String
+  tenant         Tenant         @relation(fields: [tenantId], references: [id])
+  entityType     ApprovalEntity
+  entityId       String
+  status         ApprovalStatus @default(DRAFT)
+  currentVersion Int            @default(0)
+  submittedById  String?
+  submittedAt    DateTime?
+  approvedById   String?
+  approvedAt     DateTime?
+  rejectedReason String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([entityType, entityId])
+  @@index([tenantId, status])
+}
+
+model ContentVersion {
+  id          String         @id @default(uuid())
+  tenantId    String
+  tenant      Tenant         @relation(fields: [tenantId], references: [id])
+  entityType  ApprovalEntity
+  entityId    String
+  version     Int
+  snapshot    Json
+  changeNote  String?
+  createdById String?
+  createdAt   DateTime       @default(now())
+
+  @@unique([entityType, entityId, version])
+  @@index([tenantId])
+}
+
+model Acknowledgment {
+  id         String         @id @default(uuid())
+  tenantId   String
+  tenant     Tenant         @relation(fields: [tenantId], references: [id])
+  userId     String
+  entityType ApprovalEntity
+  entityId   String
+  version    Int
+  ackedAt    DateTime       @default(now())
+
+  @@unique([userId, entityType, entityId, version])
+  @@index([tenantId, entityType, entityId, version])
+  @@index([userId])
 }

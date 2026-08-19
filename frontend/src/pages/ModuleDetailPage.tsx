@@ -12,6 +12,7 @@ import SlideViewer from '../components/SlideViewer'
 import { api } from '../utils/api'
 import VideoPlayer from '../components/VideoPlayer'
 import ModuleFeedback from '../components/ModuleFeedback'
+import ApprovalPanel from '../components/approval/ApprovalPanel'
 import { useAuthStore } from '../store/auth'
 import type { Module, Content } from '../types'
 import { trackCourseStarted, trackCourseExited, trackCourseCompleted, getSessionId } from '../hooks/useAnalytics'
@@ -737,6 +738,8 @@ export default function ModuleDetailPage() {
           </div>
         )}
       </div>
+
+      {isAdmin && id && <ApprovalPanel entityType="module" entityId={id} allowAck={false} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">

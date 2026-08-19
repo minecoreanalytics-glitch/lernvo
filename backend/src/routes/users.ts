@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { randomBytes } from 'crypto'
-import bcrypt from 'bcryptjs'
+import { hashPassword, verifyPassword, hashMany } from '../utils/password'
 import multer from 'multer'
 import { Role } from '@prisma/client'
 import { prisma } from '../utils/prisma'
@@ -234,7 +234,8 @@ router.post('/import', authorize('PLATFORM_MANAGER', 'HR'), csvUpload.single('fi
     // One temporary password PER USER (sent by email) — never shared across the batch, never returned
     const tempPasswords = new Map<string, string>()
 
-    // Validate all rows first
+    // Validate all rows first. Departments are loaded once — this used to be one query per row.
+    const knownDepartments = new Set((await prisma.department.findMany({ select: { id: true } })).map(d => d.id))
     const validRows: Array<{ rowNum: number; data: z.infer<typeof ImportRowSchema> }> = []
     const errors: { row: number; error: string }[] = []
 
@@ -246,7 +247,7 @@ router.post('/import', authorize('PLATFORM_MANAGER', 'HR'), csvUpload.single('fi
         continue
       }
       if (parsed.data.departmentId) {
-        const dept = await prisma.department.findUnique({ where: { id: parsed.data.departmentId } })
+        const dept = knownDepartments.has(parsed.data.departmentId) ? { id: parsed.data.departmentId } : null
         if (!dept) {
           errors.push({ row: rowNum, error: `Département introuvable: ${parsed.data.departmentId}` })
           continue
@@ -257,20 +258,25 @@ router.post('/import', authorize('PLATFORM_MANAGER', 'HR'), csvUpload.single('fi
 
     // Insert valid rows in a transaction
     let created = 0
+    // Les empreintes sont calculées en parallèle sur le pool de threads (natif), pas une par une
+    // dans la boucle : 200 lignes passaient d'environ une minute de CPU bloquant à quelques secondes.
+    const batchPlains = validRows.map(() => randomBytes(9).toString('base64url'))
+    const batchHashes = await hashMany(batchPlains)
+
     const createdUserIds: string[] = []
     if (validRows.length > 0) {
       // No interactive transaction: a unique violation must not abort the whole batch
       {
         const tx = prisma
-        for (const { rowNum, data } of validRows) {
+        for (const [idx, { rowNum, data }] of validRows.entries()) {
           try {
-            const tmp = randomBytes(9).toString('base64url')
+            const tmp = batchPlains[idx]
             const newUser = await tx.user.create({
               data: {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email.toLowerCase(),
-                passwordHash: await bcrypt.hash(tmp, 12),
+                passwordHash: batchHashes[idx],
                 role: data.role,
                 tenantId: getTenantId(),
                 departmentId: data.departmentId || undefined
@@ -358,7 +364,7 @@ router.post('/', authorize('PLATFORM_MANAGER', 'HR'), validate(CreateUserSchema)
   try {
     const { password, ...rest } = req.body
     if (!canGrant(req.user!.role, rest.role)) return res.status(403).json({ error: 'Vous ne pouvez pas attribuer un rôle supérieur au vôtre.' })
-    const passwordHash = await bcrypt.hash(password, 12)
+    const passwordHash = await hashPassword(password)
     const user = await prisma.user.create({
       data: { ...rest, passwordHash },
       select: { id: true, email: true, firstName: true, lastName: true, role: true }
@@ -400,7 +406,7 @@ router.post('/:id/reset-password', authorize('PLATFORM_MANAGER', 'HR'), async (r
     if (!user) return res.status(404).json({ error: 'User not found' })
 
     const tempPassword = randomBytes(8).toString('base64url').slice(0, 10)
-    const passwordHash = await bcrypt.hash(tempPassword, 12)
+    const passwordHash = await hashPassword(tempPassword)
 
     await prisma.user.update({ where: { id: req.params.id }, data: { passwordHash } })
     // Revoke all refresh tokens so user is forced to re-login

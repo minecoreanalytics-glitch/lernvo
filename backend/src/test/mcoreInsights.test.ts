@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import express from 'express'
 import request from 'supertest'
-import bcrypt from 'bcryptjs'
+import { hashPassword, verifyPassword } from '../utils/password'
 import authRoutes from '../routes/auth'
 import mcoreRoutes from '../routes/mcore'
 import { prisma } from '../utils/prisma'
@@ -13,7 +13,7 @@ const PW = 'StrongPass123!'; const ts = Date.now()
 let tenantId = '', deptId = ''; const pm = `pmmc${ts}@x.test`
 
 beforeAll(async () => {
-  const hash = await bcrypt.hash(PW, 10)
+  const hash = await hashPassword(PW)
   await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
     const t = await prisma.tenant.create({ data: { name: 'MC', slug: `mc${ts}`, status: 'ACTIVE' } }); tenantId = t.id
     const d = await prisma.department.create({ data: { name: 'Support', tenantId } }); deptId = d.id

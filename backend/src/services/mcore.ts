@@ -24,40 +24,74 @@ function h(tenant: string, actor: string, role: string): Record<string, string> 
   return { 'content-type': 'application/json', 'x-morpheus-api-key': KEY, 'x-morpheus-tenant': tenant, 'x-morpheus-actor': actor, 'x-morpheus-role': role }
 }
 
-/** Compute the knowledge-assurance context of one department (tenant-scoped prisma). */
-export async function computeDepartmentContext(deptId: string): Promise<DeptContext | null> {
-  const dept = await prisma.department.findFirst({ where: { id: deptId }, select: { id: true, name: true } })
-  if (!dept) return null
+/**
+ * Knowledge-assurance context for EVERY department of the tenant, in a fixed number of queries.
+ * The previous version ran ~8 queries per department (12 departments = ~100 round trips per page
+ * load); this runs 9 grouped queries whatever the size of the company.
+ */
+export async function computeAllDepartmentContexts(): Promise<DeptContext[]> {
   const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000)
-  const users = await prisma.user.findMany({ where: { departmentId: deptId, isActive: true, role: { not: 'SUPER_ADMIN' } }, select: { id: true } })
-  const uids = users.map(u => u.id); const headcount = uids.length
+  const now = new Date()
+  const staleBefore = new Date(Date.now() - STALE_DAYS * 86_400_000)
+  const backlogBefore = new Date(Date.now() - REVIEW_BACKLOG_DAYS * 86_400_000)
 
-  // coverage: approved KB items × active users of the dept
-  const approved = await prisma.approvalItem.findMany({ where: { entityType: 'KB_ARTICLE', currentVersion: { gt: 0 } }, select: { entityId: true, currentVersion: true, approvedAt: true } })
-  let coverage = 1
-  if (approved.length && headcount) {
-    const acks = await prisma.acknowledgment.count({ where: { userId: { in: uids }, entityType: 'KB_ARTICLE', OR: approved.map(a => ({ entityId: a.entityId, version: a.currentVersion })) } })
-    coverage = Math.min(1, acks / (approved.length * headcount))
+  const [departments, users, approved, pendingReviews] = await Promise.all([
+    prisma.department.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    prisma.user.findMany({ where: { isActive: true, role: { not: 'SUPER_ADMIN' }, departmentId: { not: null } }, select: { id: true, departmentId: true } }),
+    prisma.approvalItem.findMany({ where: { entityType: 'KB_ARTICLE', currentVersion: { gt: 0 } }, select: { entityId: true, currentVersion: true, approvedAt: true } }),
+    prisma.approvalItem.count({ where: { status: 'IN_REVIEW', submittedAt: { lt: backlogBefore } } }),
+  ])
+  if (departments.length === 0) return []
+
+  const deptOf = new Map(users.map(u => [u.id, u.departmentId as string]))
+  const headcount = new Map<string, number>()
+  for (const u of users) headcount.set(u.departmentId as string, (headcount.get(u.departmentId as string) ?? 0) + 1)
+  const userIds = users.map(u => u.id)
+  const staleDocs = approved.filter(a => a.approvedAt && a.approvedAt < staleBefore).length
+
+  const [acks, attempts, failures, openAssign, overdueAssign, questions] = await Promise.all([
+    approved.length && userIds.length
+      ? prisma.acknowledgment.findMany({ where: { userId: { in: userIds }, entityType: 'KB_ARTICLE', OR: approved.map(a => ({ entityId: a.entityId, version: a.currentVersion })) }, select: { userId: true } })
+      : [],
+    userIds.length ? prisma.quizAttempt.groupBy({ by: ['userId'], where: { userId: { in: userIds }, startedAt: { gte: since } }, _count: { _all: true } }) : [],
+    userIds.length ? prisma.quizAttempt.groupBy({ by: ['userId'], where: { userId: { in: userIds }, startedAt: { gte: since }, passed: false }, _count: { _all: true } }) : [],
+    userIds.length ? prisma.enrollment.groupBy({ by: ['userId'], where: { userId: { in: userIds }, status: { not: 'COMPLETED' }, dueAt: { not: null } }, _count: { _all: true } }) : [],
+    userIds.length ? prisma.enrollment.groupBy({ by: ['userId'], where: { userId: { in: userIds }, status: { not: 'COMPLETED' }, dueAt: { lt: now } }, _count: { _all: true } }) : [],
+    prisma.chatQuestionLog.groupBy({ by: ['departmentId'], where: { kbHits: 0, createdAt: { gte: since } }, _count: { _all: true } }),
+  ])
+
+  const perDept = (rows: Array<{ userId: string; _count: { _all: number } }>) => {
+    const m = new Map<string, number>()
+    for (const r of rows) { const d = deptOf.get(r.userId); if (d) m.set(d, (m.get(d) ?? 0) + r._count._all) }
+    return m
   }
-  const staleDocs = approved.filter(a => a.approvedAt && Date.now() - a.approvedAt.getTime() > STALE_DAYS * 86_400_000).length
+  const ackByDept = new Map<string, number>()
+  for (const a of acks) { const d = deptOf.get(a.userId); if (d) ackByDept.set(d, (ackByDept.get(d) ?? 0) + 1) }
+  const attemptsByDept = perDept(attempts), failByDept = perDept(failures)
+  const openByDept = perDept(openAssign), overdueByDept = perDept(overdueAssign)
+  const questionsByDept = new Map(questions.filter(q => q.departmentId).map(q => [q.departmentId as string, q._count._all]))
 
-  const [attempts, failed] = headcount ? await Promise.all([
-    prisma.quizAttempt.count({ where: { userId: { in: uids }, startedAt: { gte: since } } }),
-    prisma.quizAttempt.count({ where: { userId: { in: uids }, startedAt: { gte: since }, passed: false } }),
-  ]) : [0, 0]
-  const [open, overdue] = headcount ? await Promise.all([
-    prisma.enrollment.count({ where: { userId: { in: uids }, status: { not: 'COMPLETED' }, dueAt: { not: null } } }),
-    prisma.enrollment.count({ where: { userId: { in: uids }, status: { not: 'COMPLETED' }, dueAt: { lt: new Date() } } }),
-  ]) : [0, 0]
-  const unanswered = await prisma.chatQuestionLog.count({ where: { departmentId: deptId, kbHits: 0, createdAt: { gte: since } } })
-  const pendingReviews = await prisma.approvalItem.count({ where: { status: 'IN_REVIEW', submittedAt: { lt: new Date(Date.now() - REVIEW_BACKLOG_DAYS * 86_400_000) } } })
+  return departments.map(d => {
+    const hc = headcount.get(d.id) ?? 0
+    const expected = approved.length * hc
+    const att = attemptsByDept.get(d.id) ?? 0
+    const open = openByDept.get(d.id) ?? 0
+    return {
+      department_id: d.id, department_name: d.name, headcount: hc,
+      coverage_pct: expected ? +Math.min(1, (ackByDept.get(d.id) ?? 0) / expected).toFixed(3) : 1,
+      quiz_fail_rate: att ? +((failByDept.get(d.id) ?? 0) / att).toFixed(3) : 0,
+      overdue_ratio: open ? +((overdueByDept.get(d.id) ?? 0) / open).toFixed(3) : 0,
+      unanswered_questions: questionsByDept.get(d.id) ?? 0,
+      stale_docs: staleDocs,
+      pending_reviews: pendingReviews,
+    }
+  })
+}
 
-  return {
-    department_id: dept.id, department_name: dept.name, headcount,
-    coverage_pct: +coverage.toFixed(3), quiz_fail_rate: attempts ? +(failed / attempts).toFixed(3) : 0,
-    overdue_ratio: open ? +(overdue / open).toFixed(3) : 0,
-    unanswered_questions: unanswered, stale_docs: staleDocs, pending_reviews: pendingReviews,
-  }
+/** Single-department context (kept for targeted calls); prefer computeAllDepartmentContexts. */
+export async function computeDepartmentContext(deptId: string): Promise<DeptContext | null> {
+  const all = await computeAllDepartmentContexts()
+  return all.find(c => c.department_id === deptId) ?? null
 }
 
 export type HeadRecommendation = { policy_id?: string; action?: unknown; framing?: string | Record<string, string>; priority?: number; [k: string]: unknown }

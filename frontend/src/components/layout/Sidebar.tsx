@@ -76,7 +76,8 @@ export default function Sidebar() {
   const { data: notifResponse } = useQuery<{ notifications: Array<{ isRead: boolean }> }>({
     queryKey: ['notifications'],
     queryFn: () => api.get('/notifications').then(r => r.data),
-    refetchInterval: 30000 // Refetch every 30 seconds
+    refetchInterval: 60_000, // une minute suffit ; multiplié par le nombre d'employés connectés
+    refetchOnWindowFocus: true
   })
   const unreadCount = notifResponse?.notifications?.filter(n => !n.isRead).length || 0
 

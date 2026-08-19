@@ -18,17 +18,43 @@ function parse(req: { params: Record<string, string> }, res: { status: (n: numbe
 }
 
 // GET /api/approvals/pending — review queue + coverage (admins)
+// Batched on purpose: this used to run 3-4 queries per row (up to ~600 for a full queue).
+// It now costs a fixed 5 queries whatever the size of the queue.
 router.get('/pending', authorize(...Approval.APPROVER_ROLES), async (_req, res) => {
   try {
-    const items = await prisma.approvalItem.findMany({ where: { status: { in: ['IN_REVIEW', 'APPROVED', 'REJECTED', 'DRAFT'] } }, orderBy: { updatedAt: 'desc' }, take: 200 })
-    const out = []
-    for (const it of items) {
-      const ent = await Approval.loadEntity(it.entityType, it.entityId)
-      if (!ent) continue
-      const cov = it.entityType === 'KB_ARTICLE' && it.currentVersion > 0 ? await Approval.coverage(it.entityType, it.entityId, it.currentVersion) : null
-      const submitter = it.submittedById ? await prisma.user.findFirst({ where: { id: it.submittedById }, select: { firstName: true, lastName: true } }) : null
-      out.push({ ...it, title: ent.title, link: ent.link, coverage: cov, submitter: submitter ? `${submitter.firstName} ${submitter.lastName}` : null })
-    }
+    const items = await prisma.approvalItem.findMany({ orderBy: { updatedAt: 'desc' }, take: 200 })
+    if (items.length === 0) return res.json([])
+
+    const kbIds = items.filter(i => i.entityType === 'KB_ARTICLE').map(i => i.entityId)
+    const moduleIds = items.filter(i => i.entityType === 'MODULE').map(i => i.entityId)
+    const submitterIds = [...new Set(items.map(i => i.submittedById).filter(Boolean))] as string[]
+
+    const [articles, modules, submitters, activeUsers, ackGroups] = await Promise.all([
+      kbIds.length ? prisma.kbArticle.findMany({ where: { id: { in: kbIds } }, select: { id: true, title: true, slug: true } }) : [],
+      moduleIds.length ? prisma.module.findMany({ where: { id: { in: moduleIds } }, select: { id: true, title: true } }) : [],
+      submitterIds.length ? prisma.user.findMany({ where: { id: { in: submitterIds } }, select: { id: true, firstName: true, lastName: true } }) : [],
+      prisma.user.count({ where: { isActive: true, role: { not: 'SUPER_ADMIN' } } }),
+      kbIds.length ? prisma.acknowledgment.groupBy({ by: ['entityId', 'version'], where: { entityType: 'KB_ARTICLE', entityId: { in: kbIds } }, _count: { _all: true } }) : [],
+    ])
+
+    const artById = new Map(articles.map(a => [a.id, a]))
+    const modById = new Map(modules.map(m => [m.id, m]))
+    const subById = new Map(submitters.map(u => [u.id, `${u.firstName} ${u.lastName}`]))
+    const ackByKey = new Map(ackGroups.map(g => [`${g.entityId}:${g.version}`, g._count._all]))
+
+    const out = items.flatMap(it => {
+      const isKb = it.entityType === 'KB_ARTICLE'
+      const ent = isKb ? artById.get(it.entityId) : modById.get(it.entityId)
+      if (!ent) return []
+      const acked = isKb && it.currentVersion > 0 ? (ackByKey.get(`${it.entityId}:${it.currentVersion}`) ?? 0) : null
+      return [{
+        ...it,
+        title: ent.title,
+        link: isKb ? `/kb?slug=${(ent as { slug?: string }).slug ?? ''}` : `/modules/${it.entityId}`,
+        coverage: acked === null ? null : { acked, total: activeUsers, pct: activeUsers ? Math.round((acked / activeUsers) * 100) : 0 },
+        submitter: it.submittedById ? subById.get(it.submittedById) ?? null : null,
+      }]
+    })
     res.json(out)
   } catch (e) { logger.error('approvals pending', e); res.status(500).json({ error: 'Failed' }) }
 })

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import express from 'express'
 import request from 'supertest'
-import bcrypt from 'bcryptjs'
+import { hashPassword, verifyPassword } from '../utils/password'
 import authRoutes from '../routes/auth'
 import contentRoutes from '../routes/content'
 import quizRoutes from '../routes/quizzes'
@@ -25,7 +25,7 @@ const login = async (e: string) => (await request(app).post('/api/auth/login').s
 const auth = (t: string) => ({ Authorization: `Bearer ${t}` })
 
 beforeAll(async () => {
-  const hash = await bcrypt.hash(PW, 10)
+  const hash = await hashPassword(PW)
   await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
     tA = (await prisma.tenant.create({ data: { name: 'A', slug: `ca${ts}`, status: 'ACTIVE' } })).id
     tB = (await prisma.tenant.create({ data: { name: 'B', slug: `cb${ts}`, status: 'ACTIVE' } })).id
@@ -97,14 +97,14 @@ describe('cross-tenant isolation on formerly unguarded models', () => {
     expect((await request(app).post('/api/auth/refresh').send({ refreshToken: r1.body.refreshToken })).status).toBe(401)
     await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
       const u = await prisma.user.findFirst({ where: { email: adminB } })
-      await prisma.user.update({ where: { id: u!.id }, data: { passwordHash: await bcrypt.hash(PW, 10) } })
+      await prisma.user.update({ where: { id: u!.id }, data: { passwordHash: await hashPassword(PW) } })
     })
   })
 })
 
 describe('same email in two tenants (LRN-16)', () => {
   it('login on apex asks which company; on a tenant host it resolves directly; wrong password → 401', async () => {
-    const hash = await bcrypt.hash(PW, 10)
+    const hash = await hashPassword(PW)
     const shared = `dup${ts}@x.test`
     let slugA = '', slugB = ''
     await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
@@ -121,4 +121,31 @@ describe('same email in two tenants (LRN-16)', () => {
     expect(host.status).toBe(200); expect(host.body.user.tenantId).toBe(tA)
     expect((await request(app).post('/api/auth/login').send({ email: shared, password: 'wrong-password' })).status).toBe(401)
   })
+})
+
+describe('rate limits are keyed by identity, not by office IP', () => {
+  it('30 different employees can sign in from the same IP; one account still gets throttled', async () => {
+    // coût réduit pour ces comptes jetables : le test porte sur la limite, pas sur bcrypt
+    const hash = await hashPassword(PW, 4)
+    const emails: string[] = []
+    await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
+      for (let i = 0; i < 30; i++) {
+        const e = `office${i}-${ts}@x.test`; emails.push(e)
+        await prisma.user.create({ data: { email: e, passwordHash: hash, firstName: 'O', lastName: String(i), role: 'AGENT', isActive: true, tenantId: tA } })
+      }
+    })
+    // same source IP for everyone (supertest keeps one socket origin) — the old 20/15min IP rule broke here
+    const codes: number[] = []
+    for (const e of emails) codes.push((await request(app).post('/api/auth/login').send({ email: e, password: PW })).status)
+    expect(codes.filter(c => c === 200)).toHaveLength(30)
+    expect(codes).not.toContain(429)
+
+    // brute force against ONE account is still stopped, without touching the colleagues
+    const target = emails[0]
+    const attempts: number[] = []
+    for (let i = 0; i < 12; i++) attempts.push((await request(app).post('/api/auth/login').send({ email: target, password: 'wrong-password' })).status)
+    expect(attempts).toContain(429)
+    const colleague = await request(app).post('/api/auth/login').send({ email: emails[1], password: PW })
+    expect(colleague.status).toBe(200)
+  }, 30_000)
 })

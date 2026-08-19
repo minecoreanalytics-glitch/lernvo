@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import bcrypt from 'bcryptjs'
+import { hashPassword, verifyPassword } from '../utils/password'
 import { randomBytes } from 'crypto'
 import { sha256 } from '../utils/crypto'
 import jwt from 'jsonwebtoken'
@@ -10,6 +10,7 @@ import { authenticate } from '../middleware/auth'
 import { tenantStore } from '../utils/tenantContext'
 import { tenantSlugFromRequest } from '../utils/tenantHost'
 import { MEDIA_COOKIE, signMediaCookie, mediaCookieOptions } from '../middleware/media'
+import { loginLimiter, refreshLimiter } from '../middleware/limits'
 import { logger } from '../utils/logger'
 
 const router = Router()
@@ -41,7 +42,7 @@ function signRefresh() {
 const hashToken = (t: string) => sha256(t)
 
 // POST /api/auth/signup — public, creates PENDING tenant + inactive PLATFORM_MANAGER
-router.post('/signup', validate(SignupSchema), async (req, res) => {
+router.post('/signup', loginLimiter, validate(SignupSchema), async (req, res) => {
   try {
     const { companyName, email, password, firstName, lastName } = req.body as z.infer<typeof SignupSchema>
 
@@ -50,7 +51,7 @@ router.post('/signup', validate(SignupSchema), async (req, res) => {
     const suffix = Math.random().toString(36).slice(2, 6)
     const slug = `${base}-${suffix}`
 
-    const passwordHash = await bcrypt.hash(password, 12)
+    const passwordHash = await hashPassword(password)
 
     // Use superAdmin context so the tenant-scoped User create succeeds before
     // any tenant context exists (fail-closed guard would otherwise throw).
@@ -90,7 +91,7 @@ router.post('/signup', validate(SignupSchema), async (req, res) => {
 })
 
 // POST /api/auth/login
-router.post('/login', validate(LoginSchema), async (req, res) => {
+router.post('/login', loginLimiter, validate(LoginSchema), async (req, res) => {
   try {
     const { email, password, tenantSlug } = req.body
     const hostSlugEarly = tenantSlugFromRequest(req)
@@ -103,7 +104,7 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
     const wantedSlug = tenantSlug || hostSlugEarly
     const narrowed = wantedSlug ? candidates.filter(c => c.role === 'SUPER_ADMIN' || c.tenant?.slug === wantedSlug) : candidates
     const matching: typeof candidates = []
-    for (const c of narrowed) if (await bcrypt.compare(password, c.passwordHash)) matching.push(c)
+    for (const c of narrowed) if (await verifyPassword(password, c.passwordHash)) matching.push(c)
     if (matching.length === 0) return res.status(401).json({ error: 'Invalid credentials' })
     if (matching.length > 1) {
       // password verified for several companies → let the person pick (no enumeration: password known)
@@ -159,7 +160,7 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
 })
 
 // POST /api/auth/refresh
-router.post('/refresh', validate(RefreshSchema), async (req, res) => {
+router.post('/refresh', refreshLimiter, validate(RefreshSchema), async (req, res) => {
   try {
     const { refreshToken } = req.body
     const stored = await prisma.refreshToken.findUnique({
@@ -227,10 +228,10 @@ router.post('/change-password', authenticate, async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: req.user!.userId } })
     if (!user) return res.status(404).json({ error: 'User not found' })
 
-    const valid = await bcrypt.compare(currentPassword, user.passwordHash)
+    const valid = await verifyPassword(currentPassword, user.passwordHash)
     if (!valid) return res.status(401).json({ error: 'Mot de passe actuel incorrect' })
 
-    const passwordHash = await bcrypt.hash(newPassword, 12)
+    const passwordHash = await hashPassword(newPassword)
     await prisma.user.update({ where: { id: user.id }, data: { passwordHash } })
     // Revoke every session: a password change must end sessions an attacker may hold
     await prisma.refreshToken.deleteMany({ where: { userId: user.id } })

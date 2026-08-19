@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import express from 'express'
 import request from 'supertest'
-import bcrypt from 'bcryptjs'
+import { hashPassword, verifyPassword } from '../utils/password'
 import authRoutes from '../routes/auth'
 import kbRoutes from '../routes/kb'
 import approvalRoutes from '../routes/approvals'
@@ -27,7 +27,7 @@ async function login(email: string) {
 const auth = (t: string) => ({ Authorization: `Bearer ${t}` })
 
 beforeAll(async () => {
-  const hash = await bcrypt.hash(PW, 10)
+  const hash = await hashPassword(PW)
   await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
     const t = await prisma.tenant.create({ data: { name: 'Appr', slug: `appr${ts}`, status: 'ACTIVE' } })
     const o = await prisma.tenant.create({ data: { name: 'Other', slug: `oth${ts}`, status: 'ACTIVE' } })

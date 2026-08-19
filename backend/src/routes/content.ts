@@ -10,6 +10,7 @@ import { validate } from '../middleware/validate'
 import { OnboardingService } from '../services/onboarding'
 import { logger } from '../utils/logger'
 import { TTS_CONFIGURED, markdownToSpeech, synthesizeToFile } from '../services/tts'
+import { heavyAi } from '../utils/concurrency'
 import { getCtx, isSuperAdmin, getTenantId } from '../utils/tenantContext'
 import { requireModule, ownershipError } from '../utils/ownership'
 
@@ -289,7 +290,7 @@ router.post('/:id/generate-audio', authorize('PLATFORM_MANAGER', 'HR'), async (r
     if (text.length < 20) return res.status(400).json({ error: 'Section sans texte à lire.' })
     if (text.length > 30_000) return res.status(400).json({ error: 'Texte trop long pour une seule piste (30 000 caractères max).' })
     const filename = `tts-${content.id}-${Date.now()}.wav`
-    const out = await synthesizeToFile(text, { filename, voice: typeof req.body?.voice === 'string' ? req.body.voice : undefined })
+    const out = await heavyAi.run(() => synthesizeToFile(text, { filename, voice: typeof req.body?.voice === 'string' ? req.body.voice : undefined }))
     // Reuse an existing generated audio sibling, else create one right after the source section
     const existing = await prisma.content.findFirst({ where: { moduleId: content.moduleId, type: 'AUDIO', title: `🎧 ${content.title}` } })
     const audio = existing

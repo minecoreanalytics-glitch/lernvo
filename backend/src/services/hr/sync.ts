@@ -1,5 +1,5 @@
 import { Prisma, Role } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { hashPassword, hashManyWithPlains } from '../../utils/password'
 import { randomBytes } from 'crypto'
 import { prisma } from '../../utils/prisma'
 import { getTenantId } from '../../utils/tenantContext'
@@ -34,11 +34,17 @@ export async function applyHrPayload(source: string, payload: HrPayload, opts: {
 
   // ── Departments (two passes: upsert, then parents) ──
   const depts = payload.departments ?? []
+  // Lookups groupés : un aller-retour pour tous les départements, au lieu d'un par ligne.
+  const existingDepts = depts.length ? await prisma.department.findMany({
+    where: { OR: [{ externalSource: source, externalId: { in: depts.map(d => d.externalId).filter(Boolean) } }, { name: { in: depts.map(d => d.name?.trim()).filter(Boolean) as string[] } }] }
+  }) : []
+  const deptByExtId = new Map(existingDepts.filter(d => d.externalSource === source && d.externalId).map(d => [d.externalId as string, d]))
+  const deptByNameLc = new Map(existingDepts.map(d => [d.name.toLowerCase(), d]))
+
   for (const d of depts) {
     if (!d.externalId || !d.name?.trim()) { stats.warnings.push(`département ignoré (externalId/nom manquant): ${JSON.stringify(d).slice(0, 80)}`); continue }
     const name = d.name.trim()
-    let row = await prisma.department.findFirst({ where: { externalSource: source, externalId: d.externalId } })
-    if (!row) row = await prisma.department.findFirst({ where: { name } })
+    let row = deptByExtId.get(d.externalId) ?? deptByNameLc.get(name.toLowerCase()) ?? null
     if (row) {
       await prisma.department.update({ where: { id: row.id }, data: { name, managerName: d.managerName ?? row.managerName, externalSource: source, externalId: d.externalId } })
       stats.departments.updated++
@@ -58,6 +64,22 @@ export async function applyHrPayload(source: string, payload: HrPayload, opts: {
   const deptByName = new Map((await prisma.department.findMany({ select: { id: true, name: true } })).map(x => [x.name.toLowerCase(), x.id]))
 
   // ── Employees ──
+  // Un seul aller-retour pour retrouver tous les employés existants (par id externe ou par email),
+  // et les mots de passe temporaires sont hachés en parallèle sur le pool de threads.
+  const wantedEmails = payload.employees.map(e => e.email?.trim().toLowerCase()).filter(Boolean) as string[]
+  const wantedExt = payload.employees.map(e => e.externalId).filter(Boolean)
+  const existingUsers = payload.employees.length ? await prisma.user.findMany({
+    where: { OR: [{ externalSource: source, externalId: { in: wantedExt } }, { email: { in: wantedEmails } }] }
+  }) : []
+  const userByExtId = new Map(existingUsers.filter(u => u.externalSource === source && u.externalId).map(u => [u.externalId as string, u]))
+  const userByEmail = new Map(existingUsers.map(u => [u.email.toLowerCase(), u]))
+  const knownEmails = new Set(existingUsers.map(u => u.email.toLowerCase()))
+  const newCount = new Set(wantedEmails.filter(e => !knownEmails.has(e))).size
+  const tempPasswords = await hashManyWithPlains(Array.from({ length: newCount }, () => randomBytes(9).toString('base64url')))
+  const tempPlains = tempPasswords.plains
+  const tempHashes = tempPasswords.hashes
+  let tempIdx = 0
+
   const userByExt = new Map<string, string>()
   const seenIds = new Set<string>()
   const welcome: Array<{ id: string; tmp: string }> = []
@@ -65,8 +87,7 @@ export async function applyHrPayload(source: string, payload: HrPayload, opts: {
     const email = e.email?.trim().toLowerCase()
     if (!e.externalId || !email || !email.includes('@')) { stats.employees.skipped++; stats.warnings.push(`employé ignoré (externalId/email manquant): ${e.firstName ?? ''} ${e.lastName ?? ''}`.trim()); continue }
     const departmentId = (e.departmentExternalId && deptByExt.get(e.departmentExternalId)) || (e.departmentName && deptByName.get(e.departmentName.toLowerCase())) || null
-    let row = await prisma.user.findFirst({ where: { externalSource: source, externalId: e.externalId } })
-    if (!row) row = await prisma.user.findFirst({ where: { email } })
+    let row = userByExtId.get(e.externalId) ?? userByEmail.get(email) ?? null
     const active = e.active !== false
     if (row) {
       const role = e.role && !PROTECTED_ROLES.includes(row.role) ? e.role : row.role
@@ -78,10 +99,12 @@ export async function applyHrPayload(source: string, payload: HrPayload, opts: {
       } })
       stats.employees.updated++
     } else {
-      const tmp = randomBytes(6).toString('base64url')
+      const tmp = tempPlains[tempIdx] ?? randomBytes(9).toString('base64url')
+      const tmpHash = tempHashes[tempIdx] ?? await hashPassword(tmp)
+      tempIdx++
       row = await prisma.user.create({ data: {
         email, firstName: e.firstName?.trim() || '—', lastName: e.lastName?.trim() || '—',
-        passwordHash: await bcrypt.hash(tmp, 10), role: e.role ?? 'AGENT', tenantId, departmentId,
+        passwordHash: tmpHash, role: e.role ?? 'AGENT', tenantId, departmentId,
         hiredAt: e.hiredAt ? new Date(e.hiredAt) : null, isActive: active, externalSource: source, externalId: e.externalId
       } })
       stats.employees.created++

@@ -3,7 +3,6 @@ import path from 'path'
 import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
-import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import { logger } from './utils/logger'
 import { prisma } from './utils/prisma'
@@ -32,6 +31,7 @@ import approvalRoutes from './routes/approvals'
 import hrRoutes from './routes/hr'
 import publicRoutes from './routes/public'
 import mcoreRoutes from './routes/mcore'
+import { apiLimiter, authSourceLimiter } from './middleware/limits'
 import { mediaGuard } from './middleware/media'
 import { runDueConnectors } from './services/hr/connectors'
 import chatRoutes from './routes/chat'
@@ -63,11 +63,10 @@ app.use(express.urlencoded({ extended: true }))
 
 // ─── Rate Limiting ────────────────────────────────────────────────────────────
 // 1500/15min per IP — enough headroom for many employees behind a shared corporate NAT
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 1500, standardHeaders: true, legacyHeaders: false })
-// Auth: strict brute-force protection (20 attempts per 15min per IP)
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false })
-app.use('/api', limiter)
-app.use('/api/auth', authLimiter)
+// Limits are keyed by identity, never by IP for authenticated traffic: a customer's employees
+// share one office NAT (see middleware/limits.ts).
+app.use('/api', apiLimiter)
+app.use('/api/auth', authSourceLimiter)
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes)
@@ -129,6 +128,14 @@ app.get('/api/health', healthHandler)
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error(err.message, { stack: err.stack })
   res.status(500).json({ error: 'Internal server error' })
+})
+
+// Un rejet non géré ne doit jamais tuer le process en silence : on le trace et on continue.
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled promise rejection', { reason: reason instanceof Error ? reason.stack : String(reason) })
+})
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught exception', { stack: err.stack })
 })
 
 app.listen(PORT, () => {

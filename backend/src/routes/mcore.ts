@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../utils/prisma'
 import { authenticate, authorize } from '../middleware/auth'
 import { logger } from '../utils/logger'
-import { MCORE_CONFIGURED, computeDepartmentContext, recommendForDepartment, pushSignals, type DeptContext, type HeadRecommendation } from '../services/mcore'
+import { MCORE_CONFIGURED, computeAllDepartmentContexts, recommendForDepartment, pushSignals, type DeptContext, type HeadRecommendation } from '../services/mcore'
 
 const router = Router()
 router.use(authenticate)
@@ -30,9 +30,7 @@ router.get('/insights', async (req, res) => {
     const hit = cache.get(key)
     if (hit && Date.now() - hit.at < TTL && req.query.refresh !== '1') return res.json(hit.data)
     const mt = await tenantMcore(tenantId)
-    const depts = await prisma.department.findMany({ select: { id: true }, orderBy: { name: 'asc' } })
-    const contexts: DeptContext[] = []
-    for (const d of depts) { const c = await computeDepartmentContext(d.id); if (c && c.headcount > 0) contexts.push(c) }
+    const contexts: DeptContext[] = (await computeAllDepartmentContexts()).filter(c => c.headcount > 0)
     let recommendations: Array<{ department: DeptContext; recs: HeadRecommendation[]; decision_id?: string }> = []
     let headError: string | null = null
     if (mt && MCORE_CONFIGURED) {
@@ -63,9 +61,7 @@ router.get('/insights', async (req, res) => {
 router.post('/push', authorize('PLATFORM_MANAGER'), async (req, res) => {
   const mt = await tenantMcore(req.user!.tenantId!)
   if (!mt || !MCORE_CONFIGURED) return res.status(409).json({ error: 'Tentacule non activée (MORPHEUS_CORE_URL/KEY ou mcoreTenant manquant)' })
-  const depts = await prisma.department.findMany({ select: { id: true } })
-  const contexts: DeptContext[] = []
-  for (const d of depts) { const c = await computeDepartmentContext(d.id); if (c && c.headcount > 0) contexts.push(c) }
+  const contexts: DeptContext[] = (await computeAllDepartmentContexts()).filter(c => c.headcount > 0)
   try { res.json(await pushSignals(mt, contexts)) }
   catch (e) { res.status(502).json({ error: (e as Error).message }) }
 })

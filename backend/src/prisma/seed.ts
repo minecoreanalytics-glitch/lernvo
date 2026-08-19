@@ -1,5 +1,5 @@
 import { PrismaClient, Role } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { hashPassword, verifyPassword } from '../utils/password'
 
 const db = new PrismaClient()
 
@@ -17,7 +17,7 @@ async function main() {
   })
 
   // ── 2. Password hash (shared by all demo users) ─────────────────────────────
-  const passwordHash = await bcrypt.hash('LernvoDemo2026!', 12)
+  const passwordHash = await hashPassword('LernvoDemo2026!')
 
   // ── 3. SUPER_ADMIN ──────────────────────────────────────────────────────────
   await db.user.upsert({

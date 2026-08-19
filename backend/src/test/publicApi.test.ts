@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import express from 'express'
 import request from 'supertest'
-import bcrypt from 'bcryptjs'
+import { hashPassword, verifyPassword } from '../utils/password'
 import authRoutes from '../routes/auth'
 import kbRoutes from '../routes/kb'
 import approvalRoutes from '../routes/approvals'
@@ -20,7 +20,7 @@ let tenantId = ''; const pm = `pmpub${ts}@x.test`
 let pubId = '', privId = '', pubSlug = '', privSlug = ''
 
 beforeAll(async () => {
-  const hash = await bcrypt.hash(PW, 10)
+  const hash = await hashPassword(PW)
   await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
     const t = await prisma.tenant.create({ data: { name: 'Pub Co', slug, status: 'ACTIVE', logoUrl: 'https://x.test/l.png' } })
     tenantId = t.id

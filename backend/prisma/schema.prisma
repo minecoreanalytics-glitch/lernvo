@@ -48,6 +48,8 @@ model Tenant {
   approvalItems   ApprovalItem[]
   contentVersions ContentVersion[]
   acknowledgments Acknowledgment[]
+  hrConnectors    HrConnector[]
+  hrSyncRuns      HrSyncRun[]
 }
 
 enum ContentType {
@@ -121,31 +123,36 @@ model Department {
   users           User[]
   modules         Module[]
   onboardingPlans OnboardingPlan[]
+  externalSource  String?
+  externalId      String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
   @@unique([name, tenantId])
+  @@unique([tenantId, externalSource, externalId])
   @@index([tenantId])
 }
 
 model User {
-  id            String      @id @default(uuid())
-  email         String      @unique
-  passwordHash  String
-  firstName     String
-  lastName      String
-  avatarUrl     String?
-  role          Role
-  tenantId      String
-  tenant        Tenant      @relation(fields: [tenantId], references: [id])
-  departmentId  String?
-  department    Department? @relation(fields: [departmentId], references: [id])
-  managerId     String?
-  manager       User?       @relation("DirectReports", fields: [managerId], references: [id])
-  directReports User[]      @relation("DirectReports")
-  isActive      Boolean     @default(true)
-  hiredAt       DateTime?
-  lastLoginAt   DateTime?
+  id             String      @id @default(uuid())
+  email          String      @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  avatarUrl      String?
+  role           Role
+  tenantId       String
+  tenant         Tenant      @relation(fields: [tenantId], references: [id])
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id])
+  managerId      String?
+  manager        User?       @relation("DirectReports", fields: [managerId], references: [id])
+  directReports  User[]      @relation("DirectReports")
+  isActive       Boolean     @default(true)
+  hiredAt        DateTime?
+  lastLoginAt    DateTime?
+  externalSource String? // HRIS connector type (ODOO, CSV, API…)
+  externalId     String? // id in the HRIS
 
   // Gamification
   totalPoints    Int       @default(0)
@@ -173,6 +180,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([tenantId, externalSource, externalId])
   @@index([email])
   @@index([departmentId])
   @@index([role])
@@ -699,4 +707,48 @@ model Acknowledgment {
   @@unique([userId, entityType, entityId, version])
   @@index([tenantId, entityType, entityId, version])
   @@index([userId])
+}
+
+// ─── HRIS integration (employees & org chart in, certificates out) ───────────
+
+enum HrConnectorType {
+  ODOO
+  CSV
+  API
+}
+
+model HrConnector {
+  id                String          @id @default(uuid())
+  tenantId          String
+  tenant            Tenant          @relation(fields: [tenantId], references: [id])
+  type              HrConnectorType
+  name              String
+  enabled           Boolean         @default(true)
+  config            Json // secrets encrypted (services/crypto)
+  apiKeyHash        String? // type API: external system pushes to us
+  pushCertificates  Boolean         @default(true)
+  deactivateMissing Boolean         @default(false)
+  intervalMinutes   Int             @default(60)
+  lastRunAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  runs              HrSyncRun[]
+
+  @@index([tenantId])
+}
+
+model HrSyncRun {
+  id          String       @id @default(uuid())
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  connectorId String?
+  connector   HrConnector? @relation(fields: [connectorId], references: [id], onDelete: SetNull)
+  source      String
+  status      String // running | success | error
+  stats       Json?
+  error       String?
+  startedAt   DateTime     @default(now())
+  finishedAt  DateTime?
+
+  @@index([tenantId, startedAt])
 }

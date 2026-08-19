@@ -29,6 +29,8 @@ import onboardingRoutes from './routes/onboarding'
 import tenantRoutes from './routes/tenants'
 import brandingRoutes from './routes/branding'
 import approvalRoutes from './routes/approvals'
+import hrRoutes from './routes/hr'
+import { runDueConnectors } from './services/hr/connectors'
 import chatRoutes from './routes/chat'
 
 dotenv.config()
@@ -85,6 +87,7 @@ app.use('/api/onboarding', onboardingRoutes)
 app.use('/api/tenants', tenantRoutes)
 app.use('/api/branding', brandingRoutes)
 app.use('/api/approvals', approvalRoutes)
+app.use('/api/hr', hrRoutes)
 app.use('/api/chat', chatRoutes)
 
 // ─── Health Check (both /health and /api/health) ─────────────────────────────
@@ -125,6 +128,10 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 app.listen(PORT, () => {
   logger.info(`Lernvo API running on port ${PORT}`)
+  // HRIS pull connectors scheduler (every 5 min, each connector honours its own interval)
+  if (process.env.HR_SYNC_SCHEDULER !== 'off' && process.env.NODE_ENV !== 'test') {
+    setInterval(() => { runDueConnectors().catch(e => logger.warn('hr scheduler', { error: (e as Error).message })) }, 5 * 60_000).unref()
+  }
 })
 
 export default app

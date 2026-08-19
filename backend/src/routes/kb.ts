@@ -3,7 +3,7 @@ import { z } from 'zod'
 import multer from 'multer'
 import rateLimit from 'express-rate-limit'
 import { prisma } from '../utils/prisma'
-import { authenticate, authorize } from '../middleware/auth'
+import { authenticate, authorize, reenterTenant } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 import { AIService } from '../services/ai'
 import { logger } from '../utils/logger'
@@ -150,7 +150,7 @@ router.post(
   '/import-document',
   authorize('PLATFORM_MANAGER', 'HR'),
   kbImportLimiter,
-  upload.single('file'),
+  upload.single('file'), reenterTenant,
   async (req, res) => {
     try {
       if (!req.file) {

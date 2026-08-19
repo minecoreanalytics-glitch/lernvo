@@ -3,6 +3,7 @@
  * Generates professional certificates using SVG → HTML approach (no heavy deps)
  */
 import { prisma } from '../utils/prisma'
+import { pushCertificate } from './hr/connectors'
 import fs from 'fs'
 import path from 'path'
 
@@ -187,6 +188,7 @@ export class CertificateService {
         downloadUrl: `/uploads/certificates/${filename}`
       }
     })
+    pushCertificate(userId, module.title, certNumber, issuedAt).catch(() => {}) // HRIS (best effort)
 
     return { id: cert.id, certNumber: cert.certNumber, downloadUrl: cert.downloadUrl! }
   }
@@ -233,6 +235,7 @@ export class CertificateService {
         downloadUrl: `/uploads/certificates/${filename}`
       }
     })
+    pushCertificate(userId, careerPath.title, certNumber, issuedAt).catch(() => {}) // HRIS (best effort)
 
     return { id: cert.id, certNumber: cert.certNumber, downloadUrl: cert.downloadUrl! }
   }

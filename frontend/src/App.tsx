@@ -24,6 +24,7 @@ import AnalyticsPage from './pages/admin/AnalyticsPage'
 import NotificationsPage from './pages/NotificationsPage'
 import TenantsPage from './pages/admin/TenantsPage'
 import ApprovalsPage from './pages/admin/ApprovalsPage'
+import HrIntegrationsPage from './pages/admin/HrIntegrationsPage'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const user = useAuthStore(s => s.user)
@@ -86,6 +87,11 @@ export default function App() {
         <Route path="admin/approvals" element={
           <RequireRole roles={['PLATFORM_MANAGER', 'HR']}>
             <ApprovalsPage />
+          </RequireRole>
+        } />
+        <Route path="admin/integrations" element={
+          <RequireRole roles={['PLATFORM_MANAGER']}>
+            <HrIntegrationsPage />
           </RequireRole>
         } />
         <Route path="admin/reports" element={

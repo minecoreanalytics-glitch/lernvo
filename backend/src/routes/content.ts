@@ -6,7 +6,7 @@ import path from 'path'
 import fs from 'fs'
 import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '../utils/prisma'
-import { authenticate, authorize } from '../middleware/auth'
+import { authenticate, authorize, reenterTenant } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 import { OnboardingService } from '../services/onboarding'
 import { logger } from '../utils/logger'
@@ -78,7 +78,7 @@ router.post('/', authorize('PLATFORM_MANAGER', 'HR'), validate(ContentSchema), a
 })
 
 // POST /api/content/upload — file upload (video/audio/pdf)
-router.post('/upload', authorize('PLATFORM_MANAGER', 'HR'), upload.single('file'), async (req, res) => {
+router.post('/upload', authorize('PLATFORM_MANAGER', 'HR'), upload.single('file'), reenterTenant, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
     const { moduleId, title, type, order, isRequired } = req.body

@@ -6,7 +6,7 @@ import multer from 'multer'
 const pdf = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>
 import { prisma } from '../utils/prisma'
 import { getTenantId } from '../utils/tenantContext'
-import { authenticate, authorize } from '../middleware/auth'
+import { authenticate, authorize, reenterTenant } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 import { AIService, TrainingPurpose, TrainingFormat } from '../services/ai'
 import { logger } from '../utils/logger'
@@ -66,7 +66,7 @@ function handleAiRouteError(res: import('express').Response, err: unknown, conte
 
 // ─── POST /api/ai/analyze-content ────────────────────────────────────────────
 // Step 2: Analyze uploaded content → suggest purpose + format + transcribe
-router.post('/analyze-content', aiGenerationLimiter, upload.single('file'), async (req, res) => {
+router.post('/analyze-content', aiGenerationLimiter, upload.single('file'), reenterTenant, async (req, res) => {
   try {
     if (!AIService.isConfigured()) {
       return res.status(503).json({ error: 'AI service not configured. Set GEMINI_API_KEY environment variable.' })
@@ -126,7 +126,7 @@ const GenerateSchema = z.object({
   preview: z.preprocess(v => v === 'true' || v === true, z.boolean().default(false)),
 })
 
-router.post('/generate-module', aiGenerationLimiter, upload.single('file'), validate(GenerateSchema), async (req, res) => {
+router.post('/generate-module', aiGenerationLimiter, upload.single('file'), reenterTenant, validate(GenerateSchema), async (req, res) => {
   try {
     if (!AIService.isConfigured()) {
       return res.status(503).json({

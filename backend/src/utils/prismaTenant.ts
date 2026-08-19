@@ -4,7 +4,8 @@ import { getCtx, isSuperAdmin } from './tenantContext'
 const SCOPED = new Set([
   'Department', 'User', 'Category', 'Module',
   'CareerPath', 'KbArticle', 'OnboardingPlan',
-  'ApprovalItem', 'ContentVersion', 'Acknowledgment'
+  'ApprovalItem', 'ContentVersion', 'Acknowledgment',
+  'HrConnector', 'HrSyncRun'
 ])
 
 /** Lowercase only the first character of a model name to get the delegate key. */

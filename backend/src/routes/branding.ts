@@ -14,8 +14,8 @@ router.get('/', async (req, res) => {
   if (!slug) {
     return res.json({ platformName: PLATFORM_NAME, baseDomain: BASE_DOMAIN, tenant: null })
   }
-  const tenant = await tenantStore.run({ tenantId: null, superAdmin: true }, () =>
-    prisma.tenant.findUnique({
+  const tenant = await tenantStore.run({ tenantId: null, superAdmin: true }, async () =>
+    await prisma.tenant.findUnique({
       where: { slug },
       select: { name: true, slug: true, status: true, logoUrl: true, primaryColor: true, supportEmail: true }
     })
@@ -36,8 +36,8 @@ router.get('/tls-check', tlsCheckLimiter, async (req, res) => {
   if (domain === BASE_DOMAIN || domain === `www.${BASE_DOMAIN}`) return res.status(200).end()
   const slug = tenantSlugFromHost(domain)
   if (!slug) return res.status(404).end()
-  const t = await tenantStore.run({ tenantId: null, superAdmin: true }, () =>
-    prisma.tenant.findUnique({ where: { slug }, select: { status: true } })
+  const t = await tenantStore.run({ tenantId: null, superAdmin: true }, async () =>
+    await prisma.tenant.findUnique({ where: { slug }, select: { status: true } })
   )
   return res.status(t && t.status === 'ACTIVE' ? 200 : 404).end()
 })

@@ -33,6 +33,13 @@ into the tenant with SQL/`INSERT … SELECT` setting `tenantId`, then never agai
 Lernvo DB is the single source of truth. Passwords: import bcrypt hashes as-is if the source uses
 bcrypt; otherwise send reset links. Uploads go to the `lernvo_uploads` volume.
 
+## 4b. HRIS connection (optional, recommended)
+
+`Intégrations RH` (tenant admin): connect **Odoo** (URL, DB, user, API key → Tester → Synchroniser),
+or generate an **API key** for n8n / the customer's HRIS to push employees, or import a **CSV**.
+Certificates flow back to the HRIS when `Renvoyer les certificats` is on.
+⚠️ Rotating the platform `JWT_SECRET` invalidates stored connector secrets (re-save them).
+
 ## 5. Hand-off checklist
 
 - [ ] Tenant ACTIVE, subdomain answers 200 over HTTPS

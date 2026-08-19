@@ -86,5 +86,7 @@ See [docs/NEW_TENANT.md](docs/NEW_TENANT.md).
 
 ## License
 
-Copyright © Groupe Altis Holding / Minecore. All rights reserved. Source is published for
-collaboration and transparency; contact the maintainers for usage rights.
+**Business Source License 1.1** (see [LICENSE](LICENSE)). You may read, run, modify and contribute;
+a single company may use it in production for its own employees. Offering Lernvo (or a derivative)
+as a hosted/managed service or a competing product requires a commercial license from
+Groupe Altis Holding Inc. Each version converts to Apache-2.0 four years after its release.

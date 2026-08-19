@@ -24,7 +24,7 @@ describe('POST /api/auth/signup', () => {
     })
     expect(r.status).toBe(400)
   })
-  it('returns 409 on duplicate email', async () => {
+  it('the same email may create a second company (email is unique per tenant, LRN-16)', async () => {
     const email = `dup${Date.now()}@acme.test`
     const payload = {
       companyName: 'DupCo ' + Date.now(),
@@ -38,7 +38,7 @@ describe('POST /api/auth/signup', () => {
       ...payload,
       companyName: 'DupCo2 ' + Date.now(),
     })
-    expect(second.status).toBe(409)
-    expect(second.body.error).toBe('Email already in use')
+    expect(second.status).toBe(201)
+    expect(second.body.tenant?.slug ?? second.body.tenantSlug ?? '').not.toBe(first.body.tenant?.slug ?? first.body.tenantSlug ?? 'x')
   })
 })

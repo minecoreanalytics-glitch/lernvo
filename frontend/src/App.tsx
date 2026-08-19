@@ -1,31 +1,32 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth'
 import Layout from './components/layout/Layout'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
-import DashboardPage from './pages/DashboardPage'
-import AdminDashboardPage from './pages/admin/AdminDashboardPage'
-import ModulesPage from './pages/ModulesPage'
-import ModuleDetailPage from './pages/ModuleDetailPage'
-import QuizPage from './pages/QuizPage'
-import CareerPage from './pages/CareerPage'
-import KnowledgePage from './pages/KnowledgePage'
-import LeaderboardPage from './pages/LeaderboardPage'
-import ProfilePage from './pages/ProfilePage'
-import AdminUsersPage from './pages/admin/AdminUsersPage'
-import AdminContentPage from './pages/admin/AdminContentPage'
-import AIGeneratorPage from './pages/admin/AIGeneratorPage'
-import CertificatesPage from './pages/CertificatesPage'
-import DepartmentsPage from './pages/DepartmentsPage'
-import AssignmentsPage from './pages/AssignmentsPage'
-import TeamPage from './pages/TeamPage'
-import ReportsPage from './pages/admin/ReportsPage'
-import AnalyticsPage from './pages/admin/AnalyticsPage'
-import NotificationsPage from './pages/NotificationsPage'
-import TenantsPage from './pages/admin/TenantsPage'
-import ApprovalsPage from './pages/admin/ApprovalsPage'
-import HrIntegrationsPage from './pages/admin/HrIntegrationsPage'
-import InsightsPage from './pages/admin/InsightsPage'
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
+const ModulesPage = lazy(() => import('./pages/ModulesPage'))
+const ModuleDetailPage = lazy(() => import('./pages/ModuleDetailPage'))
+const QuizPage = lazy(() => import('./pages/QuizPage'))
+const CareerPage = lazy(() => import('./pages/CareerPage'))
+const KnowledgePage = lazy(() => import('./pages/KnowledgePage'))
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
+const AdminContentPage = lazy(() => import('./pages/admin/AdminContentPage'))
+const AIGeneratorPage = lazy(() => import('./pages/admin/AIGeneratorPage'))
+const CertificatesPage = lazy(() => import('./pages/CertificatesPage'))
+const DepartmentsPage = lazy(() => import('./pages/DepartmentsPage'))
+const AssignmentsPage = lazy(() => import('./pages/AssignmentsPage'))
+const TeamPage = lazy(() => import('./pages/TeamPage'))
+const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'))
+const AnalyticsPage = lazy(() => import('./pages/admin/AnalyticsPage'))
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
+const TenantsPage = lazy(() => import('./pages/admin/TenantsPage'))
+const ApprovalsPage = lazy(() => import('./pages/admin/ApprovalsPage'))
+const HrIntegrationsPage = lazy(() => import('./pages/admin/HrIntegrationsPage'))
+const InsightsPage = lazy(() => import('./pages/admin/InsightsPage'))
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const user = useAuthStore(s => s.user)
@@ -48,6 +49,7 @@ function SmartDashboard() {
 
 export default function App() {
   return (
+    <Suspense fallback={<div className="min-h-dvh flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary-200 border-t-primary-700 animate-spin" /></div>}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
@@ -118,5 +120,6 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
+    </Suspense>
   )
 }

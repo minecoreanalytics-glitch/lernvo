@@ -17,7 +17,7 @@ export const MEDIA_COOKIE = 'lernvo_media'
 type MediaClaims = { userId: string; tenantId: string | null; superAdmin: boolean }
 
 export function signMediaCookie(claims: MediaClaims): string {
-  return jwt.sign(claims, process.env.JWT_SECRET!, { expiresIn: '7d', audience: 'media' })
+  return jwt.sign(claims, process.env.JWT_SECRET!, { expiresIn: '7d', algorithm: 'HS256', issuer: 'lernvo', audience: 'media' })
 }
 export function mediaCookieOptions() {
   return { httpOnly: true, sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production', path: '/uploads', maxAge: 7 * 24 * 3600 * 1000 }
@@ -37,7 +37,7 @@ export async function mediaGuard(req: Request, res: Response, next: NextFunction
   const token = readCookie(req, MEDIA_COOKIE) || (typeof req.query.t === 'string' ? req.query.t : null)
   if (!token) return res.status(401).end()
   let claims: MediaClaims
-  try { claims = jwt.verify(token, process.env.JWT_SECRET!, { audience: 'media' }) as MediaClaims } catch { return res.status(401).end() }
+  try { claims = jwt.verify(token, process.env.JWT_SECRET!, { algorithms: ['HS256'], issuer: 'lernvo', audience: 'media' }) as MediaClaims } catch { return res.status(401).end() }
   // normalise & block traversal
   const rel = path.posix.normalize('/' + req.path).replace(/^\/+/, '')
   if (rel.includes('..') || rel.startsWith('.')) return res.status(404).end()

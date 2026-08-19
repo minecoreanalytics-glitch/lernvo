@@ -14,20 +14,23 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [tenantChoices, setTenantChoices] = useState<Array<{ slug: string; name: string }> | null>(null)
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function doLogin(tenantSlug?: string) {
     setLoading(true); setError('')
     try {
-      const { data } = await api.post('/auth/login', { email, password })
+      const { data } = await api.post('/auth/login', { email, password, ...(tenantSlug ? { tenantSlug } : {}) })
       setAuth(data.user, data.accessToken, data.refreshToken)
       navigate('/dashboard')
     } catch (err: unknown) {
-      setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Identifiants incorrects')
+      const resp = (err as { response?: { status?: number; data?: { error?: string; needTenant?: boolean; tenants?: Array<{ slug: string; name: string }> } } })?.response
+      if (resp?.status === 409 && resp.data?.needTenant) { setTenantChoices(resp.data.tenants ?? []); return }
+      setError(resp?.data?.error || 'Identifiants incorrects')
     } finally {
       setLoading(false)
     }
   }
+  async function handleSubmit(e: React.FormEvent) { e.preventDefault(); setTenantChoices(null); await doLogin() }
 
   return (
     <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -52,6 +55,16 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="card p-6 space-y-5">
+          {tenantChoices && (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-700">Ce compte existe dans plusieurs entreprises. Choisissez votre espace :</p>
+              {tenantChoices.map(t => (
+                <button key={t.slug} type="button" onClick={() => doLogin(t.slug)} disabled={loading}
+                  className="w-full text-left card p-3 hover:shadow-card-md transition-shadow text-sm font-medium text-gray-800">{t.name} <span className="text-xs text-gray-400">· {t.slug}</span></button>
+              ))}
+              <button type="button" onClick={() => setTenantChoices(null)} className="btn-ghost text-xs">Annuler</button>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="label">Adresse email</label>

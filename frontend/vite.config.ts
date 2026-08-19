@@ -4,6 +4,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
+  build: {
+    chunkSizeWarningLimit: 700,
+    rollupOptions: { output: { manualChunks: { react: ['react', 'react-dom', 'react-router-dom'], query: ['@tanstack/react-query', 'axios', 'zustand'], charts: ['recharts'], motion: ['framer-motion'], markdown: ['react-markdown', 'remark-gfm'], icons: ['lucide-react'] } } },
+  },
   plugins: [
     react(),
     VitePWA({

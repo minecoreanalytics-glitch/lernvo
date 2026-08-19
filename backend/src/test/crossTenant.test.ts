@@ -101,3 +101,24 @@ describe('cross-tenant isolation on formerly unguarded models', () => {
     })
   })
 })
+
+describe('same email in two tenants (LRN-16)', () => {
+  it('login on apex asks which company; on a tenant host it resolves directly; wrong password → 401', async () => {
+    const hash = await bcrypt.hash(PW, 10)
+    const shared = `dup${ts}@x.test`
+    let slugA = '', slugB = ''
+    await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
+      slugA = (await prisma.tenant.findUnique({ where: { id: tA } }))!.slug
+      slugB = (await prisma.tenant.findUnique({ where: { id: tB } }))!.slug
+      await prisma.user.create({ data: { email: shared, passwordHash: hash, firstName: 'D', lastName: 'A', role: 'AGENT', isActive: true, tenantId: tA } })
+      await prisma.user.create({ data: { email: shared, passwordHash: hash, firstName: 'D', lastName: 'B', role: 'AGENT', isActive: true, tenantId: tB } })
+    })
+    const apex = await request(app).post('/api/auth/login').send({ email: shared, password: PW })
+    expect(apex.status).toBe(409); expect(apex.body.needTenant).toBe(true); expect(apex.body.tenants.map((t: { slug: string }) => t.slug).sort()).toEqual([slugA, slugB].sort())
+    const pick = await request(app).post('/api/auth/login').send({ email: shared, password: PW, tenantSlug: slugB })
+    expect(pick.status).toBe(200); expect(pick.body.user.tenantId).toBe(tB)
+    const host = await request(app).post('/api/auth/login').set('Host', `${slugA}.lernvo.com`).send({ email: shared, password: PW })
+    expect(host.status).toBe(200); expect(host.body.user.tenantId).toBe(tA)
+    expect((await request(app).post('/api/auth/login').send({ email: shared, password: 'wrong-password' })).status).toBe(401)
+  })
+})

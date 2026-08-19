@@ -13,7 +13,7 @@ app.use('/api/content', contentRoutes)
 const SECRET = process.env.JWT_SECRET as string
 
 function makeToken(userId: string, tenantId: string | null, role = 'PLATFORM_MANAGER') {
-  return jwt.sign({ userId, email: `${userId}@test.lernvo`, role, tenantId }, SECRET, { expiresIn: '15m' })
+  return jwt.sign({ userId, email: `${userId}@test.lernvo`, role, tenantId }, SECRET, { expiresIn: '15m', issuer: 'lernvo', audience: 'api' })
 }
 
 let tenantAId: string

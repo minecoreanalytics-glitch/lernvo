@@ -24,7 +24,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   if (!token) return res.status(401).json({ error: 'Unauthorized' })
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload
+    const payload = jwt.verify(token, process.env.JWT_SECRET!, { algorithms: ['HS256'], issuer: 'lernvo', audience: 'api' }) as AuthPayload
     req.user = payload
     const superAdmin = req.user.role === 'SUPER_ADMIN'
     tenantStore.run(

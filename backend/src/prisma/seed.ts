@@ -21,7 +21,7 @@ async function main() {
 
   // ── 3. SUPER_ADMIN ──────────────────────────────────────────────────────────
   await db.user.upsert({
-    where: { email: 'superadmin@lernvo.com' },
+    where: { tenantId_email: { tenantId: tenant.id, email: 'superadmin@lernvo.com' } },
     update: {},
     create: {
       email: 'superadmin@lernvo.com',
@@ -45,7 +45,7 @@ async function main() {
 
   for (const u of roleUsers) {
     await db.user.upsert({
-      where: { email: u.email },
+      where: { tenantId_email: { tenantId: tenant.id, email: u.email } },
       update: {},
       create: {
         ...u,

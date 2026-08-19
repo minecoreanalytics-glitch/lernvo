@@ -15,7 +15,7 @@ const saToken = () =>
   jwt.sign(
     { userId: 'sa', email: 'sa@lernvo', role: 'SUPER_ADMIN', tenantId: null },
     SECRET,
-    { expiresIn: '15m' }
+    { expiresIn: '15m', issuer: 'lernvo', audience: 'api' }
   )
 
 describe('tenant admin', () => {
@@ -36,7 +36,7 @@ describe('tenant admin', () => {
     const tok = jwt.sign(
       { userId: 'u', email: 'u@x', role: 'PLATFORM_MANAGER', tenantId: 'x' },
       SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '15m', issuer: 'lernvo', audience: 'api' }
     )
     const r = await request(app)
       .get('/api/tenants')

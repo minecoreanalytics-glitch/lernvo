@@ -156,7 +156,7 @@ model Department {
 
 model User {
   id             String      @id @default(uuid())
-  email          String      @unique
+  email          String // unique per tenant (see @@unique below) — one person may exist in several companies
   passwordHash   String
   firstName      String
   lastName       String
@@ -201,6 +201,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([tenantId, email])
   @@unique([tenantId, externalSource, externalId])
   @@index([email])
   @@index([departmentId])

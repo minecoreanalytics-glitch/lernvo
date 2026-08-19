@@ -24,13 +24,14 @@ const SignupSchema = z.object({
 
 const LoginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6)
+  password: z.string().min(6),
+  tenantSlug: z.string().regex(/^[a-z0-9-]+$/).optional() // when the same email exists in several companies
 })
 
 const RefreshSchema = z.object({ refreshToken: z.string() })
 
 function signAccess(userId: string, email: string, role: string, tenantId: string | null, departmentId: string | null) {
-  return jwt.sign({ userId, email, role, tenantId, departmentId }, process.env.JWT_SECRET!, { expiresIn: '15m' })
+  return jwt.sign({ userId, email, role, tenantId, departmentId }, process.env.JWT_SECRET!, { expiresIn: '15m', algorithm: 'HS256', issuer: 'lernvo', audience: 'api' })
 }
 
 // Refresh tokens: random 256-bit, stored HASHED (sha256), rotated on every use, revoked on password change (LRN-11)
@@ -81,7 +82,7 @@ router.post('/signup', validate(SignupSchema), async (req, res) => {
     })
   } catch (err: unknown) {
     if (typeof err === 'object' && err !== null && (err as { code?: string }).code === 'P2002') {
-      return res.status(409).json({ error: 'Email already in use' })
+      return res.status(409).json({ error: 'Impossible de créer cet espace (identifiant déjà pris). Réessayez.' }) // slug collision (email is per-tenant)
     }
     logger.error('Signup failed', { err })
     res.status(500).json({ error: 'Signup failed' })
@@ -91,17 +92,24 @@ router.post('/signup', validate(SignupSchema), async (req, res) => {
 // POST /api/auth/login
 router.post('/login', validate(LoginSchema), async (req, res) => {
   try {
-    const { email, password } = req.body
+    const { email, password, tenantSlug } = req.body
+    const hostSlugEarly = tenantSlugFromRequest(req)
 
-    // Lookup user in superAdmin context — no tenant context exists at login time
-    const user = await tenantStore.run({ tenantId: null, superAdmin: true },
-      async () => {
-        return await prisma.user.findUnique({ where: { email } })
-      })
-    if (!user || !user.isActive) return res.status(401).json({ error: 'Invalid credentials' })
-
-    const valid = await bcrypt.compare(password, user.passwordHash)
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' })
+    // The same email may exist in several companies (one row per tenant). Resolve candidates in
+    // superAdmin context, narrow by host / explicit tenantSlug, then by password. Never reveal which
+    // tenants an email belongs to before the password has been verified.
+    const candidates = await tenantStore.run({ tenantId: null, superAdmin: true }, async () =>
+      await prisma.user.findMany({ where: { email: email.toLowerCase(), isActive: true }, include: { tenant: { select: { slug: true, name: true, status: true } } } }))
+    const wantedSlug = tenantSlug || hostSlugEarly
+    const narrowed = wantedSlug ? candidates.filter(c => c.role === 'SUPER_ADMIN' || c.tenant?.slug === wantedSlug) : candidates
+    const matching: typeof candidates = []
+    for (const c of narrowed) if (await bcrypt.compare(password, c.passwordHash)) matching.push(c)
+    if (matching.length === 0) return res.status(401).json({ error: 'Invalid credentials' })
+    if (matching.length > 1) {
+      // password verified for several companies → let the person pick (no enumeration: password known)
+      return res.status(409).json({ needTenant: true, tenants: matching.filter(c => c.tenant?.status === 'ACTIVE').map(c => ({ slug: c.tenant!.slug, name: c.tenant!.name })) })
+    }
+    const user = matching[0]
 
     // Tenant gate: non-SUPER_ADMIN users cannot log in unless their tenant is ACTIVE
     if (user.role !== 'SUPER_ADMIN') {

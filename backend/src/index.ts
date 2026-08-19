@@ -138,12 +138,18 @@ process.on('uncaughtException', (err) => {
   logger.error('Uncaught exception', { stack: err.stack })
 })
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`Lernvo API running on port ${PORT}`)
   // HRIS pull connectors scheduler (every 5 min, each connector honours its own interval)
   if (process.env.HR_SYNC_SCHEDULER !== 'off' && process.env.NODE_ENV !== 'test') {
     setInterval(() => { runDueConnectors().catch(e => logger.warn('hr scheduler', { error: (e as Error).message })) }, 5 * 60_000).unref()
   }
 })
+
+// nginx garde ses connexions amont ouvertes 60 s. Si Node ferme les siennes avant, nginx envoie
+// une requête dans une connexion en train de se fermer et le client reçoit un 502. Node doit donc
+// toujours tenir plus longtemps que le proxy qui est devant lui.
+server.keepAliveTimeout = 65_000
+server.headersTimeout = 70_000
 
 export default app

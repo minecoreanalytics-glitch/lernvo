@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    /* Prevent iOS zoom on input focus */
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-gray-50 text-gray-800 font-sans antialiased;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    /* Smoother scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent pull-to-refresh in PWA */
+    overscroll-behavior-y: contain;
+  }
+  h1, h2, h3 { @apply text-gray-900; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { @apply bg-gray-100; }
+  ::-webkit-scrollbar-thumb { @apply bg-gray-300 rounded-full; }
+
+  /* iOS input zoom fix — inputs < 16px cause zoom */
+  input, select, textarea { font-size: 16px !important; }
+  @media (min-width: 1024px) {
+    input, select, textarea { font-size: inherit !important; }
+  }
+}
+
+@layer components {
+  /* ── Cards ──────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-2xl border border-gray-200 shadow-card;
+  }
+  .card-flat {
+    @apply bg-white rounded-2xl border border-gray-200;
+  }
+
+  /* ── Buttons — touch-optimized ─────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm
+           transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    /* Touch feedback */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    /* Minimum touch target 44px (Apple HIG) */
+    min-height: 44px;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .btn-primary {
+    @apply btn bg-primary-700 hover:bg-primary-600 text-white shadow-sm;
+  }
+  .btn-primary:active:not(:disabled) {
+    @apply bg-primary-800;
+  }
+  .btn-outline {
+    @apply btn bg-white hover:bg-gray-50 text-primary-700 border border-primary-200;
+  }
+  .btn-outline:active:not(:disabled) {
+    @apply bg-primary-50;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-gray-100 text-gray-600 hover:text-gray-800;
+  }
+  .btn-ghost:active:not(:disabled) {
+    @apply bg-gray-200;
+  }
+  .btn-danger {
+    @apply btn bg-danger-50 hover:bg-red-100 text-danger-500 border border-red-200;
+  }
+  .btn-full {
+    @apply btn-primary w-full py-3.5 rounded-2xl text-base;
+  }
+
+  /* ── Inputs — mobile optimized ─────────────────────── */
+  .input {
+    @apply w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800
+           placeholder-gray-400 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100
+           transition-all duration-150;
+    /* Prevent zoom on iOS */
+    font-size: 16px;
+    min-height: 48px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .label {
+    @apply block text-xs font-medium text-gray-500 mb-1.5;
+  }
+
+  /* ── Badges / Chips ──────────────────────────────────── */
+  .chip {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .chip-primary  { @apply chip bg-primary-50 text-primary-700; }
+  .chip-success  { @apply chip bg-success-50 text-success-600; }
+  .chip-warning  { @apply chip bg-warning-50 text-warning-500; }
+  .chip-danger   { @apply chip bg-danger-50  text-danger-500; }
+  .chip-gray     { @apply chip bg-gray-100   text-gray-500; }
+
+  /* ── Progress bar ────────────────────────────────────── */
+  .progress-track { @apply h-1.5 rounded-full bg-gray-200 overflow-hidden; }
+  .progress-fill  { @apply h-full rounded-full bg-gradient-to-r from-primary-700 to-primary-400 transition-all duration-500; }
+
+  /* ── Nav item ────────────────────────────────────────── */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150
+           text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer;
+    touch-action: manipulation;
+  }
+  .nav-item-active {
+    @apply nav-item bg-primary-700 text-white hover:bg-primary-600 hover:text-white shadow-sm;
+  }
+
+  /* ── Section headers ─────────────────────────────────── */
+  .section-title {
+    @apply text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1 mt-5;
+  }
+
+  /* ── Safe area ───────────────────────────────────────── */
+  .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
+  .safe-top    { padding-top:    env(safe-area-inset-top); }
+
+  /* ── PWA standalone safe area fix ────────────────────── */
+  @supports (padding-top: env(safe-area-inset-top)) {
+    @media (display-mode: standalone) {
+      .pwa-safe-header {
+        padding-top: env(safe-area-inset-top) !important;
+      }
+    }
+  }
+
+  /* ── Skeleton ────────────────────────────────────────── */
+  .skeleton {
+    @apply bg-gray-200 rounded-xl animate-pulse;
+  }
+
+  /* ── Touch-friendly interactive elements ─────────────── */
+  .touch-target {
+    position: relative;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Expand touch area for small buttons */
+  .touch-target::after {
+    content: '';
+    position: absolute;
+    top: -8px; right: -8px; bottom: -8px; left: -8px;
+  }
+
+  /* ── Pull indicator (visual only) ────────────────────── */
+  .pull-indicator {
+    @apply w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1;
+  }
+
+  /* ── Mobile sheet (bottom sheet pattern) ─────────────── */
+  .mobile-sheet {
+    @apply fixed inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-card-lg z-50;
+    max-height: 85dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-sheet-overlay {
+    @apply fixed inset-0 bg-black/40 z-40;
+  }
+}
+
+/* ── Gamification FX ─────────────────────────────────────── */
+@keyframes xp-float {
+  0%   { opacity:0; transform: translateY(0)   scale(0.8); }
+  50%  { opacity:1; transform: translateY(-20px) scale(1); }
+  100% { opacity:0; transform: translateY(-40px) scale(0.9); }
+}
+.xp-float { animation: xp-float 1.5s ease-out forwards; pointer-events: none; }
+
+@keyframes streak-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px #F97316); }
+  50%       { filter: drop-shadow(0 0 12px #F97316); }
+}
+.streak-glow { animation: streak-glow 1.2s ease-in-out infinite; }
+
+/* ── PWA install prompt ──────────────────────────────────── */
+@media (display-mode: standalone) {
+  /* When running as installed PWA */
+  .pwa-install-prompt { display: none !important; }
+}
+
+/* ── Selection color ─────────────────────────────────────── */
+::selection {
+  background: rgba(22, 58, 107, 0.2);
+  color: inherit;
+}

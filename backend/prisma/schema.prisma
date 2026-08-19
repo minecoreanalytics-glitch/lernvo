@@ -1,0 +1,634 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  PLATFORM_MANAGER
+  HR
+  MANAGER
+  SUPERVISOR
+  AGENT
+}
+
+enum TenantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+model Tenant {
+  id         String       @id @default(uuid())
+  name       String
+  slug       String       @unique
+  status     TenantStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  approvedAt DateTime?
+  approvedBy String?
+
+  // Branding (per-tenant look & feel, served on <slug>.<DOMAIN>)
+  logoUrl      String?
+  primaryColor String?
+  supportEmail String?
+
+  departments     Department[]
+  users           User[]
+  categories      Category[]
+  modules         Module[]
+  careerPaths     CareerPath[]
+  kbArticles      KbArticle[]
+  onboardingPlans OnboardingPlan[]
+}
+
+enum ContentType {
+  VIDEO
+  AUDIO
+  TEXT
+  PDF
+  SCORM
+  PRESENTATION
+}
+
+enum QuizStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PathStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum EnrollmentStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum BadgeType {
+  STREAK
+  COMPLETION
+  QUIZ_SCORE
+  CAREER_MILESTONE
+  FIRST_LOGIN
+  DEPARTMENT_CHAMPION
+  SPEED_LEARNER
+  KNOWLEDGE_KEEPER
+}
+
+enum ActivityEvent {
+  SESSION_START
+  SESSION_END
+  PAGE_VIEW
+  COURSE_STARTED
+  COURSE_EXITED
+  COURSE_COMPLETED
+  QUIZ_STARTED
+  QUIZ_COMPLETED
+  KB_VIEWED
+  CAREER_STARTED
+}
+
+// ─── Core Identity ───────────────────────────────────────────────────────────
+
+model Department {
+  id              String           @id @default(uuid())
+  name            String
+  tenantId        String
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  description     String?
+  mission         String?
+  color           String? // hex color for category grouping
+  icon            String? // emoji
+  managerName     String? // department manager full name
+  order           Int              @default(0)
+  parentId        String?
+  parent          Department?      @relation("SubDepartments", fields: [parentId], references: [id])
+  children        Department[]     @relation("SubDepartments")
+  users           User[]
+  modules         Module[]
+  onboardingPlans OnboardingPlan[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([name, tenantId])
+  @@index([tenantId])
+}
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  avatarUrl     String?
+  role          Role
+  tenantId      String
+  tenant        Tenant      @relation(fields: [tenantId], references: [id])
+  departmentId  String?
+  department    Department? @relation(fields: [departmentId], references: [id])
+  managerId     String?
+  manager       User?       @relation("DirectReports", fields: [managerId], references: [id])
+  directReports User[]      @relation("DirectReports")
+  isActive      Boolean     @default(true)
+  hiredAt       DateTime?
+  lastLoginAt   DateTime?
+
+  // Gamification
+  totalPoints    Int       @default(0)
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastActivityAt DateTime?
+
+  // Relations
+  enrollments     Enrollment[]
+  quizAttempts    QuizAttempt[]
+  userBadges      UserBadge[]
+  progressLogs    ProgressLog[]
+  pathEnrollments CareerPathEnrollment[]
+  kbViews         KbArticleView[]
+  notifications   Notification[]
+  createdContent  Content[]              @relation("ContentCreator")
+  createdModules  Module[]               @relation("ModuleCreator")
+  refreshTokens   RefreshToken[]
+  certificates    Certificate[]
+  feedbacks       ModuleFeedback[]
+  sessions        UserSession[]
+  activityLogs    UserActivityLog[]
+  onboardings     UserOnboarding[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([departmentId])
+  @@index([role])
+  @@index([tenantId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─── Content & Training ──────────────────────────────────────────────────────
+
+model Category {
+  id         String      @id @default(uuid())
+  name       String
+  tenantId   String
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  icon       String?
+  color      String?
+  modules    Module[]
+  kbArticles KbArticle[]
+  createdAt  DateTime    @default(now())
+
+  @@unique([name, tenantId])
+  @@index([tenantId])
+}
+
+model Module {
+  id                    String                 @id @default(uuid())
+  title                 String
+  description           String?
+  tenantId              String
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id])
+  categoryId            String?
+  category              Category?              @relation(fields: [categoryId], references: [id])
+  departmentId          String?
+  department            Department?            @relation(fields: [departmentId], references: [id])
+  thumbnail             String?
+  format                String? // Texte, Vidéo, Diaporama
+  estimatedMinutes      Int                    @default(15)
+  order                 Int                    @default(0)
+  isPublished           Boolean                @default(false)
+  requiredRoles         Role[]
+  contents              Content[]
+  quizzes               Quiz[]
+  enrollments           Enrollment[]
+  pathModules           CareerPathModule[]
+  onboardingPlanModules OnboardingPlanModule[]
+  certificates          Certificate[]
+  feedbacks             ModuleFeedback[]
+  prerequisiteId        String?
+  prerequisite          Module?                @relation("ModulePrerequisite", fields: [prerequisiteId], references: [id])
+  dependents            Module[]               @relation("ModulePrerequisite")
+  createdById           String?
+  createdBy             User?                  @relation("ModuleCreator", fields: [createdById], references: [id])
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@index([tenantId])
+  @@index([categoryId])
+  @@index([departmentId])
+}
+
+model Content {
+  id           String        @id @default(uuid())
+  moduleId     String
+  module       Module        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title        String
+  type         ContentType
+  url          String? // for video/audio/pdf stored files
+  body         String? // for text/rich content (markdown)
+  duration     Int? // seconds for video/audio
+  order        Int           @default(0)
+  isRequired   Boolean       @default(true)
+  progressLogs ProgressLog[]
+  createdById  String?
+  createdBy    User?         @relation("ContentCreator", fields: [createdById], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model ProgressLog {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentId      String
+  content        Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  completed      Boolean  @default(false)
+  progressPct    Int      @default(0) // 0-100
+  watchedSeconds Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, contentId])
+  @@index([userId])
+}
+
+model Enrollment {
+  id          String           @id @default(uuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId    String
+  module      Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  status      EnrollmentStatus @default(NOT_STARTED)
+  progressPct Int              @default(0)
+  score       Float?
+  startedAt   DateTime?
+  completedAt DateTime?
+  dueAt       DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([userId, moduleId])
+  @@index([userId])
+  @@index([moduleId])
+}
+
+// ─── Quiz Engine ─────────────────────────────────────────────────────────────
+
+model Quiz {
+  id               String        @id @default(uuid())
+  moduleId         String?
+  module           Module?       @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  title            String
+  description      String?
+  timeLimit        Int? // seconds
+  passingScore     Int           @default(70) // percent
+  maxAttempts      Int           @default(3)
+  shuffleQuestions Boolean       @default(true)
+  status           QuizStatus    @default(DRAFT)
+  questions        Question[]
+  attempts         QuizAttempt[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  text        String
+  imageUrl    String?
+  options     Json // [{id, text, isCorrect}]
+  explanation String? // shown after answering
+  points      Int      @default(10)
+  order       Int      @default(0)
+  // Spaced repetition
+  difficulty  Int      @default(2) // 1=easy 2=medium 3=hard
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model QuizAttempt {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId       String
+  quiz         Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  sectionIndex Int?     // null = examen final, 0+ = quiz de section inline
+  answers      Json     // [{questionId, selectedOptionId, isCorrect, pointsEarned}]
+  score        Float    // percent
+  passed       Boolean
+  pointsEarned Int      @default(0)
+  timeTaken    Int?     // seconds
+  startedAt    DateTime @default(now())
+  completedAt  DateTime?
+
+  @@index([userId])
+  @@index([quizId])
+  @@index([userId, quizId, sectionIndex])
+}
+
+// ─── Career Paths ─────────────────────────────────────────────────────────────
+
+model CareerPath {
+  id            String                   @id @default(uuid())
+  title         String
+  description   String?
+  tenantId      String
+  tenant        Tenant                   @relation(fields: [tenantId], references: [id])
+  targetRole    Role?
+  icon          String?
+  color         String?
+  status        PathStatus               @default(DRAFT)
+  modules       CareerPathModule[]
+  enrollments   CareerPathEnrollment[]
+  prerequisites CareerPathPrerequisite[] @relation("PathPrereqs")
+  requiredBy    CareerPathPrerequisite[] @relation("RequiredByPath")
+  certificates  Certificate[]
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@index([tenantId])
+}
+
+model CareerPathModule {
+  id         String     @id @default(uuid())
+  pathId     String
+  path       CareerPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  moduleId   String
+  module     Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  order      Int
+  isRequired Boolean    @default(true)
+
+  @@unique([pathId, moduleId])
+}
+
+model CareerPathPrerequisite {
+  id             String     @id @default(uuid())
+  pathId         String
+  path           CareerPath @relation("PathPrereqs", fields: [pathId], references: [id], onDelete: Cascade)
+  prerequisiteId String
+  prerequisite   CareerPath @relation("RequiredByPath", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+
+  @@unique([pathId, prerequisiteId])
+}
+
+model CareerPathEnrollment {
+  id          String           @id @default(uuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pathId      String
+  path        CareerPath       @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  status      EnrollmentStatus @default(NOT_STARTED)
+  progressPct Int              @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([userId, pathId])
+  @@index([userId])
+}
+
+// ─── Knowledge Base ───────────────────────────────────────────────────────────
+
+model KbArticle {
+  id          String          @id @default(uuid())
+  title       String
+  slug        String          @unique
+  body        String // markdown
+  tenantId    String
+  tenant      Tenant          @relation(fields: [tenantId], references: [id])
+  categoryId  String?
+  category    Category?       @relation(fields: [categoryId], references: [id])
+  tags        String[]
+  isPublished Boolean         @default(false)
+  views       KbArticleView[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([tenantId])
+  @@index([slug])
+}
+
+model KbArticleView {
+  id        String    @id @default(uuid())
+  articleId String
+  article   KbArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@index([articleId])
+  @@index([userId])
+}
+
+// ─── Gamification ─────────────────────────────────────────────────────────────
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  description String
+  icon        String
+  type        BadgeType
+  condition   Json // {metric, threshold, ...}
+  points      Int         @default(50)
+  userBadges  UserBadge[]
+  createdAt   DateTime    @default(now())
+}
+
+model UserBadge {
+  id       String   @id @default(uuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+model PointTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  points      Int
+  reason      String // "quiz_completion", "streak_bonus", "module_complete", etc.
+  referenceId String? // quiz attempt ID, module ID, etc.
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  type      String // "badge", "reminder", "coaching", "deadline", etc.
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+// ─── Certificates ────────────────────────────────────────────────────────────
+
+model Certificate {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId    String?
+  module      Module?     @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  pathId      String?
+  path        CareerPath? @relation(fields: [pathId], references: [id], onDelete: SetNull)
+  title       String // "Formation: Module X" or "Parcours: Path Y"
+  score       Float? // quiz score if applicable
+  issuedAt    DateTime    @default(now())
+  expiresAt   DateTime? // null = never expires
+  certNumber  String      @unique // "<TENANT_SLUG>-2026-XXXXX"
+  downloadUrl String? // path to generated PDF
+
+  @@index([userId])
+  @@index([certNumber])
+}
+
+// ─── Module Feedback ─────────────────────────────────────────────────────────
+
+model ModuleFeedback {
+  id        String   @id @default(uuid())
+  moduleId  String
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int // 1-5 stars
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([moduleId, userId])
+  @@index([moduleId])
+}
+
+// ─── Onboarding ──────────────────────────────────────────────────────────────
+
+enum OnboardingStatus {
+  PENDING // plan created, not yet started
+  IN_PROGRESS // employee has started
+  COMPLETED // all required modules done
+  OVERDUE // past expected completion date
+}
+
+model OnboardingPlan {
+  id              String                 @id @default(uuid())
+  name            String
+  description     String?
+  role            Role // target role for this plan
+  departmentId    String?
+  department      Department?            @relation(fields: [departmentId], references: [id])
+  tenantId        String
+  tenant          Tenant                 @relation(fields: [tenantId], references: [id])
+  isActive        Boolean                @default(true)
+  isAiGenerated   Boolean                @default(false)
+  expectedDays    Int                    @default(30) // total onboarding duration in days
+  modules         OnboardingPlanModule[]
+  userOnboardings UserOnboarding[]
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  @@unique([role, departmentId, tenantId])
+  @@index([tenantId])
+  @@index([role])
+  @@index([isActive])
+}
+
+model OnboardingPlanModule {
+  id              String         @id @default(uuid())
+  planId          String
+  plan            OnboardingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  moduleId        String
+  module          Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  dueDaysFromHire Int // days after hire date this module is due
+  order           Int            @default(0)
+  isRequired      Boolean        @default(true)
+  phase           String? // "Semaine 1", "Semaine 2", "Mois 1", etc.
+
+  @@unique([planId, moduleId])
+  @@index([planId])
+}
+
+model UserOnboarding {
+  id            String           @id @default(uuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId        String
+  plan          OnboardingPlan   @relation(fields: [planId], references: [id])
+  status        OnboardingStatus @default(PENDING)
+  progressPct   Int              @default(0)
+  startedAt     DateTime         @default(now())
+  completedAt   DateTime?
+  expectedEndAt DateTime // hire date + plan.expectedDays
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([userId, planId])
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+
+model UserSession {
+  id         String            @id @default(uuid())
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt  DateTime          @default(now())
+  endedAt    DateTime?
+  duration   Int?
+  entryPage  String?
+  exitPage   String?
+  device     String?
+  activities UserActivityLog[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+}
+
+model UserActivityLog {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId   String?
+  session     UserSession?  @relation(fields: [sessionId], references: [id])
+  event       ActivityEvent
+  page        String?
+  referenceId String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@index([event, createdAt])
+}

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+*.env
+!.env.example
+!.env.test
+uploads/
+logs/
+.DS_Store
+*.pem
+.prisma/

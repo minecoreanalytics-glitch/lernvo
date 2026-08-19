@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0f1923"/>
+  <title>Lernvo — Hors ligne</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Inter,system-ui,sans-serif;background:#F7F8FA;color:#1A202C;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:2rem}
+    .container{text-align:center;max-width:380px}
+    .icon{width:80px;height:80px;margin:0 auto 1.5rem;background:linear-gradient(135deg,#163A6B,#1E4F8C);border-radius:24px;display:flex;align-items:center;justify-content:center}
+    .icon svg{width:40px;height:40px;color:white}
+    h1{font-size:1.5rem;font-weight:700;margin-bottom:.5rem;color:#0F1923}
+    p{font-size:.9rem;color:#6B7A8D;line-height:1.6;margin-bottom:1.5rem}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.5rem;background:#163A6B;color:white;border:none;border-radius:12px;font-size:.875rem;font-weight:600;cursor:pointer;transition:background .15s}
+    .btn:hover{background:#1E4F8C}
+    .pulse{animation:pulse 2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .dots{display:flex;gap:6px;justify-content:center;margin-top:1rem}
+    .dots span{width:6px;height:6px;border-radius:50%;background:#CDD3DE}
+    .dots span:nth-child(1){animation:dot .8s .0s infinite alternate}
+    .dots span:nth-child(2){animation:dot .8s .2s infinite alternate}
+    .dots span:nth-child(3){animation:dot .8s .4s infinite alternate}
+    @keyframes dot{to{background:#163A6B;transform:scale(1.3)}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <line x1="1" y1="1" x2="23" y2="23"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+        <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+        <line x1="12" y1="20" x2="12.01" y2="20"/>
+      </svg>
+    </div>
+    <h1>Pas de connexion</h1>
+    <p>Vous n'avez pas de connexion internet pour le moment. Vos formations et votre progression sont sauvegardées et seront synchronisées automatiquement.</p>
+    <button class="btn" onclick="window.location.reload()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Réessayer
+    </button>
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</body>
+</html>

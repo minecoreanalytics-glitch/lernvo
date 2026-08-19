@@ -27,17 +27,11 @@ type Department = {
 
 export default function DepartmentsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [view, setView] = useState<'chart' | 'grid'>('chart')
+  const [view, setView] = useState<'tree' | 'all'>('tree')
 
   const { data: flat = [] } = useQuery<FlatDept[]>({
     queryKey: ['departments-flat'],
     queryFn: () => api.get('/departments?flat=true').then(r => r.data)
-  })
-
-  // Fetch top-level departments only for the grid
-  const { data: departments = [], isLoading } = useQuery<Department[]>({
-    queryKey: ['departments-top'],
-    queryFn: () => api.get('/departments?parentOnly=true').then(r => r.data)
   })
 
   // Fetch detail when a department is selected
@@ -187,71 +181,16 @@ export default function DepartmentsPage() {
             Explorez les formations par département
           </p>
           <div className="flex rounded-xl border border-gray-200 overflow-hidden text-xs shrink-0">
-            <button onClick={() => setView('chart')} className={`px-3 py-1.5 flex items-center gap-1 ${view === 'chart' ? 'bg-primary-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}><Network size={12} /> Organigramme</button>
-            <button onClick={() => setView('grid')} className={`px-3 py-1.5 flex items-center gap-1 ${view === 'grid' ? 'bg-primary-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}><LayoutGrid size={12} /> Grille</button>
+            <button onClick={() => setView('all')} className={`px-3 py-1.5 flex items-center gap-1 ${view === 'all' ? 'bg-primary-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}><LayoutGrid size={12} /> Tous les départements</button>
+            <button onClick={() => setView('tree')} className={`px-3 py-1.5 flex items-center gap-1 ${view === 'tree' ? 'bg-primary-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}><Network size={12} /> Hiérarchie</button>
           </div>
         </div>
       </motion.div>
 
-      {view === 'chart' && (
-        <motion.div variants={item}>
-          <OrgChart flat={flat} onSelect={setSelectedId} />
-        </motion.div>
-      )}
+      <motion.div variants={item}>
+        <OrgChart flat={flat} onSelect={setSelectedId} mode={view} />
+      </motion.div>
 
-      {/* Departments grid */}
-      {view === 'grid' && (isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(9)].map((_, i) => <div key={i} className="skeleton h-36" />)}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {departments.map((dept) => (
-            <motion.button key={dept.id} variants={item}
-              onClick={() => setSelectedId(dept.id)}
-              className="card p-4 text-left hover:shadow-card-md transition-all group">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-sm"
-                  style={{ backgroundColor: (dept.color || '#3B82F6') + '15' }}>
-                  {dept.icon || '🏛️'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-gray-800 group-hover:text-primary-700 transition-colors">{dept.name}</h3>
-                  {dept.managerName && (
-                    <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
-                      <User size={9} /> {dept.managerName}
-                    </p>
-                  )}
-                  <div className="flex gap-3 mt-2 text-[10px] text-gray-400">
-                    <span className="flex items-center gap-0.5"><Users size={10} /> {dept._count.users} membres</span>
-                    {dept._count.children > 0 && (
-                      <span className="flex items-center gap-0.5"><Building2 size={10} /> {dept._count.children} sous-depts</span>
-                    )}
-                    {dept._count.modules > 0 && (
-                      <span className="flex items-center gap-0.5"><BookOpen size={10} /> {dept._count.modules} formations</span>
-                    )}
-                  </div>
-                </div>
-                <ChevronRight size={14} className="text-gray-300 shrink-0 mt-1" />
-              </div>
-
-              {/* Sub-department preview */}
-              {dept.children.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {dept.children.slice(0, 4).map(child => (
-                    <span key={child.id} className="chip chip-gray text-[9px]">
-                      {child.icon} {child.name}
-                    </span>
-                  ))}
-                  {dept.children.length > 4 && (
-                    <span className="chip chip-gray text-[9px]">+{dept.children.length - 4}</span>
-                  )}
-                </div>
-              )}
-            </motion.button>
-          ))}
-        </div>
-      ))}
     </motion.div>
   )
 }

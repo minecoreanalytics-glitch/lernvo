@@ -131,6 +131,8 @@ router.post('/login', loginLimiter, validate(LoginSchema), async (req, res) => {
     const accessToken = signAccess(user.id, user.email, user.role, user.tenantId, user.departmentId ?? null)
     const refreshToken = signRefresh()
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+    // Le client en a besoin pour envoyer l'employé sur son sous-domaine quand il entre par l'apex.
+    const homeSlug = user.role === 'SUPER_ADMIN' ? null : (user.tenant?.slug ?? null)
 
     await tenantStore.run({ tenantId: null, superAdmin: true }, async () => {
       await prisma.refreshToken.create({ data: { token: hashToken(refreshToken), userId: user.id, expiresAt } })
@@ -141,6 +143,7 @@ router.post('/login', loginLimiter, validate(LoginSchema), async (req, res) => {
     res.json({
       accessToken,
       refreshToken,
+      tenantSlug: homeSlug,
       user: {
         id: user.id,
         email: user.email,
@@ -250,12 +253,13 @@ router.get('/me', authenticate, async (req, res) => {
       where: { id: req.user!.userId },
       include: {
         department: true,
+        tenant: { select: { slug: true } },
         userBadges: { include: { badge: true }, orderBy: { earnedAt: 'desc' }, take: 5 }
       }
     })
     if (!user) return res.status(404).json({ error: 'User not found' })
-    const { passwordHash: _, ...safe } = user
-    res.json(safe)
+    const { passwordHash: _, tenant, ...safe } = user
+    res.json({ ...safe, tenantSlug: user.role === 'SUPER_ADMIN' ? null : tenant?.slug ?? null })
   } catch (e) {
     if ((e as { code?: string }).code === 'P2025') return res.status(404).json({ error: 'Not found' }) // scoped update/delete on a row outside the tenant
     res.status(500).json({ error: 'Failed to fetch profile' })

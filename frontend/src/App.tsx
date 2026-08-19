@@ -1,10 +1,12 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth'
 import { useBranding } from './hooks/useBranding'
+import { api } from './utils/api'
 import Layout from './components/layout/Layout'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import AuthHandoffPage from './pages/AuthHandoffPage'
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
@@ -31,7 +33,20 @@ const HrIntegrationsPage = lazy(() => import('./pages/admin/HrIntegrationsPage')
 const InsightsPage = lazy(() => import('./pages/admin/InsightsPage'))
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore(s => s.user)
+  const { user, refreshToken, clearAuth } = useAuthStore()
+  const { isTenantHost, baseDomain, isLoading } = useBranding()
+  // Session d'un employé ouverte sur l'apex (lernvo.com) : son espace est <slug>.lernvo.com.
+  // On lui passe le relais avec le jeton déjà en poche et on nettoie l'apex.
+  useEffect(() => {
+    if (!user || isLoading || isTenantHost || user.role === 'SUPER_ADMIN' || !refreshToken) return
+    if (window.location.hostname === 'localhost') return
+    api.get('/auth/me').then(({ data }) => {
+      if (!data.tenantSlug) return
+      const target = `${window.location.protocol}//${data.tenantSlug}.${baseDomain}/auth/handoff#${encodeURIComponent(refreshToken)}`
+      clearAuth()
+      window.location.replace(target)
+    }).catch(() => {})
+  }, [user, refreshToken, isLoading, isTenantHost, baseDomain, clearAuth])
   return user ? <>{children}</> : <Navigate to="/login" replace />
 }
 
@@ -66,6 +81,7 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/auth/handoff" element={<AuthHandoffPage />} />
       <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
         <Route path="dashboard" element={<SmartDashboard />} />
         <Route path="departments" element={<DepartmentsPage />} />

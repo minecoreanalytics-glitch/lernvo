@@ -21,6 +21,13 @@ export default function LoginPage() {
     setLoading(true); setError('')
     try {
       const { data } = await api.post('/auth/login', { email, password, ...(tenantSlug ? { tenantSlug } : {}) })
+      // Entré par lernvo.com alors que son entreprise vit sur <slug>.lernvo.com : on ne garde rien
+      // ici et on passe le relais au sous-domaine. Le jeton voyage dans le fragment (#…), que le
+      // navigateur n'envoie jamais au serveur ; la page d'arrivée le consomme et efface l'URL.
+      if (data.tenantSlug && !branding.isTenantHost && window.location.hostname !== 'localhost') {
+        window.location.replace(`${window.location.protocol}//${data.tenantSlug}.${branding.baseDomain}/auth/handoff#${encodeURIComponent(data.refreshToken)}`)
+        return
+      }
       setAuth(data.user, data.accessToken, data.refreshToken)
       navigate('/dashboard')
     } catch (err: unknown) {

@@ -59,6 +59,20 @@ describe('login host lock', () => {
     expect(r.status).toBe(401)
     expect(r.body.error).toBe('Invalid credentials')
   })
+  it('login on the apex tells the client which subdomain is home; /me too', async () => {
+    const r = await request(app).post('/api/auth/login').set('Host', BASE_DOMAIN).send({ email: emailA, password: PW })
+    expect(r.body.tenantSlug).toBe(slugA)
+    const me = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${r.body.accessToken}`)
+    expect(me.body.tenantSlug).toBe(slugA)
+  })
+  it('handoff: the apex refresh token opens a session on the home subdomain, never on another company', async () => {
+    const login = await request(app).post('/api/auth/login').set('Host', BASE_DOMAIN).send({ email: emailA, password: PW })
+    const stolen = await request(app).post('/api/auth/refresh').set('Host', `${slugB}.${BASE_DOMAIN}`).send({ refreshToken: login.body.refreshToken })
+    expect(stolen.status).toBe(401)
+    const home = await request(app).post('/api/auth/refresh').set('Host', `${slugA}.${BASE_DOMAIN}`).send({ refreshToken: login.body.refreshToken })
+    expect(home.status).toBe(200)
+    expect(home.body.accessToken).toBeTruthy()
+  })
   it('refresh token is also host-locked', async () => {
     const login = await request(app).post('/api/auth/login').set('Host', BASE_DOMAIN).send({ email: emailA, password: PW })
     const rt = login.body.refreshToken

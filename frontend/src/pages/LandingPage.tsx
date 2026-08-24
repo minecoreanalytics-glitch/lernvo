@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ShieldCheck, BookOpenCheck, MessageSquareText, Activity, Plug, Globe, Award, CheckCircle2, ArrowRight, Loader2, ChevronDown } from 'lucide-react'
+import { ShieldCheck, BookOpenCheck, MessageSquareText, Activity, Plug, Globe, Award, CheckCircle2, ArrowRight, Loader2, ChevronDown, ShoppingBag, Wrench, Landmark, HeartPulse, UtensilsCrossed, Truck } from 'lucide-react'
 import { api } from '../utils/api'
 import BrandMark from '../components/BrandMark'
 
@@ -17,7 +17,7 @@ const T = {
       sub: 'Lernvo est la seule façon de t’assurer que chaque employé applique la version du jour de vos procédures, produits et tarifs — et de le prouver.',
       cta1: 'Réserver une démo (30 min)', cta2: 'Démarrer un pilote gratuit',
       proof: ['100+ employés en production', '394 procédures & produits', '3 344 questions de quiz', '39 départements'],
-      proofNote: 'Premier déploiement : un groupe télécom multi-filiales.',
+      proofNote: 'Premier déploiement : un groupe multi-filiales de 100+ employés.',
     },
     problem: {
       h2: 'Aujourd’hui, vos procédures vivent à quatre endroits. Aucun ne vous protège.',
@@ -35,6 +35,48 @@ const T = {
         ['1', 'Source de vérité approuvée', 'Procédures, fiches produits, tarifs : brouillon → relecture → approuvé vN. Versionné. Les employés ne voient jamais un brouillon.'],
         ['2', 'Lu et compris', 'À chaque approbation, les bonnes personnes reçoivent « à lire et valider ». Quiz de section, certificat, trace par personne et par version.'],
         ['3', 'Prouvé, par département', 'Couverture en temps réel : « 87 % du Support a validé la v3 ». Signaux : échecs quiz, questions sans réponse, documents périmés.'],
+      ],
+    },
+    industries: {
+      h2: 'Pensé pour toute équipe de terrain.',
+      sub: 'La même mécanique — source approuvée, lu et compris, preuve — quel que soit votre métier.',
+      items: [
+        [ShoppingBag, 'Retail & commerce', 'Politique de remboursement, ouverture de caisse, prix en vigueur.'],
+        [Wrench, 'Service terrain', 'Procédure d’intervention, sécurité chantier, check-list avant départ.'],
+        [Landmark, 'Finance & assurance', 'KYC, conformité, barème tarifaire à jour.'],
+        [HeartPulse, 'Santé & cliniques', 'Protocoles de soin, hygiène, consentement patient.'],
+        [UtensilsCrossed, 'Hôtellerie & restauration', 'Standards d’accueil, allergènes, encaissement.'],
+        [Truck, 'Logistique & industrie', 'Modes opératoires, sécurité, contrôle qualité.'],
+      ],
+    },
+    ai: {
+      h2: 'Un assistant qui ne peut pas inventer.',
+      sub: 'Il répond à vos équipes en secondes — uniquement depuis la connaissance approuvée, toujours cité à la version. Ce qu’il ne trouve pas devient un signal, pas une réponse au hasard.',
+      points: [
+        ['Ancré dans l’approuvé', 'Chaque réponse vient de vos documents approuvés — jamais du web, jamais d’une supposition.'],
+        ['Cité à la version', '« source : Procédure v3 » sous chaque réponse. Vous savez toujours d’où ça vient.'],
+        ['Le vide devient un signal', 'S’il ne trouve pas, il le dit — et signale le document manquant à corriger.'],
+      ],
+    },
+    compare: {
+      h2: 'Pourquoi pas juste un LMS, un wiki ou un chat ?',
+      sub: 'Chacun fait une partie. Aucun ne prouve que la version d’aujourd’hui est connue.',
+      cols: ['', 'LMS', 'Wiki / Drive', 'Chat', 'Lernvo'],
+      rows: [
+        ['Version en vigueur garantie', '~', '✗', '✗', '✓'],
+        ['Preuve « lu et compris »', '~', '✗', '✗', '✓'],
+        ['Réponse sourcée en secondes', '✗', '~', '✗', '✓'],
+        ['Couverture par département', '~', '✗', '✗', '✓'],
+      ],
+    },
+    security: {
+      h2: 'Vos données restent les vôtres.',
+      sub: 'Conçu pour que la conformité et la sécurité ne soient jamais une objection.',
+      items: [
+        ['Isolation par entreprise', 'Chaque tenant a ses données à part — l’isolation est imposée à chaque livraison par la CI.'],
+        ['Aucune donnée client dans le code', 'Le code est source-available ; procédures, prix et employés vivent en base, jamais dans le dépôt.'],
+        ['SIRH dedans, certificats dehors', 'Odoo, API ou CSV ; secrets chiffrés ; export à tout moment.'],
+        ['Votre espace, votre marque', 'entreprise.lernvo.com, votre logo, TLS dédié par domaine.'],
       ],
     },
     features: {
@@ -84,7 +126,7 @@ const T = {
       sub: 'Lernvo is the only way to make sure every employee applies today’s version of your procedures, products and prices — and to prove it.',
       cta1: 'Book a 30-min demo', cta2: 'Start a free pilot',
       proof: ['100+ employees in production', '394 procedures & products', '3,344 quiz questions', '39 departments'],
-      proofNote: 'First deployment: a multi-brand telecom group.',
+      proofNote: 'First deployment: a 100+ employee multi-brand group.',
     },
     problem: {
       h2: 'Today your procedures live in four places. None of them protects you.',
@@ -102,6 +144,48 @@ const T = {
         ['1', 'Approved source of truth', 'Procedures, product sheets, price lists: draft → review → approved vN. Versioned. Employees never see a draft.'],
         ['2', 'Read & understood', 'On every approval the right people get "read & acknowledge". Section quizzes, certificates, a trace per person and per version.'],
         ['3', 'Proven, per department', 'Live coverage: "87% of Support acknowledged v3". Signals: quiz failures, unanswered questions, stale documents.'],
+      ],
+    },
+    industries: {
+      h2: 'Built for any frontline team.',
+      sub: 'Same mechanics — approved source, read & understood, proof — whatever your business.',
+      items: [
+        [ShoppingBag, 'Retail & commerce', 'Refund policy, till open/close, current prices.'],
+        [Wrench, 'Field service', 'Job procedure, site safety, pre-departure checklist.'],
+        [Landmark, 'Finance & insurance', 'KYC, compliance, up-to-date rate card.'],
+        [HeartPulse, 'Healthcare & clinics', 'Care protocols, hygiene, patient consent.'],
+        [UtensilsCrossed, 'Hospitality & food', 'Service standards, allergens, checkout.'],
+        [Truck, 'Logistics & industry', 'Work instructions, safety, quality control.'],
+      ],
+    },
+    ai: {
+      h2: 'An assistant that cannot make things up.',
+      sub: 'It answers your teams in seconds — only from approved knowledge, always cited to the version. What it can’t find becomes a signal, not a guess.',
+      points: [
+        ['Grounded in approved knowledge', 'Every answer comes from your approved documents — never the web, never a guess.'],
+        ['Cited to the version', '"source: Procedure v3" under every answer. You always know where it came from.'],
+        ['Gaps become signals', 'When it can’t find it, it says so — and flags the missing document to fix.'],
+      ],
+    },
+    compare: {
+      h2: 'Why not just an LMS, a wiki, or a chat?',
+      sub: 'Each does part of it. None proves today’s version is known.',
+      cols: ['', 'LMS', 'Wiki / Drive', 'Chat', 'Lernvo'],
+      rows: [
+        ['Guaranteed current version', '~', '✗', '✗', '✓'],
+        ['"Read & understood" proof', '~', '✗', '✗', '✓'],
+        ['Sourced answer in seconds', '✗', '~', '✗', '✓'],
+        ['Per-department coverage', '~', '✗', '✗', '✓'],
+      ],
+    },
+    security: {
+      h2: 'Your data stays yours.',
+      sub: 'Built so compliance and security are never the objection.',
+      items: [
+        ['Per-company isolation', 'Each tenant’s data is kept apart — isolation is enforced on every release by CI.'],
+        ['No customer data in the code', 'The code is source-available; procedures, prices and employees live in the database, never in the repo.'],
+        ['HRIS in, certificates out', 'Odoo, API or CSV; encrypted secrets; export anytime.'],
+        ['Your space, your brand', 'company.lernvo.com, your logo, dedicated per-domain TLS.'],
       ],
     },
     features: {
@@ -161,8 +245,12 @@ export default function LandingPage() {
       <Proof t={t} />
       <Problem t={t} />
       <How t={t} />
+      <Industries t={t} />
       <Features t={t} />
+      <AiAssistant t={t} />
+      <Compare t={t} />
       <Pricing t={t} />
+      <Security t={t} />
       <Faq t={t} />
       <LeadForm t={t} lang={lang} />
       <Footer t={t} />
@@ -219,12 +307,12 @@ function Hero({ t }: { t: Copy }) {
 
 /** Product-like illustration: an approval → acknowledgment coverage card (pure CSS, no image). */
 function MockCoverage() {
-  const rows = [['Support technique', 87], ['Vente résidentielle', 72], ['Facturation', 94], ['Marketing', 58]]
+  const rows = [['Service client', 87], ['Ventes', 72], ['Opérations', 94], ['Comptabilité', 58]]
   return (
     <div className="card p-5 shadow-card-md rotate-[-1deg] md:translate-x-4">
       <div className="flex items-center gap-2 mb-4">
         <span className="chip chip-success text-[10px]">Approuvé v3</span>
-        <span className="text-sm font-semibold text-gray-800">Procédure — Activation fibre</span>
+        <span className="text-sm font-semibold text-gray-800">Procédure — Remboursement client</span>
       </div>
       <div className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-2">Lu et compris · par département</div>
       <div className="space-y-2.5">
@@ -237,7 +325,7 @@ function MockCoverage() {
       </div>
       <div className="mt-4 flex items-start gap-2 bg-primary-50 border border-primary-100 rounded-xl p-3">
         <MessageSquareText size={14} className="text-primary-700 mt-0.5 shrink-0" />
-        <p className="text-xs text-primary-900"><span className="font-semibold">Assistant :</span> « Pour l'activation fibre, étape 3 : vérifier la puissance optique (supérieure à −27 dBm) avant de valider. » <span className="text-primary-600">— source : Procédure v3</span></p>
+        <p className="text-xs text-primary-900"><span className="font-semibold">Assistant :</span> « Pour un remboursement, étape 3 : au-delà de 100 $, l'accord d'un responsable est requis avant de valider. » <span className="text-primary-600">— source : Procédure v3</span></p>
       </div>
     </div>
   )
@@ -285,6 +373,101 @@ function How({ t }: { t: Copy }) {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  )
+}
+
+function Industries({ t }: { t: Copy }) {
+  return (
+    <section className="bg-gray-50 border-y border-gray-100">
+      <div className="max-w-6xl mx-auto px-5 py-16 md:py-24">
+        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 max-w-3xl">{t.industries.h2}</h2>
+        <p className="mt-3 text-gray-600 max-w-2xl">{t.industries.sub}</p>
+        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {t.industries.items.map(([Icon, name, ex]) => {
+            const I = Icon as typeof BookOpenCheck
+            return (
+              <div key={name as string} className="card p-6">
+                <div className="w-11 h-11 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center"><I size={20} /></div>
+                <h3 className="mt-4 font-bold text-gray-900">{name as string}</h3>
+                <p className="mt-1.5 text-sm text-gray-600 leading-relaxed">{ex as string}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AiAssistant({ t }: { t: Copy }) {
+  return (
+    <section className="bg-gray-900 text-white">
+      <div className="max-w-6xl mx-auto px-5 py-16 md:py-24">
+        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight max-w-3xl">{t.ai.h2}</h2>
+        <p className="mt-4 text-gray-300 max-w-2xl text-lg leading-relaxed">{t.ai.sub}</p>
+        <div className="mt-12 grid md:grid-cols-3 gap-6">
+          {t.ai.points.map(([h, d]) => (
+            <div key={h} className="rounded-2xl bg-white/5 border border-white/10 p-6">
+              <div className="w-10 h-10 rounded-xl bg-primary-500 text-white flex items-center justify-center"><MessageSquareText size={18} /></div>
+              <h3 className="mt-4 text-lg font-bold">{h}</h3>
+              <p className="mt-2 text-gray-300 text-sm leading-relaxed">{d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Compare({ t }: { t: Copy }) {
+  const cell = (v: string) => v === '✓'
+    ? <CheckCircle2 size={18} className="text-success-500 mx-auto" />
+    : v === '~' ? <span className="text-warning-500 font-bold">~</span>
+    : <span className="text-gray-300 font-bold">✗</span>
+  const last = t.compare.cols.length - 1
+  return (
+    <section className="max-w-6xl mx-auto px-5 py-16 md:py-24">
+      <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 max-w-3xl">{t.compare.h2}</h2>
+      <p className="mt-3 text-gray-600 max-w-2xl">{t.compare.sub}</p>
+      <div className="mt-10 overflow-x-auto">
+        <table className="w-full min-w-[560px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-gray-200">
+              {t.compare.cols.map((c, i) => (
+                <th key={i} className={`py-3 px-3 ${i === 0 ? 'text-left' : 'text-center'} font-bold ${i === last ? 'text-primary-700' : 'text-gray-500'}`}>{c}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {t.compare.rows.map((r, ri) => (
+              <tr key={ri} className="border-b border-gray-100">
+                <td className="py-3 px-3 text-gray-800 font-medium">{r[0]}</td>
+                {r.slice(1).map((v, ci) => (
+                  <td key={ci} className={`py-3 px-3 text-center ${ci === r.length - 2 ? 'bg-primary-50/60' : ''}`}>{cell(v)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+function Security({ t }: { t: Copy }) {
+  return (
+    <section className="max-w-6xl mx-auto px-5 py-16 md:py-24">
+      <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 max-w-3xl">{t.security.h2}</h2>
+      <p className="mt-3 text-gray-600 max-w-2xl">{t.security.sub}</p>
+      <div className="mt-10 grid sm:grid-cols-2 gap-5">
+        {t.security.items.map(([h, d]) => (
+          <div key={h} className="card p-6 flex gap-4">
+            <ShieldCheck size={22} className="text-primary-700 mt-0.5 shrink-0" />
+            <div><h3 className="font-bold text-gray-900">{h}</h3><p className="mt-1 text-sm text-gray-600 leading-relaxed">{d}</p></div>
+          </div>
+        ))}
       </div>
     </section>
   )

@@ -23,7 +23,7 @@ export default function AuthHandoffPage() {
     const token = decodeURIComponent(window.location.hash.slice(1))
     window.history.replaceState(null, '', '/auth/handoff')
     if (!token) { navigate('/login', { replace: true }); return }
-    ;(async () => {
+    void (async () => {
       try {
         const { data } = await axios.post('/api/auth/refresh', { refreshToken: token })
         const me = await axios.get('/api/auth/me', { headers: { Authorization: `Bearer ${data.accessToken}` } })

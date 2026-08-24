@@ -73,7 +73,7 @@ const T = {
       name: 'Nom', email: 'Email professionnel', company: 'Entreprise', size: 'Taille', sizes: ['20-100', '100-500', '500-2 000', '2 000+'], message: 'Votre situation (optionnel)',
       intentDemo: 'Démo 30 min', intentPilot: 'Pilote gratuit 60 jours', send: 'Envoyer', ok: 'Merci — je vous réponds sous 24 h. — Thierry', err: 'Envoi impossible, réessayez.',
     },
-    footer: { tag: 'Lernvo — plateforme d’assurance de connaissance. Groupe Altis Holding / Minecore.', links: [['Se connecter', '/login'], ['Créer un espace', '/signup'], ['Code source', 'https://github.com/minecoreanalytics-glitch/lernvo']] },
+    footer: { tag: 'Lernvo — plateforme d’assurance de connaissance. Groupe Altis Holding / Minecore.', links: [['Se connecter', '/login'], ['Créer un espace', '/signup']] },
   },
   en: {
     nav: { how: 'How it works', features: 'Features', pricing: 'Pricing', faq: 'FAQ', login: 'Log in', demo: 'Book a demo' },
@@ -140,7 +140,7 @@ const T = {
       name: 'Name', email: 'Work email', company: 'Company', size: 'Size', sizes: ['20-100', '100-500', '500-2,000', '2,000+'], message: 'Your situation (optional)',
       intentDemo: '30-min demo', intentPilot: 'Free 60-day pilot', send: 'Send', ok: 'Thanks — I’ll reply within 24h. — Thierry', err: 'Could not send, please retry.',
     },
-    footer: { tag: 'Lernvo — knowledge assurance platform. Groupe Altis Holding / Minecore.', links: [['Log in', '/login'], ['Create a space', '/signup'], ['Source code', 'https://github.com/minecoreanalytics-glitch/lernvo']] },
+    footer: { tag: 'Lernvo — knowledge assurance platform. Groupe Altis Holding / Minecore.', links: [['Log in', '/login'], ['Create a space', '/signup']] },
   },
 }
 type Copy = typeof T['fr']

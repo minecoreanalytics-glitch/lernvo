@@ -1,5 +1,20 @@
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { getCtx, isSuperAdmin } from './tenantContext'
+
+// Compound unique keys per model, e.g. Enrollment -> { userId_moduleId: ['userId', 'moduleId'] }.
+// Needed to rewrite findUnique into findFirst (see below); read from the generated schema so a
+// new @@unique never has to be registered by hand.
+const COMPOUND_UNIQUE = new Map<string, Record<string, string[]>>()
+for (const m of Prisma.dmmf.datamodel.models) {
+  const keys: Record<string, string[]> = {}
+  for (const idx of m.uniqueIndexes) {
+    if (idx.fields.length > 1) keys[idx.name || idx.fields.join('_')] = [...idx.fields]
+  }
+  if (m.primaryKey && m.primaryKey.fields.length > 1) {
+    keys[m.primaryKey.name || m.primaryKey.fields.join('_')] = [...m.primaryKey.fields]
+  }
+  if (Object.keys(keys).length > 0) COMPOUND_UNIQUE.set(m.name, keys)
+}
 
 // Every business model carries tenantId and is scoped here. Deliberately NOT scoped:
 // Tenant (the root), Badge (platform-wide catalogue), RefreshToken (looked up by unguessable
@@ -54,7 +69,21 @@ export function makePrisma() {
           // back to the extended client. Isolation is preserved because tenantId
           // is already injected into `where` before the base client call.
           if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
-            a.where = { ...(a.where ?? {}), tenantId: tid }
+            // A compound unique key (`userId_moduleId: { … }`) only exists in findUnique's
+            // WhereUniqueInput. findFirst takes a WhereInput, which has no such key, so it
+            // must be flattened into its component fields or Prisma rejects the query.
+            const where: any = { ...(a.where ?? {}) }
+            const compound = COMPOUND_UNIQUE.get(model)
+            if (compound) {
+              for (const key of Object.keys(compound)) {
+                const parts = where[key]
+                if (parts && typeof parts === 'object') {
+                  delete where[key]
+                  Object.assign(where, parts)
+                }
+              }
+            }
+            a.where = { ...where, tenantId: tid }
             const delegate = delegateKey(model)
             const rewritten = operation === 'findUniqueOrThrow'
               ? 'findFirstOrThrow'

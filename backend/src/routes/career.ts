@@ -67,8 +67,8 @@ router.get('/paths/:id', async (req, res) => {
     })
     if (!path) return res.status(404).json({ error: 'Career path not found' })
 
-    const enrollment = await prisma.careerPathEnrollment.findUnique({
-      where: { userId_pathId: { userId: req.user!.userId, pathId: req.params.id } }
+    const enrollment = await prisma.careerPathEnrollment.findFirst({
+      where: { userId: req.user!.userId, pathId: req.params.id }
     })
 
     // Get module completion status for this user

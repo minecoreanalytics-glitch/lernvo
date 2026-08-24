@@ -126,15 +126,15 @@ router.get('/:id', async (req, res) => {
     if (!module) return res.status(404).json({ error: 'Module not found' })
 
     // Attach user's enrollment/progress if exists
-    const enrollment = await prisma.enrollment.findUnique({
-      where: { userId_moduleId: { userId: req.user!.userId, moduleId: req.params.id } }
+    const enrollment = await prisma.enrollment.findFirst({
+      where: { userId: req.user!.userId, moduleId: req.params.id }
     })
 
     // Check prerequisite completion
     let prerequisiteMet = true
     if (module.prerequisiteId) {
-      const prereqEnrollment = await prisma.enrollment.findUnique({
-        where: { userId_moduleId: { userId: req.user!.userId, moduleId: module.prerequisiteId } }
+      const prereqEnrollment = await prisma.enrollment.findFirst({
+        where: { userId: req.user!.userId, moduleId: module.prerequisiteId }
       })
       prerequisiteMet = prereqEnrollment?.status === 'COMPLETED'
     }

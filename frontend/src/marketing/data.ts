@@ -320,3 +320,9 @@ export const ACCENT: Record<string, { c: string; soft: string }> = {
   'ai-assistant':         { c: '#3B4CC4', soft: '#E5E8FA' },
   'assignments':          { c: '#DB4F66', soft: '#FBE6E9' },
 }
+
+/* Big-number stats for the color-block band (real production facts). */
+export const STATS: Record<Lang, [string, string][]> = {
+  fr: [['100+', 'employés en production'], ['394', 'procédures & produits'], ['3 344', 'questions de quiz'], ['39', 'départements']],
+  en: [['100+', 'employees in production'], ['394', 'procedures & products'], ['3,344', 'quiz questions'], ['39', 'departments']],
+}

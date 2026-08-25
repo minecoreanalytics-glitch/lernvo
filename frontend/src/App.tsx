@@ -10,6 +10,7 @@ import AuthHandoffPage from './pages/AuthHandoffPage'
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const PlatformPage = lazy(() => import('./pages/PlatformPage'))
 const SolutionPage = lazy(() => import('./pages/SolutionPage'))
+const AiPage = lazy(() => import('./pages/AiPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
 const ModulesPage = lazy(() => import('./pages/ModulesPage'))
@@ -82,6 +83,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/platform" element={<PlatformPage />} />
+      <Route path="/ai" element={<AiPage />} />
       <Route path="/solutions/:slug" element={<SolutionPage />} />
       <Route path="/platform/capabilities/:slug" element={<SolutionPage />} />
       <Route path="/login" element={<LoginPage />} />

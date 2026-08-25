@@ -309,3 +309,14 @@ export const PROOF: Record<Lang, { items: string[]; note: string }> = {
   fr: { items: ['100+ employés en production', '394 procédures & produits', '3 344 questions de quiz', '39 départements'], note: 'Premier déploiement : un groupe multi-filiales de 100+ employés.' },
   en: { items: ['100+ employees in production', '394 procedures & products', '3,344 quiz questions', '39 departments'], note: 'First deployment: a 100+ employee multi-brand group.' },
 }
+
+/* Per-page signature accent (distinct hue per topic; navy stays the brand base). */
+export const ACCENT: Record<string, { c: string; soft: string }> = {
+  'onboarding':           { c: '#0EA968', soft: '#E7F6EF' },
+  'customer-experience':  { c: '#E0880C', soft: '#FBF0DB' },
+  'employee-engagement':  { c: '#6D4AE0', soft: '#ECE8FB' },
+  'change-management':    { c: '#0E97B0', soft: '#DDF2F5' },
+  'training':             { c: '#2B59D8', soft: '#E3E9FB' },
+  'ai-assistant':         { c: '#3B4CC4', soft: '#E5E8FA' },
+  'assignments':          { c: '#DB4F66', soft: '#FBE6E9' },
+}

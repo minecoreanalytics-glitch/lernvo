@@ -229,3 +229,83 @@ export const MENU_LABELS: Record<Lang, { products: string; outcomes: string; cap
   fr: { products: 'Produits', outcomes: 'Résultats', capabilities: 'Capacités' },
   en: { products: 'Products', outcomes: 'Outcomes', capabilities: 'Capabilities' },
 }
+
+/* Extra richer content per solution: the cost of today, and what you get. */
+export interface Extra { cost: string[]; youGet: string[] }
+export const EXTRA: Record<string, Record<Lang, Extra>> = {
+  onboarding: {
+    fr: {
+      cost: ['Trois semaines avant qu’un nouveau soit vraiment utile.', 'Le manager passe ses journées à répéter les mêmes réponses.', 'Les premières erreurs partent chez le client.'],
+      youGet: ['Un parcours d’intégration par poste, prêt le jour 1.', 'Un assistant qui répond aux questions courantes.', 'La liste des acquis validés, par personne.', 'Le premier certificat dès la première semaine.'],
+    },
+    en: {
+      cost: ['Three weeks before a new hire is truly useful.', 'The manager spends the day repeating the same answers.', 'The first mistakes reach the customer.'],
+      youGet: ['An onboarding path per role, ready on day one.', 'An assistant that handles the common questions.', 'A list of acknowledged skills, per person.', 'The first certificate within the first week.'],
+    },
+  },
+  'customer-experience': {
+    fr: {
+      cost: ['Le même produit expliqué de trois façons différentes.', 'Un prix erroné annoncé, puis à corriger devant le client.', 'La marque qui se dilue à chaque point de vente.'],
+      youGet: ['Les produits et prix approuvés, visibles partout.', 'Un assistant qui donne la réponse pendant l’échange.', 'La couverture par équipe, pour voir les écarts.', 'La preuve que la dernière version est connue.'],
+    },
+    en: {
+      cost: ['The same product explained three different ways.', 'A wrong price quoted, then corrected in front of the customer.', 'A brand that dilutes at every location.'],
+      youGet: ['Approved products and prices, visible everywhere.', 'An assistant that answers during the conversation.', 'Per-team coverage, to see the gaps.', 'Proof the latest version is known.'],
+    },
+  },
+  'employee-engagement': {
+    fr: {
+      cost: ['Un employé qui cherche l’info et ne la trouve pas.', 'Aucune visibilité sur qui progresse, ni comment.', 'Les meilleurs partent, faute de perspective.'],
+      youGet: ['Des parcours carrière clairs, avec badges.', 'L’information utile à portée de main.', 'Un classement qui valorise la régularité.', 'Une preuve de progression pour les entretiens RH.'],
+    },
+    en: {
+      cost: ['An employee who looks for the answer and does not find it.', 'No visibility into who is progressing, or how.', 'The best people leave, for lack of a path.'],
+      youGet: ['Clear career paths, with badges.', 'Useful information within reach.', 'A leaderboard that rewards consistency.', 'Proof of progress for HR reviews.'],
+    },
+  },
+  'change-management': {
+    fr: {
+      cost: ['Une nouvelle règle envoyée, jamais confirmée.', 'Des équipes qui appliquent encore l’ancienne version.', 'Un audit sans aucune preuve à montrer.'],
+      youGet: ['La version approuvée poussée à tous en un clic.', 'Une trace horodatée par personne et par version.', 'Des signaux là où le changement n’a pas pris.', 'Un dossier de preuve prêt pour l’audit.'],
+    },
+    en: {
+      cost: ['A new rule sent, never confirmed.', 'Teams still applying the old version.', 'An audit with no evidence to show.'],
+      youGet: ['The approved version pushed to everyone in one click.', 'A timestamped trace per person and per version.', 'Signals where the change did not land.', 'An evidence trail ready for audit.'],
+    },
+  },
+  training: {
+    fr: {
+      cost: ['Écrire un module à la main prend des jours.', 'Les procédures dorment en PDF, jamais transformées.', 'Personne ne sait ce qui a été retenu.'],
+      youGet: ['Un module et son quiz générés depuis un PDF.', 'Des parcours ordonnés et des certificats vérifiables.', 'Points, badges et classements intégrés.', 'Le score de rétention, par section.'],
+    },
+    en: {
+      cost: ['Writing a module by hand takes days.', 'Procedures sit in PDFs, never turned into training.', 'Nobody knows what was retained.'],
+      youGet: ['A module and its quiz generated from a PDF.', 'Ordered paths and verifiable certificates.', 'Points, badges and leaderboards built in.', 'The retention score, per section.'],
+    },
+  },
+  'ai-assistant': {
+    fr: {
+      cost: ['Un chatbot générique qui invente des réponses.', 'Des heures perdues à chercher dans dix systèmes.', 'Aucune façon de savoir d’où vient une réponse.'],
+      youGet: ['Des réponses tirées uniquement de l’approuvé.', 'La source et la version citées à chaque fois.', 'Un signal quand un document manque.', 'Un historique des questions posées, par équipe.'],
+    },
+    en: {
+      cost: ['A generic chatbot that invents answers.', 'Hours lost searching across ten systems.', 'No way to know where an answer came from.'],
+      youGet: ['Answers drawn only from approved content.', 'The source and version cited every time.', 'A signal when a document is missing.', 'A log of the questions asked, per team.'],
+    },
+  },
+  assignments: {
+    fr: {
+      cost: ['Un document envoyé, jamais ouvert.', 'Le manager qui relance à la main, un par un.', 'Aucune preuve que la consigne a été vue.'],
+      youGet: ['L’affectation par personne ou par département.', 'Des vues en retard, aujourd’hui, à venir.', 'La validation « lu et compris » tracée.', 'Un tableau de bord de couverture en direct.'],
+    },
+    en: {
+      cost: ['A document sent, never opened.', 'The manager chasing by hand, one by one.', 'No proof the instruction was seen.'],
+      youGet: ['Assignment per person or per department.', 'Overdue, today, upcoming views.', 'Traced read-and-acknowledge.', 'A live coverage dashboard.'],
+    },
+  },
+}
+
+export const PROOF: Record<Lang, { items: string[]; note: string }> = {
+  fr: { items: ['100+ employés en production', '394 procédures & produits', '3 344 questions de quiz', '39 départements'], note: 'Premier déploiement : un groupe multi-filiales de 100+ employés.' },
+  en: { items: ['100+ employees in production', '394 procedures & products', '3,344 quiz questions', '39 departments'], note: 'First deployment: a 100+ employee multi-brand group.' },
+}

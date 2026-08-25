@@ -269,13 +269,13 @@ function Ai({ t }: { t: Copy }) {
       <div className="max-w-6xl mx-auto px-5 py-16 md:py-24">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-primary-500 text-white flex items-center justify-center"><Sparkles size={20} /></div>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight max-w-3xl">{t.ai.title}</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white max-w-3xl">{t.ai.title}</h2>
         </div>
         <p className="mt-4 text-gray-300 max-w-2xl text-lg leading-relaxed">{t.ai.sub}</p>
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {t.ai.items.map(([h, d]) => (
             <div key={h} className="rounded-2xl bg-white/5 border border-white/10 p-6">
-              <h3 className="text-lg font-bold">{h}</h3>
+              <h3 className="text-lg font-bold text-white">{h}</h3>
               <p className="mt-2 text-gray-300 text-sm leading-relaxed">{d}</p>
             </div>
           ))}
@@ -325,7 +325,7 @@ function Cta({ t }: { t: Copy }) {
   return (
     <section className="bg-primary-700 text-white">
       <div className="max-w-6xl mx-auto px-5 py-16 md:py-24 text-center">
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight max-w-2xl mx-auto">{t.cta.h2}</h2>
+        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white max-w-2xl mx-auto">{t.cta.h2}</h2>
         <p className="mt-4 text-primary-100 text-lg max-w-xl mx-auto">{t.cta.sub}</p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
           <a href="/#demo" className="btn-primary bg-white text-primary-700 hover:bg-gray-100 px-6 py-3 text-base flex items-center justify-center gap-2">{t.cta.btn1} <ArrowRight size={16} /></a>

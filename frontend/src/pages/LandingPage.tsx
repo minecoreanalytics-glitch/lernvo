@@ -342,12 +342,12 @@ function How({ t }: { t: Copy }) {
   return (
     <section id="how" className="bg-gray-900 text-white">
       <div className="max-w-6xl mx-auto px-5 py-16 md:py-24">
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight max-w-3xl">{t.how.h2}</h2>
+        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white max-w-3xl">{t.how.h2}</h2>
         <div className="mt-12 grid md:grid-cols-3 gap-6">
           {t.how.steps.map(([n, h, d]) => (
             <div key={n} className="rounded-2xl bg-white/5 border border-white/10 p-6">
               <div className="w-10 h-10 rounded-xl bg-primary-500 text-white font-extrabold flex items-center justify-center text-lg">{n}</div>
-              <h3 className="mt-4 text-xl font-bold">{h}</h3>
+              <h3 className="mt-4 text-xl font-bold text-white">{h}</h3>
               <p className="mt-2 text-gray-300 text-sm leading-relaxed">{d}</p>
             </div>
           ))}
@@ -384,13 +384,13 @@ function AiAssistant({ t }: { t: Copy }) {
   return (
     <section className="bg-gray-900 text-white">
       <div className="max-w-6xl mx-auto px-5 py-16 md:py-24">
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight max-w-3xl">{t.ai.h2}</h2>
+        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white max-w-3xl">{t.ai.h2}</h2>
         <p className="mt-4 text-gray-300 max-w-2xl text-lg leading-relaxed">{t.ai.sub}</p>
         <div className="mt-12 grid md:grid-cols-3 gap-6">
           {t.ai.points.map(([h, d]) => (
             <div key={h} className="rounded-2xl bg-white/5 border border-white/10 p-6">
               <div className="w-10 h-10 rounded-xl bg-primary-500 text-white flex items-center justify-center"><MessageSquareText size={18} /></div>
-              <h3 className="mt-4 text-lg font-bold">{h}</h3>
+              <h3 className="mt-4 text-lg font-bold text-white">{h}</h3>
               <p className="mt-2 text-gray-300 text-sm leading-relaxed">{d}</p>
             </div>
           ))}
@@ -404,7 +404,7 @@ function Compare({ t }: { t: Copy }) {
   const cell = (v: string) => v === '✓'
     ? <CheckCircle2 size={18} className="text-success-500 mx-auto" />
     : v === '~' ? <span className="text-warning-500 font-bold">~</span>
-    : <span className="text-gray-300 font-bold">✗</span>
+    : <span className="text-gray-400 font-bold">✗</span>
   const last = t.compare.cols.length - 1
   return (
     <section className="max-w-6xl mx-auto px-5 py-16 md:py-24">
@@ -534,7 +534,7 @@ function LeadForm({ t, lang }: { t: Copy; lang: Lang }) {
     <section id="demo" className="bg-primary-700 text-white">
       <div className="max-w-6xl mx-auto px-5 py-16 md:py-24 grid md:grid-cols-2 gap-10 items-start">
         <div>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.form.h2}</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">{t.form.h2}</h2>
           <p className="mt-4 text-primary-100 text-lg">{t.form.sub}</p>
           <ul className="mt-8 space-y-3 text-primary-50 text-sm">
             <li className="flex gap-2"><BookOpenCheck size={16} className="mt-0.5 shrink-0" /> {lang === 'fr' ? 'On part de vos vrais documents, pas d’une démo générique.' : 'We start from your real documents, not a generic demo.'}</li>

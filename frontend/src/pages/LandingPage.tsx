@@ -13,9 +13,9 @@ const T = {
     nav: { platform: 'Plateforme', how: 'Comment ça marche', features: 'Fonctions', pricing: 'Tarifs', faq: 'Questions', login: 'Se connecter', demo: 'Réserver une démo' },
     hero: {
       kicker: 'Assurance de connaissance pour les équipes terrain',
-      h1a: 'Tes procédures ne servent à rien',
-      h1b: 'si tes employés ne les connaissent pas.',
-      sub: 'Lernvo est la seule façon de t’assurer que chaque employé applique la version du jour de vos procédures, produits et tarifs, et de le prouver.',
+      h1a: 'Vos procédures ne servent à rien',
+      h1b: 'si vos employés ne les connaissent pas.',
+      sub: 'Lernvo est la seule façon de vous assurer que chaque employé applique la version du jour de vos procédures, produits et tarifs, et de le prouver.',
       cta1: 'Réserver une démo (30 min)', cta2: 'Démarrer un pilote gratuit',
       proof: ['100+ employés en production', '394 procédures & produits', '3 344 questions de quiz', '39 départements'],
       proofNote: 'Premier déploiement : un groupe multi-filiales de 100+ employés.',

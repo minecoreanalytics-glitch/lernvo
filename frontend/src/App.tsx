@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import AuthHandoffPage from './pages/AuthHandoffPage'
 const LandingPage = lazy(() => import('./pages/LandingPage'))
+const PlatformPage = lazy(() => import('./pages/PlatformPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
 const ModulesPage = lazy(() => import('./pages/ModulesPage'))
@@ -79,6 +80,7 @@ export default function App() {
     <Suspense fallback={<div className="min-h-dvh flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-primary-200 border-t-primary-700 animate-spin" /></div>}>
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/platform" element={<PlatformPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/auth/handoff" element={<AuthHandoffPage />} />

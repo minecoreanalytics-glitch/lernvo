@@ -9,7 +9,7 @@ type Lang = 'fr' | 'en'
 /* ───────────────────────────── Copy (FR first, EN variant) ───────────────────────────── */
 const T = {
   fr: {
-    nav: { how: 'Comment ça marche', features: 'Fonctions', pricing: 'Tarifs', faq: 'Questions', login: 'Se connecter', demo: 'Réserver une démo' },
+    nav: { platform: 'Plateforme', how: 'Comment ça marche', features: 'Fonctions', pricing: 'Tarifs', faq: 'Questions', login: 'Se connecter', demo: 'Réserver une démo' },
     hero: {
       kicker: 'Assurance de connaissance pour les équipes terrain',
       h1a: 'Tes procédures ne servent à rien',
@@ -118,7 +118,7 @@ const T = {
     footer: { tag: 'Lernvo — plateforme d’assurance de connaissance. Groupe Altis Holding / Minecore.', links: [['Se connecter', '/login'], ['Créer un espace', '/signup']] },
   },
   en: {
-    nav: { how: 'How it works', features: 'Features', pricing: 'Pricing', faq: 'FAQ', login: 'Log in', demo: 'Book a demo' },
+    nav: { platform: 'Platform', how: 'How it works', features: 'Features', pricing: 'Pricing', faq: 'FAQ', login: 'Log in', demo: 'Book a demo' },
     hero: {
       kicker: 'Knowledge assurance for frontline teams',
       h1a: 'Your procedures are worthless',
@@ -267,6 +267,7 @@ function Nav({ t, lang, setLang }: { t: Copy; lang: Lang; setLang: (l: Lang) => 
           <span className="text-lg font-extrabold tracking-[-0.04em] text-gray-900 lowercase">Lernvo</span>
         </a>
         <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 ml-4">
+          <Link to="/platform" className="hover:text-gray-900">{t.nav.platform}</Link>
           <a href="#how" className="hover:text-gray-900">{t.nav.how}</a>
           <a href="#features" className="hover:text-gray-900">{t.nav.features}</a>
           <a href="#pricing" className="hover:text-gray-900">{t.nav.pricing}</a>

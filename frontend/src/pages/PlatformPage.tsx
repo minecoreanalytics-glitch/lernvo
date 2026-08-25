@@ -6,8 +6,8 @@ import {
   Lock, Database, Layers, Gauge,
 } from 'lucide-react'
 import BrandMark from '../components/BrandMark'
-
-type Lang = 'fr' | 'en'
+import MarketingNav from '../components/MarketingNav'
+import type { Lang } from '../marketing/data'
 
 /* ───────────────────────────── Copy (FR first, EN variant) ───────────────────────────── */
 const T = {
@@ -17,7 +17,7 @@ const T = {
       kicker: 'La plateforme',
       h1a: 'Une plateforme. Trois piliers.',
       h1b: 'La connaissance qui devient une preuve.',
-      sub: 'Une source de vérité approuvée, un assistant IA qui n’y répond que depuis elle, et la preuve — par département — que vos équipes la connaissent. Un seul produit.',
+      sub: 'Une source de vérité approuvée, un assistant IA qui n’y répond que depuis elle, et la preuve, par département, que vos équipes la connaissent. Un seul produit.',
       cta1: 'Réserver une démo', cta2: 'Voir les tarifs',
     },
     proof: {
@@ -41,9 +41,9 @@ const T = {
         id: 'assistant', n: '02', icon: MessageSquareText,
         kicker: 'L’assistant',
         title: 'Un assistant IA qui ne peut pas inventer',
-        purpose: 'Il répond à vos équipes en secondes — uniquement depuis la connaissance approuvée, toujours cité à la version.',
+        purpose: 'Il répond à vos équipes en secondes, uniquement depuis la connaissance approuvée, toujours cité à la version.',
         points: [
-          [ShieldCheck, 'Ancré dans l’approuvé', 'Chaque réponse vient de vos documents approuvés — jamais du web, jamais d’une supposition.'],
+          [ShieldCheck, 'Ancré dans l’approuvé', 'Chaque réponse vient de vos documents approuvés, jamais du web, jamais d’une supposition.'],
           [FileCheck2, 'Cité à la version', '« source : Procédure v3 » sous chaque réponse. Vous savez toujours d’où ça vient.'],
           [Sparkles, 'Généré depuis vos PDF', 'Importez vos documents : l’IA en tire modules, quiz et réponses. Ce qu’elle ne trouve pas devient un signal.'],
         ],
@@ -52,7 +52,7 @@ const T = {
         id: 'preuve', n: '03', icon: BarChart3,
         kicker: 'La preuve',
         title: 'La preuve, par département',
-        purpose: 'Couverture en temps réel : « 87 % du Support a validé la v3 ». Vous ne l’espérez plus — vous le mesurez.',
+        purpose: 'Couverture en temps réel : « 87 % du Support a validé la v3 ». Vous ne l’espérez plus, vous le mesurez.',
         points: [
           [Gauge, 'Couverture « lu et compris »', 'Par département et par version : qui a validé, qui reste, qui est en retard.'],
           [Bell, 'Signaux qui remontent', 'Échecs de quiz, questions sans réponse, documents périmés : les angles morts deviennent des alertes.'],
@@ -61,7 +61,7 @@ const T = {
       },
     ],
     ai: {
-      title: 'L’IA à chaque étage — jamais en roue libre.',
+      title: 'L’IA à chaque étage, jamais en roue libre.',
       sub: 'La même règle partout : elle travaille depuis l’approuvé, cite sa source, et signale ce qui manque plutôt que d’inventer.',
       items: [
         ['Générer', 'Modules, quiz et fiches tirés de vos PDF, en minutes.'],
@@ -74,7 +74,7 @@ const T = {
       title: 'Pensé pour l’entreprise.',
       sub: 'Ce qu’un acheteur sécurité, RH ou IT vérifie avant de signer.',
       items: [
-        [Lock, 'Isolation par entreprise', 'Les données de chaque tenant restent à part — l’isolation est imposée à chaque livraison par la CI.'],
+        [Lock, 'Isolation par entreprise', 'Les données de chaque tenant restent à part, l’isolation est imposée à chaque livraison par la CI.'],
         [ShieldCheck, 'Sécurité & données', 'Secrets chiffrés, aucune donnée client dans le code, export à tout moment.'],
         [Plug, 'SIRH dedans, certificats dehors', 'Odoo, clé API ou CSV : employés et organigramme importés, certificats renvoyés dans la fiche RH.'],
         [Globe, 'API publique', 'Votre site affiche exactement les produits et tarifs approuvés que vos équipes ont validés.'],
@@ -84,7 +84,7 @@ const T = {
     },
     integrations: { title: 'S’intègre à ce que vous avez déjà.', list: ['Odoo (SIRH)', 'Import CSV', 'Clé API', 'Google Gemini (IA)', 'Cœur Morpheus', 'API publique'] },
     cta: { h2: 'Voir Lernvo sur vos procédures.', sub: '30 minutes, votre cas concret. Ou un pilote gratuit de 60 jours sur un département.', btn1: 'Réserver une démo', btn2: 'Démarrer un pilote' },
-    footer: { tag: 'Lernvo — plateforme d’assurance de connaissance. Groupe Altis Holding / Minecore.', home: 'Accueil', login: 'Se connecter', space: 'Créer un espace' },
+    footer: { tag: 'Lernvo, plateforme d’assurance de connaissance. Groupe Altis Holding / Minecore.', home: 'Accueil', login: 'Se connecter', space: 'Créer un espace' },
   },
   en: {
     nav: { platform: 'Platform', pricing: 'Pricing', faq: 'FAQ', login: 'Log in', demo: 'Book a demo' },
@@ -92,7 +92,7 @@ const T = {
       kicker: 'The platform',
       h1a: 'One platform. Three pillars.',
       h1b: 'Knowledge that becomes proof.',
-      sub: 'An approved source of truth, an AI assistant that only answers from it, and proof — per department — that your teams know it. One product.',
+      sub: 'An approved source of truth, an AI assistant that only answers from it, and proof, per department, that your teams know it. One product.',
       cta1: 'Book a demo', cta2: 'See pricing',
     },
     proof: {
@@ -116,9 +116,9 @@ const T = {
         id: 'assistant', n: '02', icon: MessageSquareText,
         kicker: 'The assistant',
         title: 'An AI assistant that cannot make things up',
-        purpose: 'It answers your teams in seconds — only from approved knowledge, always cited to the version.',
+        purpose: 'It answers your teams in seconds, only from approved knowledge, always cited to the version.',
         points: [
-          [ShieldCheck, 'Grounded in approved knowledge', 'Every answer comes from your approved documents — never the web, never a guess.'],
+          [ShieldCheck, 'Grounded in approved knowledge', 'Every answer comes from your approved documents, never the web, never a guess.'],
           [FileCheck2, 'Cited to the version', '"source: Procedure v3" under every answer. You always know where it came from.'],
           [Sparkles, 'Generated from your PDFs', 'Import your documents: the AI turns them into modules, quizzes and answers. What it can’t find becomes a signal.'],
         ],
@@ -127,7 +127,7 @@ const T = {
         id: 'preuve', n: '03', icon: BarChart3,
         kicker: 'The proof',
         title: 'Proof, per department',
-        purpose: 'Live coverage: "87% of Support acknowledged v3". You no longer hope it — you measure it.',
+        purpose: 'Live coverage: "87% of Support acknowledged v3". You no longer hope it, you measure it.',
         points: [
           [Gauge, '"Read & understood" coverage', 'Per department and per version: who acknowledged, who is left, who is overdue.'],
           [Bell, 'Signals that surface', 'Quiz failures, unanswered questions, stale documents: blind spots become alerts.'],
@@ -136,7 +136,7 @@ const T = {
       },
     ],
     ai: {
-      title: 'AI on every floor — never off the leash.',
+      title: 'AI on every floor, never off the leash.',
       sub: 'Same rule everywhere: it works from approved knowledge, cites its source, and flags what’s missing instead of inventing.',
       items: [
         ['Generate', 'Modules, quizzes and sheets drawn from your PDFs, in minutes.'],
@@ -149,7 +149,7 @@ const T = {
       title: 'Built for the enterprise.',
       sub: 'What a security, HR or IT buyer checks before signing.',
       items: [
-        [Lock, 'Per-company isolation', 'Each tenant’s data stays apart — isolation is enforced on every release by CI.'],
+        [Lock, 'Per-company isolation', 'Each tenant’s data stays apart, isolation is enforced on every release by CI.'],
         [ShieldCheck, 'Security & data', 'Encrypted secrets, no customer data in the code, export anytime.'],
         [Plug, 'HRIS in, certificates out', 'Odoo, API key or CSV: employees and org chart imported, certificates written back to the HR file.'],
         [Globe, 'Public API', 'Your website shows exactly the approved products and prices your teams acknowledged.'],
@@ -159,7 +159,7 @@ const T = {
     },
     integrations: { title: 'Fits what you already run.', list: ['Odoo (HRIS)', 'CSV import', 'API key', 'Google Gemini (AI)', 'Morpheus core', 'Public API'] },
     cta: { h2: 'See Lernvo on your own procedures.', sub: '30 minutes, your real case. Or a free 60-day pilot on one department.', btn1: 'Book a demo', btn2: 'Start a pilot' },
-    footer: { tag: 'Lernvo — knowledge assurance platform. Groupe Altis Holding / Minecore.', home: 'Home', login: 'Log in', space: 'Create a space' },
+    footer: { tag: 'Lernvo, knowledge assurance platform. Groupe Altis Holding / Minecore.', home: 'Home', login: 'Log in', space: 'Create a space' },
   },
 }
 type Copy = typeof T['fr']
@@ -169,13 +169,13 @@ export default function PlatformPage() {
   const [lang, setLang] = useState<Lang>(() => (navigator.language || 'fr').toLowerCase().startsWith('en') ? 'en' : 'fr')
   const t = T[lang] as Copy
   useEffect(() => {
-    document.title = lang === 'fr' ? 'Lernvo — La plateforme' : 'Lernvo — The platform'
+    document.title = lang === 'fr' ? 'Lernvo, La plateforme' : 'Lernvo, The platform'
     document.documentElement.lang = lang
   }, [lang])
 
   return (
     <div className="min-h-dvh bg-white text-gray-800 antialiased">
-      <Nav t={t} lang={lang} setLang={setLang} />
+      <MarketingNav lang={lang} setLang={setLang} />
       <Hero t={t} />
       <Proof t={t} />
       <Arch t={t} />
@@ -189,27 +189,6 @@ export default function PlatformPage() {
   )
 }
 
-function Nav({ t, lang, setLang }: { t: Copy; lang: Lang; setLang: (l: Lang) => void }) {
-  return (
-    <header className="sticky top-0 z-40 bg-white/85 backdrop-blur border-b border-gray-100">
-      <div className="max-w-6xl mx-auto px-5 h-16 flex items-center gap-6">
-        <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <BrandMark size={36} className="rounded-xl" />
-          <span className="text-lg font-extrabold tracking-[-0.04em] text-gray-900 lowercase">Lernvo</span>
-        </Link>
-        <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 ml-4">
-          <span className="text-gray-900 font-semibold">{t.nav.platform}</span>
-          <a href="/#pricing" className="hover:text-gray-900">{t.nav.pricing}</a>
-          <a href="/#faq" className="hover:text-gray-900">{t.nav.faq}</a>
-        </nav>
-        <div className="flex-1" />
-        <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} className="text-xs font-semibold text-gray-500 hover:text-gray-900 px-2">{lang === 'fr' ? 'EN' : 'FR'}</button>
-        <Link to="/login" className="hidden sm:inline text-sm font-medium text-gray-700 hover:text-gray-900">{t.nav.login}</Link>
-        <a href="/#demo" className="btn-primary text-sm px-4 py-2">{t.nav.demo}</a>
-      </div>
-    </header>
-  )
-}
 
 function Hero({ t }: { t: Copy }) {
   return (
@@ -329,7 +308,7 @@ function Enterprise({ t }: { t: Copy }) {
 
 function Integrations({ t }: { t: Copy }) {
   return (
-    <section className="bg-gray-50 border-y border-gray-100">
+    <section id="integrations" className="bg-gray-50 border-y border-gray-100 scroll-mt-20">
       <div className="max-w-6xl mx-auto px-5 py-14 text-center">
         <h2 className="text-xl font-bold text-gray-900">{t.integrations.title}</h2>
         <div className="mt-6 flex flex-wrap justify-center gap-3">

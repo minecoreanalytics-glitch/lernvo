@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ShieldCheck, BookOpenCheck, MessageSquareText, Activity, Plug, Globe, Award, CheckCircle2, ArrowRight, Loader2, ChevronDown, ShoppingBag, Wrench, Landmark, HeartPulse, UtensilsCrossed, Truck } from 'lucide-react'
 import { api } from '../utils/api'
 import BrandMark from '../components/BrandMark'
+import MarketingNav from '../components/MarketingNav'
 
 type Lang = 'fr' | 'en'
 
@@ -14,7 +15,7 @@ const T = {
       kicker: 'Assurance de connaissance pour les équipes terrain',
       h1a: 'Tes procédures ne servent à rien',
       h1b: 'si tes employés ne les connaissent pas.',
-      sub: 'Lernvo est la seule façon de t’assurer que chaque employé applique la version du jour de vos procédures, produits et tarifs — et de le prouver.',
+      sub: 'Lernvo est la seule façon de t’assurer que chaque employé applique la version du jour de vos procédures, produits et tarifs, et de le prouver.',
       cta1: 'Réserver une démo (30 min)', cta2: 'Démarrer un pilote gratuit',
       proof: ['100+ employés en production', '394 procédures & produits', '3 344 questions de quiz', '39 départements'],
       proofNote: 'Premier déploiement : un groupe multi-filiales de 100+ employés.',
@@ -30,7 +31,7 @@ const T = {
       cost: 'Ce que ça coûte : devis erronés, tickets répétés, audits sans preuve, onboardings de trois semaines, managers qui réexpliquent la même règle.',
     },
     how: {
-      h2: 'Trois marches. Si une manque, vous n’êtes pas sûr — vous espérez.',
+      h2: 'Trois marches. Si une manque, vous n’êtes pas sûr : vous espérez.',
       steps: [
         ['1', 'Source de vérité approuvée', 'Procédures, fiches produits, tarifs : brouillon → relecture → approuvé vN. Versionné. Les employés ne voient jamais un brouillon.'],
         ['2', 'Lu et compris', 'À chaque approbation, les bonnes personnes reçoivent « à lire et valider ». Quiz de section, certificat, trace par personne et par version.'],
@@ -39,7 +40,7 @@ const T = {
     },
     industries: {
       h2: 'Pensé pour toute équipe de terrain.',
-      sub: 'La même mécanique — source approuvée, lu et compris, preuve — quel que soit votre métier.',
+      sub: 'La même mécanique quel que soit votre métier : source approuvée, lu et compris, preuve.',
       items: [
         [ShoppingBag, 'Retail & commerce', 'Politique de remboursement, ouverture de caisse, prix en vigueur.'],
         [Wrench, 'Service terrain', 'Procédure d’intervention, sécurité chantier, check-list avant départ.'],
@@ -51,11 +52,11 @@ const T = {
     },
     ai: {
       h2: 'Un assistant qui ne peut pas inventer.',
-      sub: 'Il répond à vos équipes en secondes — uniquement depuis la connaissance approuvée, toujours cité à la version. Ce qu’il ne trouve pas devient un signal, pas une réponse au hasard.',
+      sub: 'Il répond à vos équipes en secondes, uniquement depuis la connaissance approuvée, toujours cité à la version. Ce qu’il ne trouve pas devient un signal, pas une réponse au hasard.',
       points: [
-        ['Ancré dans l’approuvé', 'Chaque réponse vient de vos documents approuvés — jamais du web, jamais d’une supposition.'],
+        ['Ancré dans l’approuvé', 'Chaque réponse vient de vos documents approuvés, jamais du web, jamais d’une supposition.'],
         ['Cité à la version', '« source : Procédure v3 » sous chaque réponse. Vous savez toujours d’où ça vient.'],
-        ['Le vide devient un signal', 'S’il ne trouve pas, il le dit — et signale le document manquant à corriger.'],
+        ['Le vide devient un signal', 'S’il ne trouve pas, il le dit, et signale le document manquant à corriger.'],
       ],
     },
     compare: {
@@ -73,21 +74,21 @@ const T = {
       h2: 'Vos données restent les vôtres.',
       sub: 'Conçu pour que la conformité et la sécurité ne soient jamais une objection.',
       items: [
-        ['Isolation par entreprise', 'Chaque tenant a ses données à part — l’isolation est imposée à chaque livraison par la CI.'],
+        ['Isolation par entreprise', 'Chaque tenant a ses données à part, l’isolation est imposée à chaque livraison par la CI.'],
         ['Aucune donnée client dans le code', 'Le code est source-available ; procédures, prix et employés vivent en base, jamais dans le dépôt.'],
         ['SIRH dedans, certificats dehors', 'Odoo, API ou CSV ; secrets chiffrés ; export à tout moment.'],
         ['Votre espace, votre marque', 'entreprise.lernvo.com, votre logo, TLS dédié par domaine.'],
       ],
     },
     features: {
-      h2: 'Tout ce qu’il faut pour que le terrain sache — et rien de plus.',
+      h2: 'Tout ce qu’il faut pour que le terrain sache, et rien de plus.',
       items: [
         [MessageSquareText, 'Assistant IA branché sur vos procédures', 'Il répond à l’agent en secondes, uniquement depuis la connaissance approuvée. Quand il ne trouve pas, c’est un signal : il manque un document.'],
         [Activity, 'Signaux & recommandations', 'Par département : couverture, échecs quiz, retards, questions sans réponse, docs périmés. Optionnellement raisonné par le cœur Morpheus.'],
         [Plug, 'SIRH dedans, certificats dehors', 'Odoo, clé API ou CSV : employés et organigramme importés ; certificats renvoyés dans la fiche RH. Onboarding automatique le jour de l’embauche.'],
         [Globe, 'Ce que le client lit = ce que l’employé a appris', 'API publique : votre site affiche exactement les produits et tarifs approuvés que vos équipes ont validés.'],
         [Award, 'Parcours, certificats, gamification', 'Parcours carrière, badges, classements : les gens progressent, et la RH a la preuve.'],
-        [ShieldCheck, 'Votre espace, isolé', 'entreprise.lernvo.com, votre logo, vos données séparées — isolation vérifiée par la CI, source ouverte.'],
+        [ShieldCheck, 'Votre espace, isolé', 'entreprise.lernvo.com, votre logo, vos données séparées, isolation vérifiée par la CI, source ouverte.'],
       ],
     },
     pricing: {
@@ -113,9 +114,9 @@ const T = {
       h2: 'Voir Lernvo sur vos procédures',
       sub: '30 minutes, votre cas concret. Ou un pilote gratuit de 60 jours sur un département.',
       name: 'Nom', email: 'Email professionnel', company: 'Entreprise', size: 'Taille', sizes: ['20-100', '100-500', '500-2 000', '2 000+'], message: 'Votre situation (optionnel)',
-      intentDemo: 'Démo 30 min', intentPilot: 'Pilote gratuit 60 jours', send: 'Envoyer', ok: 'Merci — je vous réponds sous 24 h. — Thierry', err: 'Envoi impossible, réessayez.',
+      intentDemo: 'Démo 30 min', intentPilot: 'Pilote gratuit 60 jours', send: 'Envoyer', ok: 'Merci, je vous réponds sous 24 h., Thierry', err: 'Envoi impossible, réessayez.',
     },
-    footer: { tag: 'Lernvo — plateforme d’assurance de connaissance. Groupe Altis Holding / Minecore.', links: [['Se connecter', '/login'], ['Créer un espace', '/signup']] },
+    footer: { tag: 'Lernvo, plateforme d’assurance de connaissance. Groupe Altis Holding / Minecore.', links: [['Se connecter', '/login'], ['Créer un espace', '/signup']] },
   },
   en: {
     nav: { platform: 'Platform', how: 'How it works', features: 'Features', pricing: 'Pricing', faq: 'FAQ', login: 'Log in', demo: 'Book a demo' },
@@ -123,7 +124,7 @@ const T = {
       kicker: 'Knowledge assurance for frontline teams',
       h1a: 'Your procedures are worthless',
       h1b: 'if your employees don’t know them.',
-      sub: 'Lernvo is the only way to make sure every employee applies today’s version of your procedures, products and prices — and to prove it.',
+      sub: 'Lernvo is the only way to make sure every employee applies today’s version of your procedures, products and prices, and to prove it.',
       cta1: 'Book a 30-min demo', cta2: 'Start a free pilot',
       proof: ['100+ employees in production', '394 procedures & products', '3,344 quiz questions', '39 departments'],
       proofNote: 'First deployment: a 100+ employee multi-brand group.',
@@ -139,7 +140,7 @@ const T = {
       cost: 'What it costs: wrong quotes, repeated tickets, audits with no evidence, three-week onboardings, managers re-explaining the same rule.',
     },
     how: {
-      h2: 'Three steps. Miss one and you are not sure — you are hoping.',
+      h2: 'Three steps. Miss one and you are not sure: you are hoping.',
       steps: [
         ['1', 'Approved source of truth', 'Procedures, product sheets, price lists: draft → review → approved vN. Versioned. Employees never see a draft.'],
         ['2', 'Read & understood', 'On every approval the right people get "read & acknowledge". Section quizzes, certificates, a trace per person and per version.'],
@@ -148,7 +149,7 @@ const T = {
     },
     industries: {
       h2: 'Built for any frontline team.',
-      sub: 'Same mechanics — approved source, read & understood, proof — whatever your business.',
+      sub: 'The same mechanics whatever your business: approved source, read & understood, proof.',
       items: [
         [ShoppingBag, 'Retail & commerce', 'Refund policy, till open/close, current prices.'],
         [Wrench, 'Field service', 'Job procedure, site safety, pre-departure checklist.'],
@@ -160,11 +161,11 @@ const T = {
     },
     ai: {
       h2: 'An assistant that cannot make things up.',
-      sub: 'It answers your teams in seconds — only from approved knowledge, always cited to the version. What it can’t find becomes a signal, not a guess.',
+      sub: 'It answers your teams in seconds, only from approved knowledge, always cited to the version. What it can’t find becomes a signal, not a guess.',
       points: [
-        ['Grounded in approved knowledge', 'Every answer comes from your approved documents — never the web, never a guess.'],
+        ['Grounded in approved knowledge', 'Every answer comes from your approved documents, never the web, never a guess.'],
         ['Cited to the version', '"source: Procedure v3" under every answer. You always know where it came from.'],
-        ['Gaps become signals', 'When it can’t find it, it says so — and flags the missing document to fix.'],
+        ['Gaps become signals', 'When it can’t find it, it says so, and flags the missing document to fix.'],
       ],
     },
     compare: {
@@ -182,21 +183,21 @@ const T = {
       h2: 'Your data stays yours.',
       sub: 'Built so compliance and security are never the objection.',
       items: [
-        ['Per-company isolation', 'Each tenant’s data is kept apart — isolation is enforced on every release by CI.'],
+        ['Per-company isolation', 'Each tenant’s data is kept apart, isolation is enforced on every release by CI.'],
         ['No customer data in the code', 'The code is source-available; procedures, prices and employees live in the database, never in the repo.'],
         ['HRIS in, certificates out', 'Odoo, API or CSV; encrypted secrets; export anytime.'],
         ['Your space, your brand', 'company.lernvo.com, your logo, dedicated per-domain TLS.'],
       ],
     },
     features: {
-      h2: 'Everything the floor needs to know — and nothing else.',
+      h2: 'Everything the floor needs to know, and nothing else.',
       items: [
         [MessageSquareText, 'AI assistant grounded in your procedures', 'Answers the agent in seconds, only from approved knowledge. When it can’t find it, that’s a signal: a document is missing.'],
         [Activity, 'Signals & recommendations', 'Per department: coverage, quiz failures, overdue, unanswered questions, stale docs. Optionally reasoned by the Morpheus core.'],
         [Plug, 'HRIS in, certificates out', 'Odoo, API key or CSV: employees and org chart imported; certificates written back to the HR file. Onboarding starts on day one, automatically.'],
         [Globe, 'What the customer reads = what the employee learned', 'Public API: your website shows exactly the approved products and prices your teams acknowledged.'],
         [Award, 'Paths, certificates, gamification', 'Career paths, badges, leaderboards: people progress, HR has the proof.'],
-        [ShieldCheck, 'Your own isolated space', 'company.lernvo.com, your logo, your data apart — isolation enforced in CI, source-available.'],
+        [ShieldCheck, 'Your own isolated space', 'company.lernvo.com, your logo, your data apart, isolation enforced in CI, source-available.'],
       ],
     },
     pricing: {
@@ -222,9 +223,9 @@ const T = {
       h2: 'See Lernvo on your own procedures',
       sub: '30 minutes, your real case. Or a free 60-day pilot on one department.',
       name: 'Name', email: 'Work email', company: 'Company', size: 'Size', sizes: ['20-100', '100-500', '500-2,000', '2,000+'], message: 'Your situation (optional)',
-      intentDemo: '30-min demo', intentPilot: 'Free 60-day pilot', send: 'Send', ok: 'Thanks — I’ll reply within 24h. — Thierry', err: 'Could not send, please retry.',
+      intentDemo: '30-min demo', intentPilot: 'Free 60-day pilot', send: 'Send', ok: 'Thanks, I’ll reply within 24h., Thierry', err: 'Could not send, please retry.',
     },
-    footer: { tag: 'Lernvo — knowledge assurance platform. Groupe Altis Holding / Minecore.', links: [['Log in', '/login'], ['Create a space', '/signup']] },
+    footer: { tag: 'Lernvo, knowledge assurance platform. Groupe Altis Holding / Minecore.', links: [['Log in', '/login'], ['Create a space', '/signup']] },
   },
 }
 type Copy = typeof T['fr']
@@ -234,13 +235,13 @@ export default function LandingPage() {
   const [lang, setLang] = useState<Lang>(() => (navigator.language || 'fr').toLowerCase().startsWith('en') ? 'en' : 'fr')
   const t = T[lang] as Copy
   useEffect(() => {
-    document.title = lang === 'fr' ? 'Lernvo — Vos employés connaissent vos procédures. Prouvé.' : 'Lernvo — Your employees know your procedures. Proven.'
+    document.title = lang === 'fr' ? 'Lernvo, Vos employés connaissent vos procédures. Prouvé.' : 'Lernvo, Your employees know your procedures. Proven.'
     document.documentElement.lang = lang
   }, [lang])
 
   return (
     <div className="min-h-dvh bg-white text-gray-800 antialiased">
-      <Nav t={t} lang={lang} setLang={setLang} />
+      <MarketingNav lang={lang} setLang={setLang} />
       <Hero t={t} />
       <Proof t={t} />
       <Problem t={t} />
@@ -258,29 +259,6 @@ export default function LandingPage() {
   )
 }
 
-function Nav({ t, lang, setLang }: { t: Copy; lang: Lang; setLang: (l: Lang) => void }) {
-  return (
-    <header className="sticky top-0 z-40 bg-white/85 backdrop-blur border-b border-gray-100">
-      <div className="max-w-6xl mx-auto px-5 h-16 flex items-center gap-6">
-        <a href="#top" className="flex items-center gap-2.5 shrink-0">
-          <BrandMark size={36} className="rounded-xl" />
-          <span className="text-lg font-extrabold tracking-[-0.04em] text-gray-900 lowercase">Lernvo</span>
-        </a>
-        <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 ml-4">
-          <Link to="/platform" className="hover:text-gray-900">{t.nav.platform}</Link>
-          <a href="#how" className="hover:text-gray-900">{t.nav.how}</a>
-          <a href="#features" className="hover:text-gray-900">{t.nav.features}</a>
-          <a href="#pricing" className="hover:text-gray-900">{t.nav.pricing}</a>
-          <a href="#faq" className="hover:text-gray-900">{t.nav.faq}</a>
-        </nav>
-        <div className="flex-1" />
-        <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} className="text-xs font-semibold text-gray-500 hover:text-gray-900 px-2">{lang === 'fr' ? 'EN' : 'FR'}</button>
-        <Link to="/login" className="hidden sm:inline text-sm font-medium text-gray-700 hover:text-gray-900">{t.nav.login}</Link>
-        <a href="#demo" className="btn-primary text-sm px-4 py-2">{t.nav.demo}</a>
-      </div>
-    </header>
-  )
-}
 
 function Hero({ t }: { t: Copy }) {
   return (
@@ -313,7 +291,7 @@ function MockCoverage() {
     <div className="card p-5 shadow-card-md rotate-[-1deg] md:translate-x-4">
       <div className="flex items-center gap-2 mb-4">
         <span className="chip chip-success text-[10px]">Approuvé v3</span>
-        <span className="text-sm font-semibold text-gray-800">Procédure — Remboursement client</span>
+        <span className="text-sm font-semibold text-gray-800">Procédure : Remboursement client</span>
       </div>
       <div className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-2">Lu et compris · par département</div>
       <div className="space-y-2.5">
@@ -326,7 +304,7 @@ function MockCoverage() {
       </div>
       <div className="mt-4 flex items-start gap-2 bg-primary-50 border border-primary-100 rounded-xl p-3">
         <MessageSquareText size={14} className="text-primary-700 mt-0.5 shrink-0" />
-        <p className="text-xs text-primary-900"><span className="font-semibold">Assistant :</span> « Pour un remboursement, étape 3 : au-delà de 100 $, l'accord d'un responsable est requis avant de valider. » <span className="text-primary-600">— source : Procédure v3</span></p>
+        <p className="text-xs text-primary-900"><span className="font-semibold">Assistant :</span> « Pour un remboursement, étape 3 : au-delà de 100 $, l'accord d'un responsable est requis avant de valider. » <span className="text-primary-600">source : Procédure v3</span></p>
       </div>
     </div>
   )
@@ -559,7 +537,7 @@ function LeadForm({ t, lang }: { t: Copy; lang: Lang }) {
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.form.h2}</h2>
           <p className="mt-4 text-primary-100 text-lg">{t.form.sub}</p>
           <ul className="mt-8 space-y-3 text-primary-50 text-sm">
-            <li className="flex gap-2"><BookOpenCheck size={16} className="mt-0.5 shrink-0" /> {lang === 'fr' ? 'On part de vos vrais documents — pas d’une démo générique.' : 'We start from your real documents — not a generic demo.'}</li>
+            <li className="flex gap-2"><BookOpenCheck size={16} className="mt-0.5 shrink-0" /> {lang === 'fr' ? 'On part de vos vrais documents, pas d’une démo générique.' : 'We start from your real documents, not a generic demo.'}</li>
             <li className="flex gap-2"><ShieldCheck size={16} className="mt-0.5 shrink-0" /> {lang === 'fr' ? 'Espace isolé créé pendant l’appel si vous le souhaitez.' : 'Isolated space created during the call if you want.'}</li>
             <li className="flex gap-2"><Activity size={16} className="mt-0.5 shrink-0" /> {lang === 'fr' ? 'Un KPI convenu avant tout pilote : couverture, quiz, tickets.' : 'An agreed KPI before any pilot: coverage, quiz, tickets.'}</li>
           </ul>

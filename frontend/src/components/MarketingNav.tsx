@@ -54,6 +54,7 @@ export default function MarketingNav({ lang, setLang }: { lang: Lang; setLang: (
               </div>
             )}
           </div>
+          <Link to="/ai" className="hover:text-gray-900">{lang === 'fr' ? 'L’IA' : 'AI'}</Link>
           <a href="/#pricing" className="hover:text-gray-900">{lang === 'fr' ? 'Tarifs' : 'Pricing'}</a>
           <a href="/#faq" className="hover:text-gray-900">{lang === 'fr' ? 'Questions' : 'FAQ'}</a>
         </nav>

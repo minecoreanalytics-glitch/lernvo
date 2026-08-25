@@ -215,13 +215,11 @@ export interface ProductLink { label: string; href: string; desc: string }
 export const PRODUCTS: Record<Lang, ProductLink[]> = {
   fr: [
     { label: 'Vue d’ensemble', href: '/platform', desc: 'La plateforme en un coup d’œil' },
-    { label: 'L’IA chez Lernvo', href: '/ai', desc: 'Ancrée dans l’approuvé' },
     { label: 'Intégrations', href: '/platform#integrations', desc: 'Odoo, CSV, API, IA' },
     { label: 'Tarifs', href: '/#pricing', desc: 'Par employé actif' },
   ],
   en: [
     { label: 'Overview', href: '/platform', desc: 'The platform at a glance' },
-    { label: 'AI at Lernvo', href: '/ai', desc: 'Grounded in what’s approved' },
     { label: 'Integrations', href: '/platform#integrations', desc: 'Odoo, CSV, API, AI' },
     { label: 'Pricing', href: '/#pricing', desc: 'Per active employee' },
   ],

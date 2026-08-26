@@ -4,6 +4,7 @@
  * (`lernvo_media`, path=/uploads) carrying a short signed token {userId, tenantId}. Every request
  * under /uploads must present it, and the file must belong to the caller's tenant:
  *   - uploads/certificates/<certNumber>.svg  → Certificate.certNumber within the tenant
+ *   - uploads/announcements/<file>           → Announcement.imageUrl within the tenant
  *   - any other path                         → Content.url === '/uploads/…' within the tenant
  * Super-admins bypass the tenant check. Unknown files → 404 (never 403, no existence leak).
  */
@@ -48,6 +49,9 @@ export async function mediaGuard(req: Request, res: Response, next: NextFunction
     if (rel.startsWith('certificates/')) {
       const certNumber = path.posix.basename(rel).replace(/\.svg$/i, '')
       return !!(await prisma.certificate.findFirst({ where: { certNumber }, select: { id: true } }))
+    }
+    if (rel.startsWith('announcements/')) {
+      return !!(await prisma.announcement.findFirst({ where: { imageUrl: url }, select: { id: true } }))
     }
     return !!(await prisma.content.findFirst({ where: { url }, select: { id: true } }))
   }).catch(() => false)

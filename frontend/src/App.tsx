@@ -34,6 +34,8 @@ const TenantsPage = lazy(() => import('./pages/admin/TenantsPage'))
 const ApprovalsPage = lazy(() => import('./pages/admin/ApprovalsPage'))
 const HrIntegrationsPage = lazy(() => import('./pages/admin/HrIntegrationsPage'))
 const InsightsPage = lazy(() => import('./pages/admin/InsightsPage'))
+const PricingPage = lazy(() => import('./pages/PricingPage'))
+const AnnouncementsPage = lazy(() => import('./pages/AnnouncementsPage'))
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, refreshToken, clearAuth } = useAuthStore()
@@ -92,6 +94,8 @@ export default function App() {
       <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
         <Route path="dashboard" element={<SmartDashboard />} />
         <Route path="departments" element={<DepartmentsPage />} />
+        <Route path="tarifs" element={<PricingPage />} />
+        <Route path="actualites" element={<AnnouncementsPage />} />
         <Route path="modules" element={<ModulesPage />} />
         <Route path="modules/:id" element={<ModuleDetailPage />} />
         <Route path="modules/:moduleId/quiz/:quizId" element={<QuizPage />} />

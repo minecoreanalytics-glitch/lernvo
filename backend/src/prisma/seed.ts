@@ -90,6 +90,12 @@ async function main() {
     },
   })
 
+  await db.companyUnit.upsert({
+    where: { tenantId_slug: { tenantId: tenant.id, slug: 'ACME' } },
+    update: {},
+    create: { tenantId: tenant.id, name: 'Acme Inc', slug: 'ACME', order: 0 }
+  })
+
   console.log('Lernvo demo seed complete: tenant=acme-demo, 6 users, 1 department, 1 category, 1 module.')
 }
 

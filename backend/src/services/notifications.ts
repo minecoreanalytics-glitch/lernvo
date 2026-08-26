@@ -185,6 +185,34 @@ export class NotificationService {
     })
   }
 
+  static async broadcastPricingUpdate(
+    brand: string,
+    changes: Array<{ categoryName: string; serviceName: string; changeType: string; oldPrice?: string; newPrice?: string }>,
+    uploadId: string
+  ) {
+    const label = brand.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    const updated = changes.filter(c => c.changeType === 'updated').length
+    const added = changes.filter(c => c.changeType === 'added').length
+    const removed = changes.filter(c => c.changeType === 'removed').length
+    const body = `Les tarifs ${label} ont été mis à jour: ${updated} modification(s), ${added} ajout(s), ${removed} retrait(s). Consultez la page Tarifs pour les détails.`
+    const tenantId = getTenantId()
+    const users = await prisma.user.findMany({
+      where: { isActive: true },
+      select: { id: true }
+    })
+    if (users.length === 0) return
+    await prisma.notification.createMany({
+      data: users.map(u => ({
+        tenantId,
+        userId: u.id,
+        type: 'pricing',
+        title: `Mise à jour des tarifs — ${label}`,
+        body,
+        link: `/tarifs?brand=${encodeURIComponent(brand)}&upload=${uploadId}`
+      }))
+    })
+  }
+
   static async sendOnboardingOverdueManager(managerId: string, employeeName: string, planName: string) {
     return prisma.notification.create({
       data: {

@@ -71,6 +71,14 @@ model Tenant {
   careerPathEnrollments   CareerPathEnrollment[]
   careerPathPrerequisites CareerPathPrerequisite[]
   onboardingPlanModules   OnboardingPlanModule[]
+  pricingCategories       PricingCategory[]
+  pricingItems            PricingItem[]
+  pricingUploads          PricingUpload[]
+  pricingChanges          PricingChange[]
+  pricingAlerts           PricingAlert[]
+  companyUnits            CompanyUnit[]
+  announcements           Announcement[]
+  announcementReads       AnnouncementRead[]
 }
 
 enum ContentType {
@@ -197,6 +205,9 @@ model User {
   sessions        UserSession[]
   activityLogs    UserActivityLog[]
   onboardings     UserOnboarding[]
+  pricingUploads      PricingUpload[]
+  announcements       Announcement[]     @relation("AnnouncementAuthor")
+  announcementReads   AnnouncementRead[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -850,6 +861,152 @@ model ChatQuestionLog {
 
   @@index([tenantId, createdAt])
   @@index([departmentId])
+}
+
+// ─── Tarifs (grilles par tenant, marques libres) ─────────────────────────────
+
+model PricingCategory {
+  id        String        @id @default(uuid())
+  tenantId  String
+  tenant    Tenant        @relation(fields: [tenantId], references: [id])
+  brand     String
+  name      String
+  sheetName String?
+  order     Int           @default(0)
+  items     PricingItem[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([tenantId, brand, name])
+  @@index([tenantId, brand])
+}
+
+model PricingItem {
+  id           String          @id @default(uuid())
+  tenantId     String
+  tenant       Tenant          @relation(fields: [tenantId], references: [id])
+  categoryId   String
+  category     PricingCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  serviceName  String
+  description  String?
+  price        String
+  priceNumeric Float?
+  currency     String          @default("HTG")
+  unit         String?
+  features     String[]        @default([])
+  metadata     Json?
+  order        Int             @default(0)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([tenantId])
+  @@index([categoryId])
+}
+
+model PricingUpload {
+  id            String          @id @default(uuid())
+  tenantId      String
+  tenant        Tenant          @relation(fields: [tenantId], references: [id])
+  brand         String
+  fileName      String
+  uploadedById  String
+  uploadedBy    User            @relation(fields: [uploadedById], references: [id])
+  itemCount     Int             @default(0)
+  changeCount   Int             @default(0)
+  importBatchId String?
+  changes       PricingChange[]
+  alert         PricingAlert?
+  createdAt     DateTime        @default(now())
+
+  @@index([tenantId, brand, createdAt])
+  @@index([importBatchId])
+}
+
+model PricingChange {
+  id           String        @id @default(uuid())
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  uploadId     String
+  upload       PricingUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  brand        String
+  categoryName String
+  serviceName  String
+  changeType   String
+  oldPrice     String?
+  newPrice     String?
+  details      String?
+  createdAt    DateTime      @default(now())
+
+  @@index([tenantId])
+  @@index([uploadId])
+}
+
+model PricingAlert {
+  id        String        @id @default(uuid())
+  tenantId  String
+  tenant    Tenant        @relation(fields: [tenantId], references: [id])
+  brand     String
+  uploadId  String        @unique
+  upload    PricingUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  summary   String
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+
+  @@index([tenantId, isActive, createdAt])
+}
+
+// ─── Company news (fil d'actualités interne) ─────────────────────────────────
+
+model CompanyUnit {
+  id            String         @id @default(uuid())
+  tenantId      String
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  name          String
+  slug          String
+  order         Int            @default(0)
+  isActive      Boolean        @default(true)
+  announcements Announcement[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([tenantId, slug])
+  @@unique([tenantId, name])
+  @@index([tenantId, isActive])
+}
+
+model Announcement {
+  id            String             @id @default(uuid())
+  tenantId      String
+  tenant        Tenant             @relation(fields: [tenantId], references: [id])
+  companyUnitId String
+  companyUnit   CompanyUnit        @relation(fields: [companyUnitId], references: [id])
+  authorId      String
+  author        User               @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+  body          String?
+  imageUrl      String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  reads         AnnouncementRead[]
+
+  @@index([tenantId, createdAt])
+  @@index([companyUnitId])
+  @@index([authorId])
+}
+
+model AnnouncementRead {
+  id             String       @id @default(uuid())
+  tenantId       String
+  tenant         Tenant       @relation(fields: [tenantId], references: [id])
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt         DateTime     @default(now())
+
+  @@unique([tenantId, userId, announcementId])
+  @@index([userId])
+  @@index([announcementId])
 }
 
 // ─── Marketing leads (platform-global: captured on the public landing page, before any tenant exists) ──

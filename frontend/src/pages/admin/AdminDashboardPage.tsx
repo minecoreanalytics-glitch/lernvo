@@ -7,6 +7,8 @@ import {
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
 import { api } from '../../utils/api'
+import PricingAlertsBanner from '../../components/PricingAlertsBanner'
+import AnnouncementsUnreadBanner from '../../components/AnnouncementsUnreadBanner'
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } }
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.2 } } }
@@ -116,6 +118,11 @@ export default function AdminDashboardPage() {
       </motion.div>
 
       <motion.div variants={item}>
+        <AnnouncementsUnreadBanner />
+      </motion.div>
+
+      <motion.div variants={item}>
+        <PricingAlertsBanner />
       </motion.div>
 
       {/* ── Alerts: Overdue + Today ──────────────────────── */}

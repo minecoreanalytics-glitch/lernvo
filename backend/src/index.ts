@@ -35,6 +35,9 @@ import { apiLimiter, authSourceLimiter } from './middleware/limits'
 import { mediaGuard } from './middleware/media'
 import { runDueConnectors } from './services/hr/connectors'
 import chatRoutes from './routes/chat'
+import pricingRoutes from './routes/pricing'
+import integrationRoutes from './routes/integrations'
+import announcementRoutes from './routes/announcements'
 
 dotenv.config()
 
@@ -93,6 +96,9 @@ app.use('/api/approvals', approvalRoutes)
 app.use('/api/hr', hrRoutes)
 app.use('/api/mcore', mcoreRoutes)
 app.use('/api/chat', chatRoutes)
+app.use('/api/pricing', pricingRoutes)
+app.use('/api/integrations', integrationRoutes)
+app.use('/api/announcements', announcementRoutes)
 
 // ─── Health Check (both /health and /api/health) ─────────────────────────────
 const healthHandler: express.RequestHandler = async (_req, res) => {

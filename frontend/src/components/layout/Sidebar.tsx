@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   LayoutDashboard, BookOpen, Route, BookMarked, Building2,
   Trophy, User, Users, FileText, LogOut, Award, Sparkles,
-  ClipboardList, UsersRound, BarChart3, Activity, Bell, ShieldCheck, Plug, Brain
+  ClipboardList, UsersRound, BarChart3, Activity, Bell, ShieldCheck, Plug, Brain, Tag, Newspaper
 } from 'lucide-react'
 import { useBranding } from '../../hooks/useBranding'
 import BrandMark from '../BrandMark'
@@ -16,6 +16,8 @@ const employeeItems = [
   { to: '/modules',   icon: BookOpen,        label: 'Formations' },
   { to: '/kb',        icon: BookMarked,      label: 'Données' },
   { to: '/departments', icon: Building2,     label: 'Départements' },
+  { to: '/tarifs',       icon: Tag,            label: 'Tarifs' },
+  { to: '/actualites',   icon: Newspaper,      label: 'Actualités' },
   { to: '/career',    icon: Route,           label: 'Parcours carrière' },
   { to: '/certificates', icon: Award,        label: 'Certificats' },
   { to: '/leaderboard', icon: Trophy,        label: 'Classement' },
@@ -29,6 +31,8 @@ const adminOnlyItems = [
   { to: '/admin/ai',          icon: Sparkles,        label: 'Générateur IA' },
   { to: '/admin/users',       icon: Users,           label: 'Utilisateurs' },
   { to: '/departments',       icon: Building2,       label: 'Départements' },
+  { to: '/tarifs',            icon: Tag,             label: 'Tarifs' },
+  { to: '/actualites',        icon: Newspaper,       label: 'Actualités' },
   { to: '/admin/content',     icon: FileText,        label: 'Contenus' },
   { to: '/admin/approvals',   icon: ShieldCheck,     label: 'Approbations' },
   { to: '/admin/insights',    icon: Brain,           label: 'Signaux' },
@@ -80,6 +84,14 @@ export default function Sidebar() {
     refetchOnWindowFocus: true
   })
   const unreadCount = notifResponse?.notifications?.filter(n => !n.isRead).length || 0
+  const { data: newsUnread } = useQuery<{ unreadCount: number }>({
+    queryKey: ['announcements-unread'],
+    queryFn: () => api.get('/announcements/unread-count').then(r => r.data),
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+    enabled: !isSuperAdmin
+  })
+  const newsUnreadCount = newsUnread?.unreadCount || 0
 
   async function handleLogout() {
     await api.post('/auth/logout', { refreshToken }).catch(() => {})
@@ -134,12 +146,17 @@ export default function Sidebar() {
           <NavLink key={to} to={to} className={({ isActive }) =>
             isActive ? 'nav-item-active' : 'nav-item'
           }>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full">
               <Icon size={16} />
               <span>{label}</span>
               {to === '/notifications' && unreadCount > 0 && (
-                <span className="ml-auto text-xs font-bold bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
-                  {unreadCount}
+                <span className="ml-auto text-xs font-bold bg-red-500 text-white rounded-full min-w-[1.25rem] h-5 px-1 flex items-center justify-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+              {to === '/actualites' && newsUnreadCount > 0 && (
+                <span className="ml-auto text-xs font-bold bg-red-500 text-white rounded-full min-w-[1.25rem] h-5 px-1 flex items-center justify-center">
+                  {newsUnreadCount > 99 ? '99+' : newsUnreadCount}
                 </span>
               )}
             </div>

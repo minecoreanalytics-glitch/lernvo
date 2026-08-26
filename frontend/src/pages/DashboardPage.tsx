@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { api } from '../utils/api'
 import PendingAcksCard from '../components/approval/PendingAcksCard'
+import PricingAlertsBanner from '../components/PricingAlertsBanner'
+import AnnouncementsUnreadBanner from '../components/AnnouncementsUnreadBanner'
 import type { LeaderboardEntry } from '../types'
 
 type CareerPathEnrollment = {
@@ -191,6 +193,14 @@ export default function DashboardPage() {
       {/* ── À LIRE ET VALIDER (approbations) ───────────── */}
       <motion.div variants={item}>
         <PendingAcksCard />
+      </motion.div>
+
+      <motion.div variants={item}>
+        <AnnouncementsUnreadBanner />
+      </motion.div>
+
+      <motion.div variants={item}>
+        <PricingAlertsBanner />
       </motion.div>
 
       {/* ══════════════════════════════════════════════════ */}

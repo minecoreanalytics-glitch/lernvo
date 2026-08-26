@@ -135,7 +135,12 @@ export default function HrIntegrationsPage() {
                     <pre className="font-mono text-[10px] text-gray-600 whitespace-pre-wrap">{`POST ${pushUrl}
 X-HR-Key: ${shownKey[c.id]}
 { "departments": [{ "externalId": "D1", "name": "Ventes" }],
-  "employees": [{ "externalId": "E1", "email": "a@b.com", "firstName": "A", "lastName": "B", "departmentExternalId": "D1", "role": "AGENT" }] }`}</pre>
+  "employees": [{ "externalId": "E1", "email": "a@b.com", "firstName": "A", "lastName": "B", "departmentExternalId": "D1", "role": "AGENT" }] }
+
+# Salesforce / n8n (un employé + auto-enroll) :
+POST https://${branding.baseDomain}/api/integrations/sync-user
+X-Integration-Key: ${shownKey[c.id]}
+{ "salesforceId": "003xx", "email": "a@b.com", "firstName": "A", "lastName": "B", "departmentName": "Ventes" }`}</pre>
                   </div>
                 )}
               </div>

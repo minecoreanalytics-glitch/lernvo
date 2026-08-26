@@ -99,7 +99,7 @@ const T = {
         ['Business', '6 $', '/employé/mois', '100 à 1 000 employés · −20 % en annuel', ['Intégration SIRH (Odoo, API, CSV)', 'API publique', 'Signaux & recommandations', 'Support prioritaire']],
         ['Enterprise', 'Sur devis', '', '1 000+ / multi-entités', ['SSO, SLA', 'Cœur Morpheus', 'Accompagnement & migration']],
       ],
-      cta: 'Parler à Thierry',
+      cta: 'Parler à un expert',
     },
     faq: {
       h2: 'Questions qu’on nous pose',
@@ -208,7 +208,7 @@ const T = {
         ['Business', '$6', '/employee/mo', '100 to 1,000 · −20% annual', ['HRIS integration (Odoo, API, CSV)', 'Public API', 'Signals & recommendations', 'Priority support']],
         ['Enterprise', 'Custom', '', '1,000+ / multi-entity', ['SSO, SLA', 'Morpheus core', 'Onboarding & migration']],
       ],
-      cta: 'Talk to Thierry',
+      cta: 'Talk to an expert',
     },
     faq: {
       h2: 'Questions we get',

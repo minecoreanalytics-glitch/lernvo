@@ -25,6 +25,8 @@ const SCOPED = new Set([
   'CareerPath', 'KbArticle', 'OnboardingPlan',
   'ApprovalItem', 'ContentVersion', 'Acknowledgment',
   'HrConnector', 'HrSyncRun', 'ChatQuestionLog',
+  'PricingCategory', 'PricingItem', 'PricingUpload', 'PricingChange', 'PricingAlert',
+  'CompanyUnit', 'Announcement', 'AnnouncementRead',
   'Content', 'Enrollment', 'Quiz', 'Question', 'QuizAttempt', 'ProgressLog', 'Certificate',
   'Notification', 'PointTransaction', 'UserBadge', 'KbArticleView', 'ModuleFeedback',
   'UserSession', 'UserActivityLog', 'UserOnboarding', 'CareerPathModule', 'CareerPathEnrollment',

@@ -25,8 +25,9 @@ export default function WelcomeModal() {
   // Check if we already showed today
   useEffect(() => {
     if (!user) return
-    const key = getTodayKey(user.id)
-    if (!sessionStorage.getItem(key)) {
+    let seen = false
+    try { seen = !!sessionStorage.getItem(getTodayKey(user.id)) } catch { /* storage disabled */ }
+    if (!seen) {
       // Small delay so dashboard loads first
       const t = setTimeout(() => setShow(true), 800)
       return () => clearTimeout(t)
@@ -53,9 +54,7 @@ export default function WelcomeModal() {
   })
 
   function handleClose() {
-    if (user) {
-      sessionStorage.setItem(getTodayKey(user.id), '1')
-    }
+    try { if (user) sessionStorage.setItem(getTodayKey(user.id), '1') } catch { /* storage disabled */ }
     setShow(false)
   }
 
@@ -78,16 +77,19 @@ export default function WelcomeModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           onClick={handleClose}
         >
+          {/* Backdrop on its own non-interactive layer — iOS Safari lets backdrop-filter
+              swallow taps meant for children, which killed the modal's buttons. */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: 'spring', duration: 0.5 }}
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+            className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
           >
             {/* Header gradient */}
             <div className="bg-gradient-to-br from-primary-700 to-primary-900 px-6 pt-6 pb-5 relative">

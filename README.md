@@ -15,6 +15,7 @@ subdomain (`<slug>.lernvo.com`), branding, users and data.
 |---|---|
 | Backend | Node 20 · Express · TypeScript · Prisma 5 · PostgreSQL 16 · Redis |
 | Frontend | React 18 · Vite · TypeScript · Tailwind · TanStack Query · PWA |
+| Mobile | Expo SDK 57 · React Native · Expo Router · SecureStore · SQLite |
 | AI (optional) | Google Gemini (`GEMINI_API_KEY`) — module/quiz/KB generation, chatbot, **text-to-speech** (audio version of any section) |
 | Morpheus (optional) | `MORPHEUS_CORE_URL` + `MORPHEUS_API_KEY` — knowledge-assurance signals & recommendations (see docs/mcore) |
 | HRIS (optional) | Odoo connector, push API key, CSV import (see docs/specs/2026-08-19-hris-sync.md) |
@@ -65,6 +66,7 @@ Tests:
 ```bash
 cd backend && npm test        # uses lernvo_test DB (backend/.env.test), created by docker/dev-init.sql
 cd frontend && npx tsc --noEmit && npm run build
+cd mobile && npm test && npm run typecheck
 bash scripts/check-tenant-neutral.sh
 ```
 
@@ -77,6 +79,7 @@ to enable emails. Both are silently disabled when empty.
 backend/            Express API — src/routes (one file per domain), src/services, src/utils/prismaTenant.ts
 backend/prisma/     schema.prisma (single source of truth for the DB)
 frontend/           React SPA — src/pages, src/components, src/hooks/useBranding.ts
+mobile/             Native iOS/Android app — Expo Router, secure auth, offline SQLite sync
 docker/             production compose (docker-compose.lernvo.yml), nginx, dev-init.sql
 docs/               NEW_TENANT.md (tenant onboarding runbook)
 scripts/            check-tenant-neutral.sh (CI gate)

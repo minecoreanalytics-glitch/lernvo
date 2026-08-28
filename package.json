@@ -12,7 +12,7 @@
     "mobile:android": "npm run android --prefix mobile",
     "test:mobile": "npm test --prefix mobile",
     "typecheck:mobile": "npm run typecheck --prefix mobile",
-    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend && npm install --prefix mobile",
     "db:migrate": "npm run db:migrate --prefix backend",
     "db:push": "npm run db:push --prefix backend",
     "db:seed": "npm run db:seed --prefix backend",

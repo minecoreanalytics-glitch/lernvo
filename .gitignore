@@ -11,3 +11,6 @@ logs/
 *.pem
 .prisma/
 .worktrees/
+.expo/
+dist-android/
+dist-ios/

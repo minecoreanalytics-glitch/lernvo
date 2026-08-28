@@ -1,0 +1,65 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [main, lernvo, "codex/**"]
+  pull_request:
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npx expo-doctor
+      - name: Bundle iOS application
+        run: npx expo export --platform ios --output-dir dist-ios
+        env:
+          EXPO_PUBLIC_API_URL: https://api.example.com
+      - name: Bundle Android application
+        run: npx expo export --platform android --output-dir dist-android
+        env:
+          EXPO_PUBLIC_API_URL: https://api.example.com
+
+  mobile-api-contract:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lernvo
+          POSTGRES_PASSWORD: lernvo
+          POSTGRES_DB: lernvo_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lernvo" --health-interval 5s --health-timeout 3s --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql://lernvo:lernvo@127.0.0.1:5432/lernvo_test
+      JWT_SECRET: ci-secret
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma validate
+      - run: npx prisma db push --skip-generate
+      - run: npm test -- src/test/mobileContract.test.ts src/test/mobileRefresh.test.ts src/test/mobileEventIngestion.test.ts src/test/crossTenant.test.ts
+      - run: npm run build

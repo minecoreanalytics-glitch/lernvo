@@ -38,6 +38,7 @@ import chatRoutes from './routes/chat'
 import pricingRoutes from './routes/pricing'
 import integrationRoutes from './routes/integrations'
 import announcementRoutes from './routes/announcements'
+import mobileRoutes from './routes/mobile'
 
 dotenv.config()
 
@@ -99,6 +100,7 @@ app.use('/api/chat', chatRoutes)
 app.use('/api/pricing', pricingRoutes)
 app.use('/api/integrations', integrationRoutes)
 app.use('/api/announcements', announcementRoutes)
+app.use('/api/mobile/v1', mobileRoutes)
 
 // ─── Health Check (both /health and /api/health) ─────────────────────────────
 const healthHandler: express.RequestHandler = async (_req, res) => {

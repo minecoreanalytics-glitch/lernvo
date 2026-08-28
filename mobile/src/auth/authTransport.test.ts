@@ -15,6 +15,7 @@ describe('HTTP auth transport', () => {
           tenantSlug: 'acme',
           user: {
             id: 'u1',
+            tenantId: 'tenant-1',
             email: 'learner@acme.test',
             firstName: 'Ada',
             lastName: 'Lovelace',

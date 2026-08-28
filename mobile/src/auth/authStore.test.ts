@@ -9,6 +9,7 @@ const session = {
   tenantSlug: 'acme',
   user: {
     id: 'u1',
+    tenantId: 'tenant-1',
     email: 'ada@acme.test',
     firstName: 'Ada',
     lastName: 'Lovelace',

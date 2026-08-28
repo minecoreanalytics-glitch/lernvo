@@ -1,5 +1,6 @@
 export type AuthenticatedUser = Readonly<{
   id: string;
+  tenantId: string;
   email: string;
   firstName: string;
   lastName: string;

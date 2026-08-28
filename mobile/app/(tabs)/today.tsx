@@ -5,14 +5,20 @@ import { useStore } from 'zustand';
 import { authStore } from '../../src/auth/authRuntime';
 import { ScreenScaffold } from '../../src/components/ScreenScaffold';
 import { canAccessTeam } from '../../src/navigation/capabilities';
+import { syncNow, syncStatusLabel, syncStatusSource } from '../../src/sync/syncRuntime';
+import { useSyncStatus } from '../../src/sync/useSyncStatus';
 
 export default function TodayScreen() {
   const router = useRouter();
   const user = useStore(authStore, (state) => state.user);
+  const syncStatus = useSyncStatus(syncStatusSource);
   const firstName = user?.firstName ?? 'there';
 
   return (
     <ScreenScaffold eyebrow="Your daily focus" title={`Good day, ${firstName}`}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Synchronize learning" onPress={() => void syncNow()} style={styles.syncPill}>
+        <Text style={styles.syncText}>{syncStatusLabel(syncStatus)}</Text>
+      </Pressable>
       <View style={styles.sessionCard}>
         <Text style={styles.minutes}>5 minutes</Text>
         <Text style={styles.cardTitle}>Keep your knowledge sharp</Text>
@@ -39,4 +45,6 @@ const styles = StyleSheet.create({
   primaryText: { color: '#123B2A', fontSize: 16, fontWeight: '800' },
   teamButton: { alignItems: 'center', borderColor: '#97B5A5', borderRadius: 14, borderWidth: 1, marginTop: 18, minHeight: 50, justifyContent: 'center' },
   teamText: { color: '#123B2A', fontSize: 16, fontWeight: '700' },
+  syncPill: { alignSelf: 'flex-start', backgroundColor: '#DFEAE4', borderRadius: 999, marginTop: 16, paddingHorizontal: 12, paddingVertical: 7 },
+  syncText: { color: '#385747', fontSize: 13, fontWeight: '700' },
 });

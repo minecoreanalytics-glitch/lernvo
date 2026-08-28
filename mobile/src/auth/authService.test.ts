@@ -25,6 +25,7 @@ const signedIn: CredentialBundle = {
   tenantSlug: 'acme',
   user: {
     id: 'user-1',
+    tenantId: 'tenant-1',
     email: 'learner@acme.test',
     firstName: 'Ada',
     lastName: 'Lovelace',

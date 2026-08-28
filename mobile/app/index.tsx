@@ -1,12 +1,22 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useStore } from 'zustand';
+
+import { authStore } from '../src/auth/authRuntime';
 
 export default function StartScreen() {
+  const status = useStore(authStore, (state) => state.status);
+
+  if (status === 'signedOut') return <Redirect href="/(auth)/sign-in" />;
+
   return (
     <View style={styles.container}>
-      <Text accessibilityRole="header" style={styles.title}>
-        Lernvo
-      </Text>
-      <Text style={styles.subtitle}>Your daily learning starts here.</Text>
+      {status === 'checking' ? <ActivityIndicator color="#146B45" /> : (
+        <>
+          <Text accessibilityRole="header" style={styles.title}>Lernvo</Text>
+          <Text style={styles.subtitle}>Your daily learning starts here.</Text>
+        </>
+      )}
     </View>
   );
 }

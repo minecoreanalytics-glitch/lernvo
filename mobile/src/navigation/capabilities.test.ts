@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { messages } from '../i18n/messages';
 import {
   canAccessTeam,
   getAppEntry,
@@ -8,14 +9,15 @@ import {
 } from './capabilities';
 
 describe('native navigation capabilities', () => {
-  it('keeps the learner tab bar focused on five frontline destinations', () => {
-    expect(learnerTabs).toEqual([
-      { key: 'today', label: 'Today' },
-      { key: 'learn', label: 'Learn' },
-      { key: 'ask', label: 'Ask' },
-      { key: 'inbox', label: 'Inbox' },
-      { key: 'me', label: 'Me' },
-    ]);
+  it('keeps the learner tab bar on six frontline destinations', () => {
+    expect(learnerTabs.map((tab) => tab.key)).toEqual(['today', 'learn', 'docs', 'ask', 'inbox', 'me']);
+  });
+
+  it('has a French and English label for every tab', () => {
+    for (const tab of learnerTabs) {
+      expect(messages.en[tab.labelKey]).toBeTruthy();
+      expect(messages.fr[tab.labelKey]).toBeTruthy();
+    }
   });
 
   it.each<MobileRole>(['SUPERVISOR', 'MANAGER', 'HR', 'PLATFORM_MANAGER', 'SUPER_ADMIN'])(

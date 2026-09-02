@@ -12,7 +12,7 @@ export default function StartScreen() {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator color="#146B45" />
+      <ActivityIndicator color="#1E4F8C" />
     </View>
   );
 }
@@ -20,7 +20,7 @@ export default function StartScreen() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: '#F4F7F5',
+    backgroundColor: '#F7F8FA',
     flex: 1,
     justifyContent: 'center',
     padding: 24,

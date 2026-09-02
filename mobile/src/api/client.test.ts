@@ -124,4 +124,52 @@ describe('mobile API client', () => {
       retryable: false,
     });
   });
+
+  it('retries once after refreshing an expired access token', async () => {
+    const tokens = ['expired-token', 'fresh-token'];
+    const calls: string[] = [];
+    const client = createMobileApiClient({
+      baseUrl: 'https://api.lernvo.com',
+      getAccessToken: () => tokens[0] ?? null,
+      getTenantSlug: () => 'acme',
+      refreshAccessToken: async () => {
+        tokens[0] = 'fresh-token';
+        return 'fresh-token';
+      },
+      createRequestId: () => 'request-refresh',
+      fetchImpl: async (input, init) => {
+        const request = new Request(input, init);
+        calls.push(request.headers.get('authorization') ?? '');
+        if (request.headers.get('authorization') === 'Bearer expired-token') {
+          return Response.json(
+            { error: { code: 'UNAUTHORIZED', message: 'Expired' } },
+            { status: 401 },
+          );
+        }
+        return Response.json(successEnvelope);
+      },
+    });
+
+    await expect(client.request('/bootstrap')).resolves.toEqual({ ready: true });
+    expect(calls).toEqual(['Bearer expired-token', 'Bearer fresh-token']);
+  });
+
+  it('maps a 409 tenant selection response', async () => {
+    const client = createMobileApiClient({
+      baseUrl: 'https://api.lernvo.com',
+      getAccessToken: () => 'token',
+      getTenantSlug: () => null,
+      createRequestId: () => 'request-need-tenant',
+      fetchImpl: async () =>
+        Response.json(
+          { needTenant: true, tenants: [{ slug: 'acme', name: 'Acme' }] },
+          { status: 409 },
+        ),
+    });
+
+    await expect(client.request('/bootstrap')).rejects.toMatchObject({
+      code: 'NEED_TENANT',
+      status: 409,
+    });
+  });
 });

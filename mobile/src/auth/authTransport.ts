@@ -1,24 +1,47 @@
 import type { AuthTransport } from './authService';
 import type { CredentialBundle } from './credentialStore';
 
+export type TenantChoice = Readonly<{ slug: string; name: string }>;
+
 export class AuthTransportError extends Error {
   readonly status: number;
+  readonly needTenant: boolean;
+  readonly tenants: TenantChoice[];
 
-  constructor(status: number, message: string) {
+  constructor(
+    status: number,
+    message: string,
+    options: { needTenant?: boolean; tenants?: TenantChoice[] } = {},
+  ) {
     super(message);
     this.name = 'AuthTransportError';
     this.status = status;
+    this.needTenant = options.needTenant === true;
+    this.tenants = options.tenants ?? [];
   }
 
   toJSON() {
-    return { name: this.name, status: this.status, message: this.message };
+    return {
+      name: this.name,
+      status: this.status,
+      message: this.message,
+      needTenant: this.needTenant,
+    };
   }
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
   const body = (await response.json().catch(() => ({}))) as {
     error?: string;
+    needTenant?: boolean;
+    tenants?: TenantChoice[];
   } & T;
+  if (response.status === 409 && body.needTenant) {
+    throw new AuthTransportError(409, 'Select your company to continue', {
+      needTenant: true,
+      tenants: Array.isArray(body.tenants) ? body.tenants : [],
+    });
+  }
   if (!response.ok) {
     throw new AuthTransportError(
       response.status,
@@ -50,7 +73,12 @@ export function createHttpAuthTransport(options: {
 
   return {
     async signIn(input) {
-      return post<CredentialBundle>('login', input);
+      const payload: Record<string, string> = {
+        email: input.email,
+        password: input.password,
+      };
+      if (input.tenantSlug) payload.tenantSlug = input.tenantSlug;
+      return post<CredentialBundle>('login', payload);
     },
     async refresh(input) {
       return post<{ accessToken: string; refreshToken: string }>(

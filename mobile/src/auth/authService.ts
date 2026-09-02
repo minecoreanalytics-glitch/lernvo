@@ -32,10 +32,11 @@ export function createAuthService(options: {
   }
 
   async function signIn(input: SignInInput) {
+    const tenantSlug = input.tenantSlug.trim().toLowerCase();
     const authenticated = await options.transport.signIn({
       email: input.email.trim().toLowerCase(),
       password: input.password,
-      tenantSlug: input.tenantSlug.trim().toLowerCase(),
+      tenantSlug,
     });
     await options.store.save(authenticated);
     session = authenticated;

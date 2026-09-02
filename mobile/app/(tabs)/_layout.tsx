@@ -3,14 +3,17 @@ import { Redirect, Tabs } from 'expo-router';
 import { useStore } from 'zustand';
 
 import { authStore } from '../../src/auth/authRuntime';
+import { t } from '../../src/i18n';
+import { learnerTabs, type LearnerTabKey } from '../../src/navigation/capabilities';
 
-const icons = {
+const icons: Record<LearnerTabKey, readonly [string, string]> = {
   today: ['sparkles', 'sparkles-outline'],
   learn: ['library', 'library-outline'],
+  docs: ['document-text', 'document-text-outline'],
   ask: ['chatbubble-ellipses', 'chatbubble-ellipses-outline'],
   inbox: ['notifications', 'notifications-outline'],
   me: ['person-circle', 'person-circle-outline'],
-} as const;
+};
 
 export default function TabLayout() {
   const status = useStore(authStore, (state) => state.status);
@@ -20,21 +23,32 @@ export default function TabLayout() {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#146B45',
-        tabBarInactiveTintColor: '#61776B',
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
-        tabBarStyle: { borderTopColor: '#DCE6E0' },
+        tabBarActiveTintColor: '#1E4F8C',
+        tabBarInactiveTintColor: '#8A97A8',
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarStyle: { borderTopColor: '#E4E8EF' },
         tabBarIcon: ({ color, focused, size }) => {
-          const names = icons[route.name as keyof typeof icons];
-          return <Ionicons color={color} name={focused ? names[0] : names[1]} size={size} />;
+          const names = icons[route.name as LearnerTabKey];
+          return (
+            <Ionicons
+              color={color}
+              name={(focused ? names[0] : names[1]) as keyof typeof Ionicons.glyphMap}
+              size={size}
+            />
+          );
         },
       })}
     >
-      <Tabs.Screen name="today" options={{ title: 'Today', tabBarAccessibilityLabel: 'Today tab' }} />
-      <Tabs.Screen name="learn" options={{ title: 'Learn', tabBarAccessibilityLabel: 'Learn tab' }} />
-      <Tabs.Screen name="ask" options={{ title: 'Ask', tabBarAccessibilityLabel: 'Ask tab' }} />
-      <Tabs.Screen name="inbox" options={{ title: 'Inbox', tabBarAccessibilityLabel: 'Inbox tab' }} />
-      <Tabs.Screen name="me" options={{ title: 'Me', tabBarAccessibilityLabel: 'Me tab' }} />
+      {learnerTabs.map((tab) => (
+        <Tabs.Screen
+          key={tab.key}
+          name={tab.key}
+          options={{
+            title: t(tab.labelKey),
+            tabBarAccessibilityLabel: t('tabs.a11y', { tab: t(tab.labelKey) }),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

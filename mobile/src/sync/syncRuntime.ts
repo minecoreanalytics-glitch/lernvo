@@ -1,9 +1,9 @@
 import NetInfo from '@react-native-community/netinfo';
 import { AppState } from 'react-native';
 
-import { createMobileApiClient } from '../api/client';
-import { authService, authStore } from '../auth/authRuntime';
-import { getPublicEnvironment } from '../config/env';
+import { mobileApi } from '../api/runtime';
+import { authStore } from '../auth/authRuntime';
+import { t } from '../i18n';
 import { openLocalDatabase } from '../storage/database';
 import { migrateDatabase } from '../storage/migrations/001_initial';
 import { EventOutboxRepository } from '../storage/repositories/eventOutboxRepository';
@@ -37,11 +37,6 @@ export function initializeSyncRuntime() {
     const database = await openLocalDatabase();
     await migrateDatabase(database);
     const outbox = new EventOutboxRepository(database);
-    const api = createMobileApiClient({
-      baseUrl: getPublicEnvironment().apiUrl,
-      getAccessToken: authService.getAccessToken,
-      getTenantSlug: authService.getTenantSlug,
-    });
     coordinator = createSyncCoordinator({
       outbox,
       isOnline: connectivity.isOnline,
@@ -51,7 +46,7 @@ export function initializeSyncRuntime() {
       },
       transport: {
         async push(events, signal) {
-          const response = await api.request<{ results: Array<{
+          const response = await mobileApi.request<{ results: Array<{
             clientEventId: string;
             status: 'accepted' | 'duplicate' | 'rejected';
             serverSequence?: number;
@@ -99,8 +94,8 @@ export async function syncNow() {
 }
 
 export function syncStatusLabel(status: SyncStatus) {
-  if (status === 'syncing') return 'Syncing';
-  if (status === 'offline') return 'Offline';
-  if (status === 'attentionRequired') return 'Sync needs attention';
-  return 'Up to date';
+  if (status === 'syncing') return t('sync.syncing');
+  if (status === 'offline') return t('sync.offline');
+  if (status === 'attentionRequired') return t('sync.attention');
+  return t('sync.upToDate');
 }

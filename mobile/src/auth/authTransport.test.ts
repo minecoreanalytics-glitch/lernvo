@@ -80,4 +80,40 @@ describe('HTTP auth transport', () => {
     });
     expect(JSON.stringify(error)).not.toContain('never-echo-me');
   });
+
+  it('surfaces tenant choices from a 409 needTenant response', async () => {
+    const auth = createHttpAuthTransport({
+      baseUrl: 'https://api.lernvo.com',
+      fetchImpl: async () =>
+        Response.json(
+          {
+            needTenant: true,
+            tenants: [
+              { slug: 'acme', name: 'Acme Training' },
+              { slug: 'northwind', name: 'Northwind' },
+            ],
+          },
+          { status: 409 },
+        ),
+    });
+
+    const error = await auth
+      .signIn({
+        email: 'learner@acme.test',
+        password: 'secret',
+        tenantSlug: '',
+      })
+      .catch((caught) => caught);
+
+    expect(error).toMatchObject({
+      name: 'AuthTransportError',
+      status: 409,
+      needTenant: true,
+    });
+    expect(error.tenants).toEqual([
+      { slug: 'acme', name: 'Acme Training' },
+      { slug: 'northwind', name: 'Northwind' },
+    ]);
+    expect(JSON.stringify(error)).not.toContain('secret');
+  });
 });

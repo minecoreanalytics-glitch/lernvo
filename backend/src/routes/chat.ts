@@ -314,14 +314,26 @@ async function callGeminiChat(
 
 // ─── POST /api/chat ──────────────────────────────────────────────────────────
 
-router.post('/', chatLimiter, validate(MessageSchema), async (req, res) => {
-  try {
+export class ChatAssistantError extends Error {
+  readonly status: number
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = 'ChatAssistantError'
+    this.status = status
+  }
+}
+
+export async function generateChatReply(input: {
+  userId: string
+  message: string
+  history: Array<{ role: 'user' | 'assistant'; content: string }>
+}): Promise<{ reply: string; citations: Array<{ id: string; title: string }> }> {
     if (!process.env.GEMINI_API_KEY) {
-      return res.status(503).json({ error: 'Assistant IA non configuré sur ce serveur.' })
+      throw new ChatAssistantError(503, 'Assistant IA non configuré sur ce serveur.')
     }
 
-    const { message, history } = req.body as z.infer<typeof MessageSchema>
-    const userId = req.user!.userId
+    const { message, history, userId } = input
     const now = new Date()
     const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
     const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -357,7 +369,7 @@ router.post('/', chatLimiter, validate(MessageSchema), async (req, res) => {
       })
     ])
 
-    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' })
+    if (!user) throw new ChatAssistantError(404, 'Utilisateur introuvable')
 
     // ── KB: retrieve relevant articles first (priority context) ───────────
     const kbMatches = await findRelevantKbArticles(message, 5)
@@ -453,9 +465,25 @@ INSTRUCTIONS GÉNÉRALES:
     const reply = await callGeminiChat(systemPrompt, history, message, {
       maxOutputTokens: kbQuestion ? 1200 : 800
     })
-    res.json({ reply })
+    return {
+      reply,
+      citations: kbMatches.map(a => ({ id: a.id, title: a.title })),
+    }
+}
 
+router.post('/', chatLimiter, validate(MessageSchema), async (req, res) => {
+  try {
+    const { message, history } = req.body as z.infer<typeof MessageSchema>
+    const result = await generateChatReply({
+      userId: req.user!.userId,
+      message,
+      history,
+    })
+    res.json({ reply: result.reply })
   } catch (err) {
+    if (err instanceof ChatAssistantError) {
+      return res.status(err.status).json({ error: err.message })
+    }
     const msg = (err as Error).message
     if (msg === 'NOT_CONFIGURED') {
       return res.status(503).json({ error: 'Assistant IA non configuré sur ce serveur.' })

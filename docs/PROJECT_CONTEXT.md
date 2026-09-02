@@ -13,8 +13,9 @@ briefcase-and-check mark).
 
 - React Native with Expo SDK 57 is the mobile platform; Capacitor and WebView shells are rejected
   (re-confirmed by the owner on 2026-09-01 after seeing both side by side).
-- Learner navigation: Today, Learn, Docs, Ask, Inbox, Me. Docs was added on 2026-09-01 because
-  employees must be able to read approved procedures (knowledge base) on mobile.
+- Learner navigation follows Jakob's Law (owner decision 2026-09-02): five tabs, Home (Today), Learn,
+  Ask centred as the primary action, Inbox, Me. Documents (approved knowledge base) live inside
+  Learn as a Formations / Documents segment. Pull-to-refresh on every list; settings stay in Me.
 - Managers get a role-gated Team screen without turning the learner experience into a dashboard.
 - French and English from the first pilot, resolved from the device language.
 - AI can draft, summarize, translate, and explain. Deterministic services own scoring, compliance,
@@ -49,7 +50,7 @@ Done and verified:
   image `lernvo-backend:rollback-20260902`. Verified live: htvuniversity.com, htv.lernvo.com and
   lernvo.com 200; demo tenant login + bootstrap/today/learn/kb/inbox/me all 200 through
   `https://lernvo.com/api/mobile/v1`.
-- Mobile app (`mobile/`): secure auth (SecureStore, tenant slug at sign-in), six learner tabs,
+- Mobile app (`mobile/`): secure auth (SecureStore, tenant slug at sign-in), five learner tabs (Jakob's Law),
   Team, module detail, quiz, document reader, offline outbox + sync coordinator, FR/EN catalogue
   with parity test, brand icon/adaptive icon/splash, store-oriented `app.json` and `eas.json`.
   49 unit tests, `tsc` clean, `expo-doctor` 21/21, iOS and Android JS bundles export.

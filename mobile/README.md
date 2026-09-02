@@ -43,6 +43,22 @@ After adding or upgrading a native module, regenerate the native projects:
 npx expo prebuild --platform all --no-install
 ```
 
+### Checkout inside iCloud Drive (macOS)
+
+If the repository lives under `~/Documents` with iCloud Drive enabled, iCloud stamps extended
+attributes on freshly built frameworks and Xcode's codesign step fails with
+"resource fork, Finder information, or similar detritus not allowed" (seen in the
+`[CP-User] Build ExpoModulesJSI xcframework` phase). Workarounds, in order of preference:
+
+1. Clone or `git worktree add` outside iCloud (for example `~/dev/lernvo`).
+2. Before building, clear the attributes and retry:
+
+```bash
+xattr -cr ios/Pods node_modules/expo-modules-jsi && npm run ios
+```
+
+EAS cloud builds are not affected.
+
 ## Verification
 
 ```bash

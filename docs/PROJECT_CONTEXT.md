@@ -28,7 +28,8 @@ briefcase-and-check mark).
 
 - Product and architecture spec: `docs/superpowers/specs/2026-08-28-lernvo-native-mobile-design.md`
 - Store release runbook: `docs/mobile/STORE_RELEASE.md`
-- Implementation branch: `codex/lernvo-mobile-foundation` (worktree `.worktrees/mobile-foundation`)
+- Code: `main` (the `codex/lernvo-mobile-foundation` branch and its worktree
+  `.worktrees/mobile-foundation` are merged; start new work from `main`)
 - GitHub repository: `https://github.com/minecoreanalytics-glitch/lernvo`
 - EAS project: `@tbijou/lernvo` (id `90319661-35ba-47b7-b461-3e7bcee601a5`)
 
@@ -52,7 +53,12 @@ Done and verified:
   Team, module detail, quiz, document reader, offline outbox + sync coordinator, FR/EN catalogue
   with parity test, brand icon/adaptive icon/splash, store-oriented `app.json` and `eas.json`.
   49 unit tests, `tsc` clean, `expo-doctor` 21/21, iOS and Android JS bundles export.
-- Local iOS development build runs on the iPhone 17 simulator (`npm run ios`).
+- Local iOS development build (with expo-localization + splash) runs on the iPhone 17 simulator,
+  pointed at lernvo.com; sign-in renders in French with the brand mark, icon and FR/EN
+  localizations verified in the built bundle. Building from an iCloud-synced checkout needs the
+  `xattr -cr` workaround documented in `mobile/README.md`.
+- PR #2 merged into `main` (squash `7c31f4e`) with CI green (backend, frontend, tenant-neutral,
+  mobile, mobile-api-contract). `main` now matches production.
 
 In progress / next:
 
@@ -62,8 +68,8 @@ In progress / next:
 3. Push notifications (expo-notifications + APNs/FCM through EAS) and deep links: not started.
 4. Reinforcement engine (workstream 2) and manager coaching (workstream 4): not started.
 5. `expo-system-ui` if we want `userInterfaceStyle`/`backgroundColor` enforced natively.
-6. Merge `codex/lernvo-mobile-foundation` into `main` once CI is green so the repository matches
-   what is deployed on lernvo.com.
+6. Delete the stray EAS project `@tbijou/lernvo-backend` on expo.dev (created by mistake; the real
+   one is `@tbijou/lernvo`).
 
 ## Non-negotiable invariants
 

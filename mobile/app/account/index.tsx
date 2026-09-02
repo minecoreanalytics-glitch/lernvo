@@ -91,7 +91,7 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  section: { backgroundColor: '#FFFFFF', borderRadius: 18, marginTop: 16, padding: 18 },
+  section: { backgroundColor: '#FFFFFF', borderRadius: 24, shadowColor: '#0F2849', shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 2, marginTop: 16, padding: 18 },
   sectionHeader: { alignItems: 'center', flexDirection: 'row', gap: 8, marginBottom: 8 },
   sectionTitle: { color: '#163A6B', fontSize: 15, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6 },
   line: { color: '#1A202C', fontSize: 16 },

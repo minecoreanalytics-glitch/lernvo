@@ -47,10 +47,13 @@ export function ScreenScaffold({
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       {scroll ? (
+        // contentInsetAdjustmentBehavior lets content scroll underneath the floating
+        // native tab bar (Liquid Glass on iOS 26) and drives its minimize-on-scroll.
         <ScrollView
           contentContainerStyle={styles.scroll}
+          contentInsetAdjustmentBehavior="automatic"
           keyboardShouldPersistTaps="handled"
           refreshControl={
             onRefresh ? (
@@ -67,11 +70,11 @@ export function ScreenScaffold({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { backgroundColor: '#F7F8FA', flex: 1 },
-  scroll: { paddingBottom: 32 },
-  content: { flexGrow: 1, paddingHorizontal: 22, paddingTop: 16 },
+  safeArea: { backgroundColor: '#F4F6FA', flex: 1 },
+  scroll: { paddingBottom: 120 },
+  content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 12 },
   headerRow: { alignItems: 'flex-start', flexDirection: 'row', gap: 12, justifyContent: 'space-between' },
-  headerText: { flex: 1, paddingTop: 8 },
-  eyebrow: { color: '#1E4F8C', fontSize: 13, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase' },
-  title: { color: '#1A202C', fontSize: 32, fontWeight: '800', letterSpacing: -0.6, marginTop: 5 },
+  headerText: { flex: 1, paddingTop: 6 },
+  eyebrow: { color: '#1E4F8C', fontSize: 12, fontWeight: '700', letterSpacing: 1.4, textTransform: 'uppercase' },
+  title: { color: '#0F1923', fontSize: 34, fontWeight: '800', letterSpacing: -0.9, marginTop: 4 },
 });

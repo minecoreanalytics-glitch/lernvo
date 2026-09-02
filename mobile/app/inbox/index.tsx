@@ -50,7 +50,7 @@ export default function InboxScreen() {
 const styles = StyleSheet.create({
   copy: { color: '#5C6B7E', fontSize: 17, lineHeight: 25, marginTop: 18 },
   unread: { color: '#1E4F8C', fontSize: 14, fontWeight: '700', marginTop: 16 },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 18, marginTop: 14, padding: 18 },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 24, shadowColor: '#0F2849', shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 2, marginTop: 14, padding: 18 },
   meta: { color: '#8A97A8', fontSize: 13, fontWeight: '700' },
   body: { color: '#1A202C', fontSize: 16, lineHeight: 23, marginTop: 8 },
   ack: { alignSelf: 'flex-start', marginTop: 12 },

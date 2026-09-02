@@ -72,7 +72,7 @@ export default function ModuleScreen() {
 const styles = StyleSheet.create({
   copy: { color: '#5C6B7E', fontSize: 17, lineHeight: 25, marginTop: 18 },
   warn: { color: '#B42318', fontSize: 15, marginTop: 16 },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 18, marginTop: 16, padding: 18 },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 24, shadowColor: '#0F2849', shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 2, marginTop: 16, padding: 18 },
   kicker: { color: '#1E4F8C', fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
   cardTitle: { color: '#1A202C', fontSize: 20, fontWeight: '800', marginTop: 6 },
   body: { color: '#2D3748', fontSize: 16, lineHeight: 24, marginTop: 10 },

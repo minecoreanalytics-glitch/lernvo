@@ -48,6 +48,9 @@ const en = {
   'today.moduleBody': 'A short session to keep your assigned learning moving.',
   'today.start': 'Start today’s session',
   'today.openTeam': 'Open Team workspace',
+  'today.askPlaceholder': 'Ask a quick question…',
+  'today.quick': 'Quick access',
+  'today.progress': '{pct}% done',
 
   'learn.eyebrow': 'Your work',
   'learn.title': 'Learn',
@@ -183,6 +186,9 @@ const fr: Record<MessageKey, string> = {
   'today.moduleBody': 'Une courte session pour faire avancer votre formation.',
   'today.start': 'Commencer la session du jour',
   'today.openTeam': 'Ouvrir l’espace Équipe',
+  'today.askPlaceholder': 'Poser une question rapide…',
+  'today.quick': 'Accès rapide',
+  'today.progress': '{pct} % fait',
 
   'learn.eyebrow': 'Votre travail',
   'learn.title': 'Formations',

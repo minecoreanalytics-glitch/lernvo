@@ -41,11 +41,11 @@ export default function TopScreen() {
 
 const styles = StyleSheet.create({
   copy: { color: '#5C6B7E', fontSize: 17, lineHeight: 25, marginTop: 18 },
-  meCard: { backgroundColor: '#163A6B', borderRadius: 20, marginTop: 20, padding: 20 },
+  meCard: { backgroundColor: '#163A6B', borderRadius: 28, shadowColor: '#0F2849', shadowOpacity: 0.25, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, marginTop: 20, padding: 20 },
   meKicker: { color: '#CDE5FA', fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
   meTitle: { color: '#FFFFFF', fontSize: 28, fontWeight: '800', marginTop: 6 },
   meBody: { color: '#E4E8EF', fontSize: 15, marginTop: 6 },
-  row: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 14, flexDirection: 'row', gap: 12, marginTop: 10, minHeight: 56, paddingHorizontal: 14 },
+  row: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 18, shadowColor: '#0F2849', shadowOpacity: 0.05, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, flexDirection: 'row', gap: 12, marginTop: 10, minHeight: 56, paddingHorizontal: 14 },
   rowMe: { borderColor: '#1E4F8C', borderWidth: 2 },
   rank: { color: '#163A6B', fontSize: 18, fontWeight: '800', minWidth: 30, textAlign: 'center' },
   rowText: { flex: 1 },

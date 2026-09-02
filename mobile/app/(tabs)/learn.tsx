@@ -49,7 +49,7 @@ export default function LearnScreen() {
 
 const styles = StyleSheet.create({
   copy: { color: '#5C6B7E', fontSize: 17, lineHeight: 25, marginTop: 18 },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 18, marginTop: 16, padding: 18 },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 24, shadowColor: '#0F2849', shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 2, marginTop: 16, padding: 18 },
   kicker: { color: '#1E4F8C', fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
   cardTitle: { color: '#1A202C', fontSize: 20, fontWeight: '800', marginTop: 6 },
   cardBody: { color: '#5C6B7E', fontSize: 15, lineHeight: 22, marginTop: 8 },

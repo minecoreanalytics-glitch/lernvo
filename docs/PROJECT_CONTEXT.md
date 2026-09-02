@@ -13,9 +13,16 @@ briefcase-and-check mark).
 
 - React Native with Expo SDK 57 is the mobile platform; Capacitor and WebView shells are rejected
   (re-confirmed by the owner on 2026-09-01 after seeing both side by side).
-- Learner navigation follows Jakob's Law (owner decision 2026-09-02): five tabs, Home (Today), Learn,
-  Ask centred as the primary action, Inbox, Me. Documents (approved knowledge base) live inside
-  Learn as a Formations / Documents segment. Pull-to-refresh on every list; settings stay in Me.
+- Navigation (owner decisions 2026-09-02): tab bar mirrors the web mobile nav plus the
+  assistant, **Accueil · Formations · Données · Assistant · Top**; everything about the person
+  (profile, career paths, certificates, department, settings, sign-out) is behind the avatar
+  top-right, announcements behind the bell next to it. Pull-to-refresh on every list.
+- Visual direction (owner references 2026-09-02: Apple design resources, "Modern Floating
+  Navbar" kit, HyperMart and clinic-booking concepts): floating pill tab bar detached from the
+  edge with the active destination raised in a navy orb (Liquid Glass surface on iOS 26 via
+  expo-glass-effect, frosted white elsewhere), glass bell/avatar chips, layered Home (ask bar,
+  priority card with depth and a floating icon chip, colour quick-access tiles), 24-28 pt radii
+  and soft elevation on cards. No flat 2010-style bars.
 - Managers get a role-gated Team screen without turning the learner experience into a dashboard.
 - French and English from the first pilot, resolved from the device language.
 - AI can draft, summarize, translate, and explain. Deterministic services own scoring, compliance,
@@ -50,7 +57,7 @@ Done and verified:
   image `lernvo-backend:rollback-20260902`. Verified live: htvuniversity.com, htv.lernvo.com and
   lernvo.com 200; demo tenant login + bootstrap/today/learn/kb/inbox/me all 200 through
   `https://lernvo.com/api/mobile/v1`.
-- Mobile app (`mobile/`): secure auth (SecureStore, tenant slug at sign-in), five learner tabs (Jakob's Law),
+- Mobile app (`mobile/`): secure auth (SecureStore, tenant slug at sign-in), five learner tabs behind a floating glass bar,
   Team, module detail, quiz, document reader, offline outbox + sync coordinator, FR/EN catalogue
   with parity test, brand icon/adaptive icon/splash, store-oriented `app.json` and `eas.json`.
   49 unit tests, `tsc` clean, `expo-doctor` 21/21, iOS and Android JS bundles export.

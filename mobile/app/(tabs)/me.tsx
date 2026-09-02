@@ -14,7 +14,7 @@ export default function MeScreen() {
   const profile = data?.user ?? user;
 
   return (
-    <ScreenScaffold eyebrow={tenantSlug ?? t('me.eyebrow')} title={`${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() || t('me.title')}>
+    <ScreenScaffold eyebrow={tenantSlug ?? t('me.eyebrow')} title={`${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() || t('me.title')} onRefresh={reload}>
       <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
       <View style={styles.card}>
         <Text style={styles.email}>{profile?.email}</Text>

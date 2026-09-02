@@ -31,7 +31,7 @@ export default function ModuleScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: data?.title ?? t('module.title') }} />
-      <ScreenScaffold eyebrow={t('module.title')} title={data?.title ?? t('module.title')}>
+      <ScreenScaffold eyebrow={t('module.title')} title={data?.title ?? t('module.title')} onRefresh={reload}>
         <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
         {data?.description ? <Text style={styles.copy}>{data.description}</Text> : null}
         {data && !data.prerequisiteMet && data.prerequisite ? (

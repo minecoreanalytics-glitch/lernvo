@@ -15,7 +15,7 @@ export default function InboxScreen() {
   }
 
   return (
-    <ScreenScaffold eyebrow={t('inbox.eyebrow')} title={t('inbox.title')}>
+    <ScreenScaffold eyebrow={t('inbox.eyebrow')} title={t('inbox.title')} onRefresh={reload}>
       <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
       {data && data.announcements.length === 0 ? (
         <Text style={styles.copy}>{t('inbox.empty')}</Text>

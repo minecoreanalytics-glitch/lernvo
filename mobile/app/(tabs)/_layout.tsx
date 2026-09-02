@@ -7,9 +7,8 @@ import { t } from '../../src/i18n';
 import { learnerTabs, type LearnerTabKey } from '../../src/navigation/capabilities';
 
 const icons: Record<LearnerTabKey, readonly [string, string]> = {
-  today: ['sparkles', 'sparkles-outline'],
+  today: ['home', 'home-outline'],
   learn: ['library', 'library-outline'],
-  docs: ['document-text', 'document-text-outline'],
   ask: ['chatbubble-ellipses', 'chatbubble-ellipses-outline'],
   inbox: ['notifications', 'notifications-outline'],
   me: ['person-circle', 'person-circle-outline'],

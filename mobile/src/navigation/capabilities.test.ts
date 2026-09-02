@@ -14,8 +14,8 @@ describe('native navigation capabilities', () => {
     expect(learnerTabs.length).toBeLessThanOrEqual(MAX_TABS);
     expect(learnerTabs.map((tab) => tab.key)).toEqual(['today', 'learn', 'ask', 'inbox', 'me']);
     expect(learnerTabs[0].key).toBe('today');
-    expect(learnerTabs[learnerTabs.length - 1].key).toBe('me');
-    expect(learnerTabs[Math.floor(learnerTabs.length / 2)].key).toBe('ask');
+    expect(learnerTabs.at(-1)?.key).toBe('me');
+    expect(learnerTabs.at(Math.floor(learnerTabs.length / 2))?.key).toBe('ask');
   });
 
   it('has a French and English label for every tab', () => {

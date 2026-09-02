@@ -672,3 +672,55 @@ export async function loadKbArticle(id: string) {
     updatedAt: a.updatedAt.toISOString(),
   }
 }
+
+// ── Leaderboard ("Top" tab) ───────────────────────────────────────────────────
+// Same tenant-scoped ranking as the web /leaderboard page (GamificationService,
+// cached 60 s in Redis). Managers/supervisors are scoped to their department
+// tree like on the web; agents see the whole company.
+export async function loadLeaderboard(userId: string, role: string, limit = 20) {
+  let departmentId: string | undefined
+  if (['MANAGER', 'SUPERVISOR'].includes(role)) {
+    const me = await prisma.user.findFirst({ where: { id: userId }, select: { departmentId: true } })
+    if (me?.departmentId) {
+      const dept = await prisma.department.findFirst({
+        where: { id: me.departmentId },
+        select: { id: true, parentId: true },
+      })
+      departmentId = dept?.parentId ?? me.departmentId
+    }
+  }
+
+  const [entries, self] = await Promise.all([
+    GamificationService.getLeaderboard(limit, departmentId) as Promise<Array<{
+      rank: number
+      id: string
+      firstName: string
+      lastName: string
+      avatarUrl: string | null
+      role: string
+      totalPoints: number
+      currentStreak: number
+      department: { name: string } | null
+    }>>,
+    prisma.user.findFirst({ where: { id: userId }, select: { totalPoints: true, currentStreak: true } }),
+  ])
+  const rank = self
+    ? (await prisma.user.count({ where: { totalPoints: { gt: self.totalPoints }, isActive: true } })) + 1
+    : null
+
+  return {
+    scope: departmentId ? ('department' as const) : ('company' as const),
+    me: self ? { rank, totalPoints: self.totalPoints, currentStreak: self.currentStreak } : null,
+    entries: entries.map((row) => ({
+      rank: row.rank,
+      userId: row.id,
+      firstName: row.firstName,
+      lastName: row.lastName,
+      avatarUrl: row.avatarUrl,
+      totalPoints: row.totalPoints,
+      currentStreak: row.currentStreak,
+      department: row.department?.name ?? null,
+      isMe: row.id === userId,
+    })),
+  }
+}

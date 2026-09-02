@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { learnerApi } from '../../src/api/learner';
@@ -15,6 +16,8 @@ export default function InboxScreen() {
   }
 
   return (
+    <>
+    <Stack.Screen options={{ headerShown: true, title: t('inbox.title') }} />
     <ScreenScaffold eyebrow={t('inbox.eyebrow')} title={t('inbox.title')} onRefresh={reload}>
       <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
       {data && data.announcements.length === 0 ? (
@@ -40,6 +43,7 @@ export default function InboxScreen() {
         </View>
       ))}
     </ScreenScaffold>
+    </>
   );
 }
 

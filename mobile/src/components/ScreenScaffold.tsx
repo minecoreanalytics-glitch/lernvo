@@ -2,6 +2,8 @@ import { useCallback, useState, type PropsWithChildren, type ReactNode } from 'r
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AccountBar } from './AccountBar';
+
 export function ScreenScaffold({
   title,
   eyebrow,
@@ -9,6 +11,7 @@ export function ScreenScaffold({
   scroll = true,
   footer,
   onRefresh,
+  accountBar = false,
 }: PropsWithChildren<{
   title: string;
   eyebrow?: string;
@@ -16,6 +19,8 @@ export function ScreenScaffold({
   footer?: ReactNode;
   /** Pull-to-refresh handler (the platform convention users expect on any list). */
   onRefresh?: () => Promise<unknown> | void;
+  /** Show the top-right bell + avatar (tab screens only). */
+  accountBar?: boolean;
 }>) {
   const [refreshing, setRefreshing] = useState(false);
   const refresh = useCallback(async () => {
@@ -30,8 +35,13 @@ export function ScreenScaffold({
 
   const body = (
     <View style={styles.content}>
-      {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-      <Text accessibilityRole="header" style={styles.title}>{title}</Text>
+      <View style={styles.headerRow}>
+        <View style={styles.headerText}>
+          {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+          <Text accessibilityRole="header" style={styles.title}>{title}</Text>
+        </View>
+        {accountBar ? <AccountBar /> : null}
+      </View>
       {children}
     </View>
   );
@@ -59,7 +69,9 @@ export function ScreenScaffold({
 const styles = StyleSheet.create({
   safeArea: { backgroundColor: '#F7F8FA', flex: 1 },
   scroll: { paddingBottom: 32 },
-  content: { flexGrow: 1, paddingHorizontal: 22, paddingTop: 24 },
+  content: { flexGrow: 1, paddingHorizontal: 22, paddingTop: 16 },
+  headerRow: { alignItems: 'flex-start', flexDirection: 'row', gap: 12, justifyContent: 'space-between' },
+  headerText: { flex: 1, paddingTop: 8 },
   eyebrow: { color: '#1E4F8C', fontSize: 13, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase' },
   title: { color: '#1A202C', fontSize: 32, fontWeight: '800', letterSpacing: -0.6, marginTop: 5 },
 });

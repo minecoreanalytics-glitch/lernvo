@@ -14,6 +14,7 @@ import {
   loadInbox,
   loadKbArticle,
   loadKbArticles,
+  loadLeaderboard,
   loadLearnCatalog,
   loadModuleForLearner,
   loadProfile,
@@ -173,6 +174,11 @@ router.post('/inbox/read', authenticate, async (req, res) => {
     return sendError(res, 400, 'INVALID_REQUEST', 'Acknowledgement payload is invalid');
   }
   const result = await acknowledgeAnnouncements(req.user!.userId, parsed.data.ids);
+  return sendEnvelope(req, res, result);
+});
+
+router.get('/leaderboard', authenticate, async (req, res) => {
+  const result = await loadLeaderboard(req.user!.userId, req.user!.role);
   return sendEnvelope(req, res, result);
 });
 

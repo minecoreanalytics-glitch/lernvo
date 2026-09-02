@@ -8,10 +8,10 @@ import { learnerTabs, type LearnerTabKey } from '../../src/navigation/capabiliti
 
 const icons: Record<LearnerTabKey, readonly [string, string]> = {
   today: ['home', 'home-outline'],
-  learn: ['library', 'library-outline'],
+  learn: ['book', 'book-outline'],
+  data: ['documents', 'documents-outline'],
   ask: ['chatbubble-ellipses', 'chatbubble-ellipses-outline'],
-  inbox: ['notifications', 'notifications-outline'],
-  me: ['person-circle', 'person-circle-outline'],
+  top: ['trophy', 'trophy-outline'],
 };
 
 export default function TabLayout() {

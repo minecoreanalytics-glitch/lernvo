@@ -24,6 +24,8 @@ const en = {
   'tabs.ask': 'Ask',
   'tabs.inbox': 'Inbox',
   'tabs.me': 'Me',
+  'tabs.data': 'Data',
+  'tabs.top': 'Top',
   'tabs.a11y': '{tab} tab',
 
   'sync.syncing': 'Syncing',
@@ -54,8 +56,6 @@ const en = {
   'learn.status.IN_PROGRESS': 'In progress',
   'learn.status.COMPLETED': 'Completed',
   'learn.status.OVERDUE': 'Overdue',
-  'learn.segmentModules': 'Modules',
-  'learn.segmentDocs': 'Documents',
   'learn.path': 'Path',
   'learn.moduleCount': '{count} modules',
 
@@ -81,6 +81,7 @@ const en = {
   'inbox.unread': 'Unread',
   'inbox.acknowledge': 'Acknowledge',
   'inbox.acknowledged': 'Acknowledged',
+  'inbox.a11y': 'Announcements',
 
   'me.eyebrow': 'Profile',
   'me.title': 'Me',
@@ -89,6 +90,25 @@ const en = {
   'me.noCertificates': 'Certificates you earn will appear here.',
   'me.signOut': 'Sign out',
   'me.language': 'Language follows your device settings.',
+
+  'account.title': 'My account',
+  'account.a11y': 'My account',
+  'account.profile': 'Profile',
+  'account.careerPaths': 'Career paths',
+  'account.noPaths': 'No career path assigned yet.',
+  'account.certificates': 'Certificates',
+  'account.department': 'Department',
+  'account.settings': 'Settings',
+
+  'data.eyebrow': 'Approved knowledge',
+  'data.title': 'Data',
+
+  'top.eyebrow': 'Your company',
+  'top.title': 'Leaderboard',
+  'top.you': 'You',
+  'top.rank': 'Rank {rank}',
+  'top.points': '{points} pts',
+  'top.empty': 'No points yet. Finish a module or a quiz to appear here.',
 
   'team.eyebrow': 'Manager workspace',
   'team.title': 'Team',
@@ -139,6 +159,8 @@ const fr: Record<MessageKey, string> = {
   'tabs.ask': 'Assistant',
   'tabs.inbox': 'Annonces',
   'tabs.me': 'Moi',
+  'tabs.data': 'Données',
+  'tabs.top': 'Top',
   'tabs.a11y': 'Onglet {tab}',
 
   'sync.syncing': 'Synchronisation',
@@ -169,8 +191,6 @@ const fr: Record<MessageKey, string> = {
   'learn.status.IN_PROGRESS': 'En cours',
   'learn.status.COMPLETED': 'Terminé',
   'learn.status.OVERDUE': 'En retard',
-  'learn.segmentModules': 'Formations',
-  'learn.segmentDocs': 'Documents',
   'learn.path': 'Parcours',
   'learn.moduleCount': '{count} modules',
 
@@ -196,6 +216,7 @@ const fr: Record<MessageKey, string> = {
   'inbox.unread': 'Non lue',
   'inbox.acknowledge': 'J’ai lu',
   'inbox.acknowledged': 'Lue',
+  'inbox.a11y': 'Annonces',
 
   'me.eyebrow': 'Profil',
   'me.title': 'Moi',
@@ -204,6 +225,25 @@ const fr: Record<MessageKey, string> = {
   'me.noCertificates': 'Vos certificats apparaîtront ici.',
   'me.signOut': 'Se déconnecter',
   'me.language': 'La langue suit les réglages de votre appareil.',
+
+  'account.title': 'Mon compte',
+  'account.a11y': 'Mon compte',
+  'account.profile': 'Profil',
+  'account.careerPaths': 'Parcours carrière',
+  'account.noPaths': 'Aucun parcours carrière assigné pour l’instant.',
+  'account.certificates': 'Certificats',
+  'account.department': 'Département',
+  'account.settings': 'Réglages',
+
+  'data.eyebrow': 'Connaissances approuvées',
+  'data.title': 'Données',
+
+  'top.eyebrow': 'Votre entreprise',
+  'top.title': 'Classement',
+  'top.you': 'Vous',
+  'top.rank': 'Rang {rank}',
+  'top.points': '{points} pts',
+  'top.empty': 'Pas encore de points. Terminez un module ou un quiz pour apparaître ici.',
 
   'team.eyebrow': 'Espace gestionnaire',
   'team.title': 'Équipe',

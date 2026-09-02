@@ -35,7 +35,7 @@ export default function TodayScreen() {
   }
 
   return (
-    <ScreenScaffold eyebrow={t('today.eyebrow')} title={t('today.greeting', { name: firstName })} onRefresh={reload}>
+    <ScreenScaffold accountBar eyebrow={t('today.eyebrow')} title={t('today.greeting', { name: firstName })} onRefresh={reload}>
       <Pressable accessibilityRole="button" accessibilityLabel={t('sync.a11y')} onPress={() => void syncNow()} style={styles.syncPill}>
         <Text style={styles.syncText}>{syncStatusLabel(syncStatus)}</Text>
       </Pressable>

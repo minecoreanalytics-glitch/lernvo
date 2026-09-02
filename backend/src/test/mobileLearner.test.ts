@@ -271,4 +271,20 @@ describe('mobile learner facades', () => {
     })
     expect(response.body.data.certificates).toEqual([])
   })
+
+  it('ranks the tenant on the leaderboard and flags the caller', async () => {
+    const res = await request(app)
+      .get('/api/mobile/v1/leaderboard')
+      .set('Authorization', `Bearer ${accessToken()}`)
+    expect(res.status).toBe(200)
+    expect(res.body.data.scope).toBe('company')
+    expect(res.body.data.me.rank).toBeGreaterThanOrEqual(1)
+    const rows = res.body.data.entries as Array<{ userId: string; isMe: boolean; rank: number }>
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows.every((row, i) => row.rank === i + 1)).toBe(true)
+    expect(rows.some((row) => row.userId === userId && row.isMe)).toBe(true)
+    // answer keys / emails never leak
+    expect(JSON.stringify(res.body)).not.toContain('@lernvo.test')
+  })
+
 })

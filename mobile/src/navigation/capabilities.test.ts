@@ -10,12 +10,12 @@ import {
 } from './capabilities';
 
 describe('native navigation capabilities', () => {
-  it("follows Jakob's Law: at most five tabs, home first, profile last, primary action centred", () => {
+  it("follows Jakob's Law: at most five tabs, home first, account off the bar", () => {
     expect(learnerTabs.length).toBeLessThanOrEqual(MAX_TABS);
-    expect(learnerTabs.map((tab) => tab.key)).toEqual(['today', 'learn', 'ask', 'inbox', 'me']);
+    expect(learnerTabs.map((tab) => tab.key)).toEqual(['today', 'learn', 'data', 'ask', 'top']);
     expect(learnerTabs[0].key).toBe('today');
-    expect(learnerTabs.at(-1)?.key).toBe('me');
-    expect(learnerTabs.at(Math.floor(learnerTabs.length / 2))?.key).toBe('ask');
+    expect(learnerTabs.map((tab) => tab.key as string)).not.toContain('me');
+    expect(learnerTabs.map((tab) => tab.key as string)).not.toContain('settings');
   });
 
   it('has a French and English label for every tab', () => {

@@ -79,6 +79,8 @@ model Tenant {
   companyUnits            CompanyUnit[]
   announcements           Announcement[]
   announcementReads       AnnouncementRead[]
+  mobileLearningEvents    MobileLearningEvent[]
+  mobileSyncCursors       MobileSyncCursor[]
 }
 
 enum ContentType {
@@ -208,6 +210,8 @@ model User {
   pricingUploads      PricingUpload[]
   announcements       Announcement[]     @relation("AnnouncementAuthor")
   announcementReads   AnnouncementRead[]
+  mobileLearningEvents MobileLearningEvent[]
+  mobileSyncCursor     MobileSyncCursor?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -229,6 +233,40 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model MobileLearningEvent {
+  id             String   @id @default(uuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientEventId  String
+  eventType      String
+  payload        Json
+  payloadHash    String
+  contentId      String?
+  contentVersion Int?
+  occurredAt     DateTime
+  serverSequence Int
+  createdAt      DateTime @default(now())
+
+  @@unique([tenantId, userId, clientEventId])
+  @@unique([tenantId, userId, serverSequence])
+  @@index([tenantId, userId, occurredAt])
+}
+
+model MobileSyncCursor {
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nextSequence Int      @default(1)
+  updatedAt    DateTime @updatedAt
+
+  @@unique([tenantId, userId])
+  @@index([tenantId])
 }
 
 // ─── Content & Training ──────────────────────────────────────────────────────

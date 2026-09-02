@@ -30,7 +30,7 @@ const SCOPED = new Set([
   'Content', 'Enrollment', 'Quiz', 'Question', 'QuizAttempt', 'ProgressLog', 'Certificate',
   'Notification', 'PointTransaction', 'UserBadge', 'KbArticleView', 'ModuleFeedback',
   'UserSession', 'UserActivityLog', 'UserOnboarding', 'CareerPathModule', 'CareerPathEnrollment',
-  'CareerPathPrerequisite', 'OnboardingPlanModule'
+  'CareerPathPrerequisite', 'OnboardingPlanModule', 'MobileLearningEvent', 'MobileSyncCursor'
 ])
 
 /** Lowercase only the first character of a model name to get the delegate key. */

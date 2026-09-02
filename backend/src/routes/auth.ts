@@ -177,10 +177,12 @@ router.post('/refresh', refreshLimiter, validate(RefreshSchema), async (req, res
 
     // Host lock (same rule as /login): on <slug>.<DOMAIN> only that tenant's users
     const hostSlug = tenantSlugFromRequest(req)
-    if (hostSlug && stored.user.role !== 'SUPER_ADMIN') {
+    const mobileSlugHeader = req.header('x-lernvo-tenant')
+    const mobileSlug = mobileSlugHeader && /^[a-z0-9-]+$/.test(mobileSlugHeader) ? mobileSlugHeader : null
+    if ((hostSlug || mobileSlug) && stored.user.role !== 'SUPER_ADMIN') {
       const t = await tenantStore.run({ tenantId: null, superAdmin: true }, async () =>
         await prisma.tenant.findUnique({ where: { id: stored.user.tenantId }, select: { slug: true } }))
-      if (!t || t.slug !== hostSlug) return res.status(401).json({ error: 'Invalid or expired refresh token' })
+      if (!t || (hostSlug && t.slug !== hostSlug) || (mobileSlug && t.slug !== mobileSlug)) return res.status(401).json({ error: 'Invalid or expired refresh token' })
     }
     // Rotate: the presented token is consumed, a new one is issued (reuse of the old one → 401)
     const nextRefresh = signRefresh()

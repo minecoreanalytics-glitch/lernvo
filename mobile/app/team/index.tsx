@@ -17,7 +17,7 @@ export default function TeamScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, title: t('team.title') }} />
+      <Stack.Screen options={{ headerShown: true, headerBackButtonDisplayMode: 'minimal', title: t('team.title') }} />
       <ScreenScaffold eyebrow={t('team.eyebrow')} title={t('team.title')} onRefresh={reload}>
         <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
         {data ? (

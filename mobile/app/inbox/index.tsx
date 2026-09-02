@@ -17,7 +17,7 @@ export default function InboxScreen() {
 
   return (
     <>
-    <Stack.Screen options={{ headerShown: true, title: t('inbox.title') }} />
+    <Stack.Screen options={{ headerShown: true, headerBackButtonDisplayMode: 'minimal', title: t('inbox.title') }} />
     <ScreenScaffold eyebrow={t('inbox.eyebrow')} title={t('inbox.title')} onRefresh={reload}>
       <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
       {data && data.announcements.length === 0 ? (

@@ -39,7 +39,7 @@ export default function QuizScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, title: data?.title ?? t('quiz.title') }} />
+      <Stack.Screen options={{ headerShown: true, headerBackButtonDisplayMode: 'minimal', title: data?.title ?? t('quiz.title') }} />
       <ScreenScaffold eyebrow={t('quiz.eyebrow')} title={data?.title ?? t('quiz.title')}>
         <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
         {data && !data.canAttempt && !result ? (

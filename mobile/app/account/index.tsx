@@ -35,7 +35,7 @@ export default function AccountScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, title: t('account.title') }} />
+      <Stack.Screen options={{ headerShown: true, headerBackButtonDisplayMode: 'minimal', title: t('account.title') }} />
       <ScreenScaffold
         eyebrow={tenantSlug ?? t('account.title')}
         title={name}

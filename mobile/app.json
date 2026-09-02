@@ -10,13 +10,9 @@
     "userInterfaceStyle": "light",
     "primaryColor": "#163A6B",
     "backgroundColor": "#F7F8FA",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.minecore.lernvo",
-      "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -32,7 +28,6 @@
     },
     "android": {
       "package": "com.minecore.lernvo",
-      "versionCode": 1,
       "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
@@ -73,7 +68,6 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
       "eas": {
         "projectId": "90319661-35ba-47b7-b461-3e7bcee601a5"
       }

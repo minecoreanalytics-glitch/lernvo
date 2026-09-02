@@ -27,7 +27,7 @@ export default function TabLayout() {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarStyle: { borderTopColor: '#E4E8EF' },
         tabBarIcon: ({ color, focused, size }) => {
-          const names = icons[route.name as LearnerTabKey];
+          const names = icons[route.name as LearnerTabKey] ?? (['ellipse', 'ellipse-outline'] as const);
           return (
             <Ionicons
               color={color}

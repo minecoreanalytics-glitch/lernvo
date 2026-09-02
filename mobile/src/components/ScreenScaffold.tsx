@@ -1,5 +1,5 @@
-import type { PropsWithChildren, ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState, type PropsWithChildren, type ReactNode } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function ScreenScaffold({
@@ -8,12 +8,26 @@ export function ScreenScaffold({
   children,
   scroll = true,
   footer,
+  onRefresh,
 }: PropsWithChildren<{
   title: string;
   eyebrow?: string;
   scroll?: boolean;
   footer?: ReactNode;
+  /** Pull-to-refresh handler (the platform convention users expect on any list). */
+  onRefresh?: () => Promise<unknown> | void;
 }>) {
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = useCallback(async () => {
+    if (!onRefresh) return;
+    setRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [onRefresh]);
+
   const body = (
     <View style={styles.content}>
       {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
@@ -25,7 +39,15 @@ export function ScreenScaffold({
   return (
     <SafeAreaView style={styles.safeArea}>
       {scroll ? (
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor="#1E4F8C" />
+            ) : undefined
+          }
+        >
           {body}
         </ScrollView>
       ) : body}

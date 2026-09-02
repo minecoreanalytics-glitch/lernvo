@@ -18,7 +18,7 @@ const en = {
   'signIn.selectCompany': 'Select your company',
   'signIn.continue': 'Continue',
 
-  'tabs.today': 'Today',
+  'tabs.today': 'Home',
   'tabs.learn': 'Learn',
   'tabs.docs': 'Docs',
   'tabs.ask': 'Ask',
@@ -54,6 +54,8 @@ const en = {
   'learn.status.IN_PROGRESS': 'In progress',
   'learn.status.COMPLETED': 'Completed',
   'learn.status.OVERDUE': 'Overdue',
+  'learn.segmentModules': 'Modules',
+  'learn.segmentDocs': 'Documents',
   'learn.path': 'Path',
   'learn.moduleCount': '{count} modules',
 
@@ -131,7 +133,7 @@ const fr: Record<MessageKey, string> = {
   'signIn.selectCompany': 'Choisissez votre entreprise',
   'signIn.continue': 'Continuer',
 
-  'tabs.today': 'Aujourd’hui',
+  'tabs.today': 'Accueil',
   'tabs.learn': 'Formations',
   'tabs.docs': 'Documents',
   'tabs.ask': 'Assistant',
@@ -167,6 +169,8 @@ const fr: Record<MessageKey, string> = {
   'learn.status.IN_PROGRESS': 'En cours',
   'learn.status.COMPLETED': 'Terminé',
   'learn.status.OVERDUE': 'En retard',
+  'learn.segmentModules': 'Formations',
+  'learn.segmentDocs': 'Documents',
   'learn.path': 'Parcours',
   'learn.moduleCount': '{count} modules',
 

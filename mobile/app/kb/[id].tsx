@@ -60,7 +60,7 @@ export default function KbArticleScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: data?.category ?? t('docs.document') }} />
-      <ScreenScaffold eyebrow={data?.category ?? t('docs.document')} title={data?.title ?? t('docs.document')}>
+      <ScreenScaffold eyebrow={data?.category ?? t('docs.document')} title={data?.title ?? t('docs.document')} onRefresh={reload}>
         <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
         {data ? (
           <Fragment>

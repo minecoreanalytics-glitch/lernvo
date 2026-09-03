@@ -34,7 +34,8 @@ function TabItem({
     Animated.spring(rise, { toValue: focused ? 1 : 0, useNativeDriver: true, damping: 14, stiffness: 180, mass: 0.8 }).start();
   }, [focused, rise]);
 
-  const label = t(learnerTabs.find((tab) => tab.key === routeKey)!.labelKey);
+  const tab = learnerTabs.find((entry) => entry.key === routeKey);
+  const label = tab ? t(tab.labelKey) : routeKey;
   const translateY = rise.interpolate({ inputRange: [0, 1], outputRange: [0, -(ORB / 2 + 6)] });
   const scale = rise.interpolate({ inputRange: [0, 1], outputRange: [0.72, 1] });
   const idleOpacity = rise.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });

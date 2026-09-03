@@ -79,7 +79,7 @@ export default function ModuleScreen() {
                 onCompleted={() => void completeContent(content.id)}
               />
             ) : null}
-            {!content.progress?.completed ? (
+            {!content.progress?.completed && !(content.body && (content.type === 'PRESENTATION' || hasSlideMarkers(content.body))) ? (
               <Pressable accessibilityRole="button" onPress={() => void completeContent(content.id)} style={styles.secondary}>
                 <Ionicons color="#1E4F8C" name="checkmark-circle-outline" size={18} />
                 <Text style={styles.secondaryText}>{t('module.markDone')}</Text>

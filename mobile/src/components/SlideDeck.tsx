@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 
 import { t } from '../i18n';
 import { parseSlides, type BulletIcon } from '../slides/parseSlides';
@@ -29,8 +29,14 @@ type Props = {
 /** Native counterpart of the web SlideViewer: swipeable dark slides, bullets with icons, speaker note, completion on the last slide. */
 export function SlideDeck({ body, completed, onComplete }: Props) {
   const slides = useMemo(() => parseSlides(body), [body]);
-  const { width } = useWindowDimensions();
-  const slideWidth = width - 40; // screen padding (20 each side)
+  const { width: windowWidth } = useWindowDimensions();
+  // Measure the real container (card padding varies); fall back to a safe estimate before layout.
+  const [measured, setMeasured] = useState(0);
+  const slideWidth = measured || windowWidth - 76;
+  const onLayout = (event: LayoutChangeEvent) => {
+    const w = Math.round(event.nativeEvent.layout.width);
+    if (w > 0 && w !== measured) setMeasured(w);
+  };
   const scroller = useRef<ScrollView>(null);
   const [current, setCurrent] = useState(0);
   const [visited, setVisited] = useState<Set<number>>(new Set([0]));
@@ -58,14 +64,17 @@ export function SlideDeck({ body, completed, onComplete }: Props) {
   }
 
   return (
-    <View style={styles.wrap}>
+    <View onLayout={onLayout} style={styles.wrap}>
       <ScrollView
         ref={scroller}
         horizontal
         pagingEnabled
+        bounces={false}
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumEnd}
-        style={{ width: slideWidth }}
+        scrollEventThrottle={16}
+        style={[styles.scroller, { width: slideWidth }]}
+        contentContainerStyle={{ width: slideWidth * slides.length }}
       >
         {slides.map((slide, index) => (
           <View key={index} style={[styles.slide, { width: slideWidth, backgroundColor: THEMES[index % THEMES.length] }]}>
@@ -126,8 +135,9 @@ export function SlideDeck({ body, completed, onComplete }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { marginTop: 14 },
-  slide: { borderRadius: 22, minHeight: 300, overflow: 'hidden', padding: 22 },
+  wrap: { marginTop: 14, width: '100%' },
+  scroller: { borderRadius: 22, overflow: 'hidden' },
+  slide: { borderRadius: 22, minHeight: 260, overflow: 'hidden', padding: 20 },
   blob: { backgroundColor: '#F5B700', borderRadius: 999, height: 180, opacity: 0.12, position: 'absolute', right: -60, top: -80, width: 180 },
   counter: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
   title: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', letterSpacing: -0.3, lineHeight: 28, marginTop: 10 },

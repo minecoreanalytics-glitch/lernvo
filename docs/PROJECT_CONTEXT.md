@@ -57,10 +57,18 @@ Done and verified:
   image `lernvo-backend:rollback-20260902`. Verified live: htvuniversity.com, htv.lernvo.com and
   lernvo.com 200; demo tenant login + bootstrap/today/learn/kb/inbox/me all 200 through
   `https://lernvo.com/api/mobile/v1`.
-- Mobile app (`mobile/`): secure auth (SecureStore, tenant slug at sign-in), five learner tabs behind a floating glass bar,
-  Team, module detail, quiz, document reader, offline outbox + sync coordinator, FR/EN catalogue
-  with parity test, brand icon/adaptive icon/splash, store-oriented `app.json` and `eas.json`.
-  49 unit tests, `tsc` clean, `expo-doctor` 21/21, iOS and Android JS bundles export.
+- Mobile app (`mobile/`): secure auth (SecureStore, tenant slug at sign-in), floating glass tab bar
+  (Accueil · Formations · Données · Assistant · Top), account behind the top-right avatar, bell →
+  Notifications | Annonces. **Web parity screens (2026-09-02 evening)**: Devoirs (assignments),
+  Parcours carrière detail, Départements (org tree + members), Données = Documents | Tarifs + search,
+  Mon compte (rank, badges, shareable certificates, change password), module viewer with inline
+  video/audio/PDF (expo-video, expo-audio, WebView) authorised by `GET /api/mobile/v1/media-token`
+  (deployed). These screens call the web API (`/api/*`) with the same JWT through `src/api/web.ts`,
+  so they stay in lockstep with the web without new backend work. Offline outbox + sync
+  coordinator, FR/EN catalogue with parity test, brand icon/adaptive icon/splash, store-oriented
+  `app.json` and `eas.json`. 49 unit tests, `tsc` clean, `expo-doctor` 21/21.
+- Runs in **Expo Go** on the owner's iPhone through an Expo tunnel (all native modules are Expo SDK
+  packages); dev clients need a rebuild after each new native module (`expo prebuild` + `pod install`).
 - Local iOS development build (with expo-localization + splash) runs on the iPhone 17 simulator,
   pointed at lernvo.com; sign-in renders in French with the brand mark, icon and FR/EN
   localizations verified in the built bundle. Building from an iCloud-synced checkout needs the

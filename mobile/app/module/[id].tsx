@@ -132,6 +132,6 @@ const styles = StyleSheet.create({
   doneText: { color: '#0D8F8A', fontSize: 13, fontWeight: '800', marginTop: 12, textTransform: 'uppercase' },
   quizCard: { backgroundColor: '#FFFFFF', borderRadius: 24, marginTop: 18, padding: 18, shadowColor: '#0F2849', shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
   quizIcon: { alignItems: 'center', backgroundColor: '#EEF4FB', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
-  primary: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: '#1E4F8C', borderRadius: 14, flexDirection: 'row', gap: 8, justifyContent: 'center', marginTop: 16, minHeight: 46, paddingHorizontal: 20 },
+  primary: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: '#1E4F8C', borderRadius: 14, flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, minHeight: 50, paddingHorizontal: 18 },
   primaryText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
 });

@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   track: { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 999, height: 8, marginTop: 14, overflow: 'hidden' },
   fill: { backgroundColor: '#F5B700', borderRadius: 999, height: 8 },
   heroBody: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginTop: 12 },
-  cta: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: '#FFFFFF', borderRadius: 14, flexDirection: 'row', gap: 10, justifyContent: 'center', marginTop: 16, minHeight: 46, paddingHorizontal: 18 },
+  cta: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: '#FFFFFF', borderRadius: 14, flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, minHeight: 50, paddingHorizontal: 18 },
   ctaText: { color: '#163A6B', fontSize: 16, fontWeight: '800' },
   step: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 20, flexDirection: 'row', gap: 12, marginTop: 12, padding: 14, shadowColor: '#0F2849', shadowOpacity: 0.05, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
   stepIndex: { alignItems: 'center', backgroundColor: '#EEF4FB', borderRadius: 999, height: 34, justifyContent: 'center', width: 34 },

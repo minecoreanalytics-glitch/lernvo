@@ -266,16 +266,24 @@ export async function startModuleForLearner(userId: string, moduleId: string) {
   })
   if (!module) return null
 
-  return prisma.enrollment.upsert({
-    where: { userId_moduleId: { userId, moduleId } },
-    create: {
+  // Explicit "start": create the enrollment or move NOT_STARTED to IN_PROGRESS.
+  // Never downgrade a COMPLETED enrollment and never reset an existing startedAt.
+  const existing = await prisma.enrollment.findFirst({
+    where: { userId, moduleId },
+    select: { id: true, status: true, startedAt: true },
+  })
+  if (existing) {
+    if (existing.status !== 'NOT_STARTED') return existing
+    return prisma.enrollment.update({
+      where: { id: existing.id },
+      data: { status: 'IN_PROGRESS', startedAt: existing.startedAt ?? new Date() },
+    })
+  }
+  return prisma.enrollment.create({
+    data: {
       tenantId: getTenantId(),
       userId,
       moduleId,
-      status: 'IN_PROGRESS',
-      startedAt: new Date(),
-    },
-    update: {
       status: 'IN_PROGRESS',
       startedAt: new Date(),
     },

@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter, Stack, type Href } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { learnerApi } from '../../src/api/learner';
 import { web } from '../../src/api/web';
@@ -24,11 +25,19 @@ function authorize(url: string, token: string | null) {
 export default function ModuleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { data, error, loading, reload } = useAsync(async () => {
-    if (!id) return null;
-    await learnerApi.startModule(id).catch(() => undefined);
-    return learnerApi.module(id);
-  }, [id]);
+  const { data, error, loading, reload } = useAsync(() => (id ? learnerApi.module(id) : Promise.resolve(null)), [id]);
+  const [starting, setStarting] = useState(false);
+
+  async function start() {
+    if (!id) return;
+    setStarting(true);
+    try {
+      await learnerApi.startModule(id);
+      await reload();
+    } finally {
+      setStarting(false);
+    }
+  }
   const media = useAsync(() => web.mediaToken().then((r) => r.token).catch(() => null), []);
 
   async function completeContent(contentId: string) {
@@ -38,6 +47,9 @@ export default function ModuleScreen() {
 
   const total = data?.contents.length ?? 0;
   const done = data?.contents.filter((c) => c.progress?.completed).length ?? 0;
+  const enrolled = Boolean(data?.enrollment) && data?.enrollment?.status !== 'NOT_STARTED';
+  const requiredLeft = data?.contents.filter((c) => c.isRequired && !c.progress?.completed).length ?? 0;
+  const quizUnlocked = enrolled && requiredLeft === 0 && total > 0;
 
   return (
     <>
@@ -50,6 +62,12 @@ export default function ModuleScreen() {
             <Text style={styles.summaryKicker}>{t('common.minutes', { count: data.estimatedMinutes })} · {done}/{total}</Text>
             {data.description ? <Text style={styles.summaryBody}>{data.description}</Text> : null}
             <View style={styles.track}><View style={[styles.fill, { width: `${total ? Math.max(3, (done / total) * 100) : 0}%` }]} /></View>
+            {!enrolled ? (
+              <Pressable accessibilityRole="button" disabled={starting} onPress={() => void start()} style={styles.startBtn}>
+                {starting ? <ActivityIndicator color="#163A6B" /> : <Text style={styles.startText}>{t('today.start')}</Text>}
+                <Ionicons color="#163A6B" name="arrow-forward" size={18} />
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
         {data && !data.prerequisiteMet && data.prerequisite ? (
@@ -67,7 +85,7 @@ export default function ModuleScreen() {
               </View>
             </View>
             {content.body && (content.type === 'PRESENTATION' || hasSlideMarkers(content.body)) ? (
-              <SlideDeck body={content.body} completed={Boolean(content.progress?.completed)} onComplete={() => void completeContent(content.id)} />
+              <SlideDeck body={content.body} completed={Boolean(content.progress?.completed)} onComplete={enrolled ? () => void completeContent(content.id) : undefined} />
             ) : content.body ? (
               <Markdown body={content.body} />
             ) : null}
@@ -79,7 +97,7 @@ export default function ModuleScreen() {
                 onCompleted={() => void completeContent(content.id)}
               />
             ) : null}
-            {!content.progress?.completed && !(content.body && (content.type === 'PRESENTATION' || hasSlideMarkers(content.body))) ? (
+            {enrolled && !content.progress?.completed && !(content.body && (content.type === 'PRESENTATION' || hasSlideMarkers(content.body))) ? (
               <Pressable accessibilityRole="button" onPress={() => void completeContent(content.id)} style={styles.secondary}>
                 <Ionicons color="#1E4F8C" name="checkmark-circle-outline" size={18} />
                 <Text style={styles.secondaryText}>{t('module.markDone')}</Text>
@@ -100,10 +118,17 @@ export default function ModuleScreen() {
                 <Text style={styles.cardTitle}>{quiz.title.replace(/^quiz\s*:\s*/i, '')}</Text>
               </View>
             </View>
-            <Pressable accessibilityRole="button" onPress={() => router.push(`/quiz/${quiz.id}` as Href)} style={styles.primary}>
-              <Text style={styles.primaryText}>{t('quiz.start')}</Text>
-              <Ionicons color="#FFFFFF" name="arrow-forward" size={18} />
-            </Pressable>
+            {quizUnlocked ? (
+              <Pressable accessibilityRole="button" onPress={() => router.push(`/quiz/${quiz.id}` as Href)} style={styles.primary}>
+                <Text style={styles.primaryText}>{t('quiz.start')}</Text>
+                <Ionicons color="#FFFFFF" name="arrow-forward" size={18} />
+              </Pressable>
+            ) : (
+              <View style={[styles.primary, styles.primaryLocked]}>
+                <Text style={styles.primaryLockedText}>{enrolled ? t('quiz.locked', { count: requiredLeft }) : t('quiz.lockedStart')}</Text>
+                <Ionicons color="#8A97A8" name="lock-closed" size={18} />
+              </View>
+            )}
           </View>
         ))}
       </ScreenScaffold>
@@ -134,4 +159,8 @@ const styles = StyleSheet.create({
   quizIcon: { alignItems: 'center', backgroundColor: '#EEF4FB', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
   primary: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: '#1E4F8C', borderRadius: 14, flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, minHeight: 50, paddingHorizontal: 18 },
   primaryText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  primaryLocked: { backgroundColor: '#EEF2F7' },
+  primaryLockedText: { color: '#6B7A8D', flex: 1, fontSize: 14, fontWeight: '700' },
+  startBtn: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: '#FFFFFF', borderRadius: 14, flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, minHeight: 50, paddingHorizontal: 18 },
+  startText: { color: '#163A6B', fontSize: 16, fontWeight: '800' },
 });

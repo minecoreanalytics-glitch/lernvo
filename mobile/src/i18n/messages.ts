@@ -141,6 +141,8 @@ const en = {
   'quiz.submitError': 'Unable to submit quiz',
   'quiz.start': 'Quiz',
   'quiz.passing': 'Pass mark {score}%',
+  'quiz.locked': 'Finish the remaining {count} section(s) to unlock the quiz',
+  'quiz.lockedStart': 'Start the module to unlock the quiz',
 
   'notif.title': 'Notifications',
   'notif.segmentNotifications': 'Notifications',
@@ -368,6 +370,8 @@ const fr: Record<MessageKey, string> = {
   'quiz.submitError': 'Impossible d’envoyer le quiz',
   'quiz.start': 'Quiz',
   'quiz.passing': 'Seuil de réussite {score} %',
+  'quiz.locked': 'Terminez les {count} section(s) restante(s) pour débloquer le quiz',
+  'quiz.lockedStart': 'Commencez le module pour débloquer le quiz',
 
   'notif.title': 'Notifications',
   'notif.segmentNotifications': 'Notifications',

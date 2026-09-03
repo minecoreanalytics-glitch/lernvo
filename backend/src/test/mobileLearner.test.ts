@@ -287,4 +287,19 @@ describe('mobile learner facades', () => {
     expect(JSON.stringify(res.body)).not.toContain('@lernvo.test')
   })
 
+
+  it('never downgrades a completed enrollment when a module is started again', async () => {
+    await tenantStore.run({ tenantId, superAdmin: false }, async () => {
+      await prisma.enrollment.updateMany({ where: { userId, moduleId }, data: { status: 'COMPLETED', progressPct: 100, completedAt: new Date() } })
+    })
+    const res = await request(app)
+      .post(`/api/mobile/v1/modules/${moduleId}/start`)
+      .set('Authorization', `Bearer ${accessToken()}`)
+    expect(res.status).toBe(200)
+    expect(res.body.data.enrollment.status).toBe('COMPLETED')
+    await tenantStore.run({ tenantId, superAdmin: false }, async () => {
+      await prisma.enrollment.updateMany({ where: { userId, moduleId }, data: { status: 'IN_PROGRESS', progressPct: 0, completedAt: null } })
+    })
+  })
+
 })

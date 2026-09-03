@@ -91,7 +91,13 @@ export default function ModuleScreen() {
         ))}
         {data?.quizzes.map((quiz) => (
           <Pressable key={quiz.id} accessibilityRole="button" onPress={() => router.push(`/quiz/${quiz.id}` as Href)} style={styles.primary}>
-            <Text style={styles.primaryText}>{t('module.takeQuiz', { title: quiz.title })}</Text>
+            <View style={styles.primaryIcon}>
+              <Ionicons color="#FFFFFF" name="help-circle" size={22} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.primaryKicker}>{t('quiz.title')} · {quiz.passingScore}%</Text>
+              <Text style={styles.primaryText} numberOfLines={2}>{quiz.title.replace(/^quiz\s*:\s*/i, '')}</Text>
+            </View>
             <View style={styles.primaryArrow}><Ionicons color="#FFFFFF" name="arrow-forward" size={18} /></View>
           </Pressable>
         ))}
@@ -119,7 +125,9 @@ const styles = StyleSheet.create({
   secondary: { alignItems: 'center', alignSelf: 'flex-start', flexDirection: 'row', gap: 6, marginTop: 14 },
   secondaryText: { color: '#1E4F8C', fontSize: 15, fontWeight: '700' },
   doneText: { color: '#0D8F8A', fontSize: 13, fontWeight: '800', marginTop: 12, textTransform: 'uppercase' },
-  primary: { alignItems: 'center', backgroundColor: '#1E4F8C', borderRadius: 18, flexDirection: 'row', justifyContent: 'space-between', marginTop: 18, minHeight: 56, paddingLeft: 18, paddingRight: 8 },
-  primaryText: { color: '#FFFFFF', flex: 1, fontSize: 16, fontWeight: '800' },
+  primary: { alignItems: 'center', backgroundColor: '#1E4F8C', borderRadius: 22, flexDirection: 'row', gap: 12, marginTop: 18, minHeight: 72, paddingHorizontal: 14, paddingVertical: 12, shadowColor: '#0F2849', shadowOpacity: 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 4 },
+  primaryIcon: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
+  primaryKicker: { color: '#CDE5FA', fontSize: 11, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase' },
+  primaryText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', lineHeight: 21, marginTop: 2 },
   primaryArrow: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 14, height: 40, justifyContent: 'center', width: 40 },
 });

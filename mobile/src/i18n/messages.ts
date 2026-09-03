@@ -218,6 +218,12 @@ const en = {
   'module.listen': 'Listen',
   'module.read': 'Read',
   'module.mediaUnavailable': 'This content opens in your browser.',
+  'slides.of': '{n} / {total}',
+  'slides.finish': 'Finish section',
+  'slides.next': 'Next slide',
+  'slides.prev': 'Previous slide',
+  'slides.note': 'Presenter note',
+  'slides.seeAll': 'View every slide to finish',
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -437,6 +443,12 @@ const fr: Record<MessageKey, string> = {
   'module.listen': 'Écouter',
   'module.read': 'Lire',
   'module.mediaUnavailable': 'Ce contenu s’ouvre dans votre navigateur.',
+  'slides.of': '{n} / {total}',
+  'slides.finish': 'Terminer la section',
+  'slides.next': 'Slide suivante',
+  'slides.prev': 'Slide précédente',
+  'slides.note': 'Note du présentateur',
+  'slides.seeAll': 'Consultez toutes les slides pour terminer',
 };
 
 export const messages: Record<Locale, Record<MessageKey, string>> = { en, fr };

@@ -5,11 +5,14 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { learnerApi } from '../../src/api/learner';
 import { web } from '../../src/api/web';
 import { getPublicEnvironment } from '../../src/config/env';
+import { Markdown } from '../../src/components/Markdown';
 import { MediaSection } from '../../src/components/MediaSection';
+import { SlideDeck } from '../../src/components/SlideDeck';
 import { ScreenScaffold } from '../../src/components/ScreenScaffold';
 import { StatusCopy } from '../../src/components/StatusCopy';
 import { useAsync } from '../../src/hooks/useAsync';
 import { t } from '../../src/i18n';
+import { hasSlideMarkers } from '../../src/slides/parseSlides';
 
 /** Content URLs are stored relative (/uploads/...) or absolute. Protected uploads need the media token. */
 function authorize(url: string, token: string | null) {
@@ -63,7 +66,11 @@ export default function ModuleScreen() {
                 <Text style={styles.cardTitle}>{content.title}</Text>
               </View>
             </View>
-            {content.body ? <Text style={styles.body}>{content.body}</Text> : null}
+            {content.body && (content.type === 'PRESENTATION' || hasSlideMarkers(content.body)) ? (
+              <SlideDeck body={content.body} completed={Boolean(content.progress?.completed)} onComplete={() => void completeContent(content.id)} />
+            ) : content.body ? (
+              <Markdown body={content.body} />
+            ) : null}
             {content.url ? (
               <MediaSection
                 type={content.type}

@@ -90,16 +90,21 @@ export default function ModuleScreen() {
           </View>
         ))}
         {data?.quizzes.map((quiz) => (
-          <Pressable key={quiz.id} accessibilityRole="button" onPress={() => router.push(`/quiz/${quiz.id}` as Href)} style={styles.primary}>
-            <View style={styles.primaryIcon}>
-              <Ionicons color="#FFFFFF" name="help-circle" size={22} />
+          <View key={quiz.id} style={styles.quizCard}>
+            <View style={styles.cardHead}>
+              <View style={styles.quizIcon}>
+                <Ionicons color="#163A6B" name="help-circle" size={22} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.kicker}>{t('quiz.title')} · {t('quiz.passing', { score: quiz.passingScore })}</Text>
+                <Text style={styles.cardTitle}>{quiz.title.replace(/^quiz\s*:\s*/i, '')}</Text>
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.primaryKicker}>{t('quiz.title')} · {quiz.passingScore}%</Text>
-              <Text style={styles.primaryText} numberOfLines={2}>{quiz.title.replace(/^quiz\s*:\s*/i, '')}</Text>
-            </View>
-            <View style={styles.primaryArrow}><Ionicons color="#FFFFFF" name="arrow-forward" size={18} /></View>
-          </Pressable>
+            <Pressable accessibilityRole="button" onPress={() => router.push(`/quiz/${quiz.id}` as Href)} style={styles.primary}>
+              <Text style={styles.primaryText}>{t('quiz.start')}</Text>
+              <Ionicons color="#FFFFFF" name="arrow-forward" size={18} />
+            </Pressable>
+          </View>
         ))}
       </ScreenScaffold>
     </>
@@ -125,9 +130,8 @@ const styles = StyleSheet.create({
   secondary: { alignItems: 'center', alignSelf: 'flex-start', flexDirection: 'row', gap: 6, marginTop: 14 },
   secondaryText: { color: '#1E4F8C', fontSize: 15, fontWeight: '700' },
   doneText: { color: '#0D8F8A', fontSize: 13, fontWeight: '800', marginTop: 12, textTransform: 'uppercase' },
-  primary: { alignItems: 'center', backgroundColor: '#1E4F8C', borderRadius: 22, flexDirection: 'row', gap: 12, marginTop: 18, minHeight: 72, paddingHorizontal: 14, paddingVertical: 12, shadowColor: '#0F2849', shadowOpacity: 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 4 },
-  primaryIcon: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
-  primaryKicker: { color: '#CDE5FA', fontSize: 11, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase' },
-  primaryText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', lineHeight: 21, marginTop: 2 },
-  primaryArrow: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 14, height: 40, justifyContent: 'center', width: 40 },
+  quizCard: { backgroundColor: '#FFFFFF', borderRadius: 24, marginTop: 18, padding: 18, shadowColor: '#0F2849', shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  quizIcon: { alignItems: 'center', backgroundColor: '#EEF4FB', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
+  primary: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: '#1E4F8C', borderRadius: 14, flexDirection: 'row', gap: 8, justifyContent: 'center', marginTop: 16, minHeight: 46, paddingHorizontal: 20 },
+  primaryText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
 });

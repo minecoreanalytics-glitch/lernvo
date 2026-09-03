@@ -46,7 +46,7 @@ const en = {
   'today.noSessionBody': 'When your company assigns a module or quiz, it will show up here.',
   'today.quizBody': 'Finish with a short knowledge check. Scoring happens on the server.',
   'today.moduleBody': 'A short session to keep your assigned learning moving.',
-  'today.start': 'Start today’s session',
+  'today.start': 'Start',
   'today.openTeam': 'Open Team workspace',
   'today.askPlaceholder': 'Ask a quick question…',
   'today.quick': 'Quick access',
@@ -139,6 +139,8 @@ const en = {
   'quiz.submitting': 'Submitting…',
   'quiz.submit': 'Submit answers',
   'quiz.submitError': 'Unable to submit quiz',
+  'quiz.start': 'Quiz',
+  'quiz.passing': 'Pass mark {score}%',
 
   'notif.title': 'Notifications',
   'notif.segmentNotifications': 'Notifications',
@@ -160,7 +162,7 @@ const en = {
 
   'career.title': 'Career path',
   'career.eyebrow': 'Career path',
-  'career.enroll': 'Start this path',
+  'career.enroll': 'Start',
   'career.enrolled': 'Enrolled · {pct}%',
   'career.required': 'Required',
   'career.optional': 'Optional',
@@ -271,7 +273,7 @@ const fr: Record<MessageKey, string> = {
   'today.noSessionBody': 'Dès que votre entreprise vous assigne un module ou un quiz, il apparaîtra ici.',
   'today.quizBody': 'Terminez par une courte vérification des connaissances. La correction se fait côté serveur.',
   'today.moduleBody': 'Une courte session pour faire avancer votre formation.',
-  'today.start': 'Commencer la session du jour',
+  'today.start': 'Commencer',
   'today.openTeam': 'Ouvrir l’espace Équipe',
   'today.askPlaceholder': 'Poser une question rapide…',
   'today.quick': 'Accès rapide',
@@ -364,6 +366,8 @@ const fr: Record<MessageKey, string> = {
   'quiz.submitting': 'Envoi…',
   'quiz.submit': 'Envoyer mes réponses',
   'quiz.submitError': 'Impossible d’envoyer le quiz',
+  'quiz.start': 'Quiz',
+  'quiz.passing': 'Seuil de réussite {score} %',
 
   'notif.title': 'Notifications',
   'notif.segmentNotifications': 'Notifications',
@@ -385,7 +389,7 @@ const fr: Record<MessageKey, string> = {
 
   'career.title': 'Parcours carrière',
   'career.eyebrow': 'Parcours carrière',
-  'career.enroll': 'Commencer ce parcours',
+  'career.enroll': 'Commencer',
   'career.enrolled': 'Inscrit · {pct} %',
   'career.required': 'Obligatoire',
   'career.optional': 'Optionnel',

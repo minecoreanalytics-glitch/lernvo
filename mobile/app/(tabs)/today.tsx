@@ -207,9 +207,9 @@ const styles = StyleSheet.create({
   progressTrack: { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 999, height: 8, marginTop: 18, overflow: 'hidden' },
   progressFill: { backgroundColor: '#F5B700', borderRadius: 999, height: 8 },
   progressLabel: { color: '#CDE5FA', fontSize: 12, fontWeight: '700', marginTop: 8 },
-  cta: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 18, flexDirection: 'row', justifyContent: 'space-between', marginTop: 18, minHeight: 56, paddingLeft: 18, paddingRight: 8 },
+  cta: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: '#FFFFFF', borderRadius: 16, flexDirection: 'row', gap: 12, marginTop: 18, minHeight: 50, paddingLeft: 18, paddingRight: 6 },
   ctaText: { color: '#163A6B', fontSize: 16, fontWeight: '800' },
-  ctaArrow: { alignItems: 'center', backgroundColor: '#163A6B', borderRadius: 14, height: 40, justifyContent: 'center', width: 40 },
+  ctaArrow: { alignItems: 'center', backgroundColor: '#163A6B', borderRadius: 12, height: 36, justifyContent: 'center', width: 36 },
 
   sectionTitle: { color: '#0F1923', fontSize: 20, fontWeight: '800', letterSpacing: -0.3, marginTop: 28 },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 14 },

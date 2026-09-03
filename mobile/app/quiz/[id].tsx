@@ -39,7 +39,7 @@ export default function QuizScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: true, title: data?.title ?? t('quiz.title') }} />
+      <Stack.Screen options={{ headerShown: true, headerBackButtonDisplayMode: 'minimal', title: data?.title ?? t('quiz.title') }} />
       <ScreenScaffold eyebrow={t('quiz.eyebrow')} title={data?.title ?? t('quiz.title')}>
         <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
         {data && !data.canAttempt && !result ? (
@@ -98,7 +98,7 @@ export default function QuizScreen() {
 
 const styles = StyleSheet.create({
   copy: { color: '#5C6B7E', fontSize: 17, lineHeight: 25, marginTop: 18 },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 18, marginTop: 16, padding: 18 },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 24, shadowColor: '#0F2849', shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 2, marginTop: 16, padding: 18 },
   kicker: { color: '#1E4F8C', fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
   prompt: { color: '#1A202C', fontSize: 18, fontWeight: '700', marginTop: 8, marginBottom: 10 },
   option: { borderColor: '#E4E8EF', borderRadius: 12, borderWidth: 1, marginTop: 8, minHeight: 46, justifyContent: 'center', paddingHorizontal: 12 },
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   optionTextSelected: { color: '#FFFFFF', fontWeight: '700' },
   ok: { color: '#0D8F8A', fontSize: 14, fontWeight: '700', marginTop: 12 },
   bad: { color: '#B42318', fontSize: 14, fontWeight: '700', marginTop: 12 },
-  result: { backgroundColor: '#163A6B', borderRadius: 18, marginTop: 18, padding: 20 },
+  result: { backgroundColor: '#163A6B', borderRadius: 24, shadowColor: '#0F2849', shadowOpacity: 0.22, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, marginTop: 18, padding: 20 },
   resultTitle: { color: '#FFFFFF', fontSize: 22, fontWeight: '800' },
   resultCopy: { color: '#E4E8EF', fontSize: 16, marginTop: 6 },
   primary: { alignItems: 'center', backgroundColor: '#1E4F8C', borderRadius: 14, justifyContent: 'center', marginTop: 18, minHeight: 50 },

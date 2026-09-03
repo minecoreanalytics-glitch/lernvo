@@ -22,6 +22,10 @@ export type MobileApiClientOptions = Readonly<{
   refreshAccessToken?: () => MaybePromise<string | null>;
   createRequestId?: () => string;
   fetchImpl?: typeof fetch;
+  /** URL prefix after the base URL. Defaults to the versioned mobile API. */
+  basePath?: string;
+  /** When false, the raw JSON body is returned (web API routes have no envelope). */
+  envelope?: boolean;
 }>;
 
 export type MobileRequestInit = Omit<RequestInit, 'headers'> & {
@@ -32,6 +36,8 @@ export function createMobileApiClient(options: MobileApiClientOptions) {
   const baseUrl = options.baseUrl.replace(/\/+$/, '');
   const fetchImpl = options.fetchImpl ?? fetch;
   const createRequestId = options.createRequestId ?? safeRandomUUID;
+  const basePath = (options.basePath ?? '/api/mobile/v1').replace(/\/+$/, '');
+  const envelope = options.envelope ?? true;
 
   async function perform<T>(path: string, init: MobileRequestInit, retried: boolean): Promise<T> {
     const requestId = createRequestId();
@@ -51,7 +57,7 @@ export function createMobileApiClient(options: MobileApiClientOptions) {
     let response: Response;
     try {
       response = await fetchImpl(
-        `${baseUrl}/api/mobile/v1/${path.replace(/^\/+/, '')}`,
+        `${baseUrl}${basePath}/${path.replace(/^\/+/, '')}`,
         { ...init, headers },
       );
     } catch {
@@ -91,6 +97,7 @@ export function createMobileApiClient(options: MobileApiClientOptions) {
       });
     }
 
+    if (!envelope) return body as T;
     if (!isMobileEnvelope<T>(body)) {
       throw new MobileApiError({
         code: 'INVALID_RESPONSE',

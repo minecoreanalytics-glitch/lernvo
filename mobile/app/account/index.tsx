@@ -36,8 +36,8 @@ export default function AccountScreen() {
   const router = useRouter();
   const { user, tenantSlug, signOut } = useStore(authStore);
   const me = useAsync(() => learnerApi.me(), [user?.id]);
-  const stats = useAsync(() => web.myStats().catch(() => null), [user?.id]);
-  const paths = useAsync(() => web.myPaths().catch(() => []), [user?.id]);
+  const stats = useAsync(() => web.myStats(), [user?.id]);
+  const paths = useAsync(() => web.myPaths(), [user?.id]);
   const profile = me.data?.user ?? user;
   const name = `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() || t('account.title');
 
@@ -103,7 +103,17 @@ export default function AccountScreen() {
           {stats.data ? <Text style={styles.muted}>{t('account.rank', { rank: stats.data.rank, days: stats.data.longestStreak })}</Text> : null}
         </Section>
 
-        <Section icon="ribbon-outline" title={t('account.badges')}>
+        <Section
+          icon="ribbon-outline"
+          title={t('account.badges')}
+          action={
+            <Pressable accessibilityRole="button" onPress={() => router.push('/badges' as Href)} style={styles.actionBtn}>
+              <Text style={styles.link}>{t('badges.viewAll')}</Text>
+              <Ionicons color="#1E4F8C" name="chevron-forward" size={16} />
+            </Pressable>
+          }
+        >
+          {stats.error ? <Text style={styles.errorText}>{stats.error}</Text> : null}
           {stats.data && stats.data.badges.length === 0 ? <Text style={styles.muted}>{t('account.noBadges')}</Text> : null}
           <View style={styles.badges}>
             {stats.data?.badges.map((ub) => (
@@ -115,7 +125,17 @@ export default function AccountScreen() {
           </View>
         </Section>
 
-        <Section icon="git-branch-outline" title={t('account.careerPaths')}>
+        <Section
+          icon="git-branch-outline"
+          title={t('account.careerPaths')}
+          action={
+            <Pressable accessibilityRole="button" onPress={() => router.push('/career' as Href)} style={styles.actionBtn}>
+              <Text style={styles.link}>{t('career.browse')}</Text>
+              <Ionicons color="#1E4F8C" name="chevron-forward" size={16} />
+            </Pressable>
+          }
+        >
+          {paths.error ? <Text style={styles.errorText}>{paths.error}</Text> : null}
           {paths.data && paths.data.length === 0 ? <Text style={styles.muted}>{t('account.noPaths')}</Text> : null}
           {paths.data?.map((enr) => (
             <Pressable key={enr.id} accessibilityRole="button" onPress={() => router.push(`/career/${enr.pathId}` as Href)} style={styles.item}>
@@ -147,14 +167,14 @@ export default function AccountScreen() {
         <Section
           icon="business-outline"
           title={t('account.department')}
-          action={
-            <Pressable accessibilityRole="button" onPress={() => router.push('/departments' as Href)}>
-              <Text style={styles.link}>{t('account.openDepartments')}</Text>
-            </Pressable>
-          }
         >
           <Text style={styles.line}>{me.data?.user.department?.name ?? '—'}</Text>
           <Text style={styles.muted}>{profile?.role}</Text>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/departments' as Href)} style={styles.rowLink}>
+            <Ionicons color="#163A6B" name="people-outline" size={18} />
+            <Text style={styles.rowLinkText}>{t('account.openDepartments')}</Text>
+            <Ionicons color="#9BA8BB" name="chevron-forward" size={18} />
+          </Pressable>
         </Section>
 
         <Section
@@ -216,6 +236,10 @@ const styles = StyleSheet.create({
   sectionHeader: { alignItems: 'center', flexDirection: 'row', gap: 8, marginBottom: 8 },
   sectionTitle: { color: '#163A6B', fontSize: 14, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
   link: { color: '#1E4F8C', fontSize: 13, fontWeight: '700' },
+  actionBtn: { alignItems: 'center', flexDirection: 'row', gap: 2 },
+  errorText: { color: '#B42318', fontSize: 13, marginTop: 4 },
+  rowLink: { alignItems: 'center', backgroundColor: '#EEF4FB', borderRadius: 14, flexDirection: 'row', gap: 10, marginTop: 12, minHeight: 46, paddingHorizontal: 12 },
+  rowLinkText: { color: '#163A6B', flex: 1, fontSize: 15, fontWeight: '700' },
   line: { color: '#1A202C', fontSize: 16 },
   stats: { color: '#1E4F8C', fontSize: 14, fontWeight: '700', marginTop: 8 },
   muted: { color: '#6B7A8D', fontSize: 14, marginTop: 4 },

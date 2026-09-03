@@ -55,6 +55,26 @@ export type CareerPathDetail = Readonly<{
   }>;
 }>;
 
+export type CareerPathSummary = Readonly<{
+  id: string;
+  title: string;
+  description: string | null;
+  targetRole: string | null;
+  estimatedWeeks: number | null;
+  status: string;
+  _count: { modules: number; enrollments: number };
+  userEnrollment: { status: string; progressPct: number } | null;
+}>;
+
+export type BadgeItem = Readonly<{
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  type: string;
+  points: number;
+}>;
+
 export type MyPathEnrollment = Readonly<{
   id: string;
   pathId: string;
@@ -136,6 +156,8 @@ export const web = {
 
   assignments: () => webApi.request<AssignmentsPayload>('/assignments'),
 
+  paths: () => webApi.request<CareerPathSummary[]>('/career/paths'),
+  badges: () => webApi.request<BadgeItem[]>('/gamification/badges'),
   careerPath: (id: string) => webApi.request<CareerPathDetail>(`/career/paths/${id}`),
   myPaths: () => webApi.request<MyPathEnrollment[]>('/career/my-paths'),
   enrollPath: (id: string) => webApi.request<{ id: string }>(`/career/paths/${id}/enroll`, { method: 'POST' }),

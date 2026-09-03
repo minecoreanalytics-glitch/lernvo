@@ -1,7 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { File, Paths } from 'expo-file-system';
 import { Stack, useRouter, type Href } from 'expo-router';
-import * as Sharing from 'expo-sharing';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useStore } from 'zustand';
@@ -75,6 +74,7 @@ export default function AccountScreen() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const file = new File(Paths.cache, `${certNumber}.svg`);
       file.write(await response.text());
+      const Sharing = await import('expo-sharing');
       if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(file.uri, { mimeType: 'image/svg+xml', dialogTitle: certNumber });
     } catch {
       // Sharing is best-effort; the certificate stays listed.

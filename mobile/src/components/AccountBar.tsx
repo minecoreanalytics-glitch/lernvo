@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native'
 import { useStore } from 'zustand';
 
 import { learnerApi } from '../api/learner';
+import { web } from '../api/web';
 import { authStore } from '../auth/authRuntime';
 import { useAsync } from '../hooks/useAsync';
 import { t } from '../i18n';
@@ -33,7 +34,8 @@ export function AccountBar() {
   const router = useRouter();
   const user = useStore(authStore, (state) => state.user);
   const inbox = useAsync(() => learnerApi.inbox(), [user?.id]);
-  const unread = inbox.data?.unreadCount ?? 0;
+  const notifications = useAsync(() => web.notifications().catch(() => []), [user?.id]);
+  const unread = (inbox.data?.unreadCount ?? 0) + (notifications.data?.filter((n) => !n.isRead).length ?? 0);
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || '•';
 
   return (

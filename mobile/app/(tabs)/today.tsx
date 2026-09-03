@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useStore } from 'zustand';
 
 import { learnerApi } from '../../src/api/learner';
+import { web } from '../../src/api/web';
 import { authStore } from '../../src/auth/authRuntime';
 import { ScreenScaffold } from '../../src/components/ScreenScaffold';
 import { StatusCopy } from '../../src/components/StatusCopy';
@@ -25,6 +26,10 @@ export default function TodayScreen() {
   const user = useStore(authStore, (state) => state.user);
   const syncStatus = useSyncStatus(syncStatusSource);
   const { data, error, loading, reload } = useAsync(() => learnerApi.today(), [user?.id]);
+  const assignments = useAsync(() => web.assignments().catch(() => null), [user?.id]);
+  const overdueCount = assignments.data?.overdue.length ?? 0;
+  const todayCount = assignments.data?.today.length ?? 0;
+  const assignedTotal = assignments.data ? overdueCount + todayCount + assignments.data.upcoming.length + assignments.data.noDueDate.length : 0;
   const session = data?.session;
   const firstName = user?.firstName ?? t('today.fallbackName');
   const reasonLabel = session && session.kind !== 'none' ? t(`today.reason.${session.reason}`) : null;
@@ -41,7 +46,7 @@ export default function TodayScreen() {
   }
 
   return (
-    <ScreenScaffold accountBar eyebrow={t('today.eyebrow')} title={t('today.greeting', { name: firstName })} onRefresh={reload}>
+    <ScreenScaffold accountBar eyebrow={t('today.eyebrow')} title={t('today.greeting', { name: firstName })} onRefresh={() => Promise.all([reload(), assignments.reload()])}>
       {/* Ask entry point, search-bar shaped: the fastest path to an approved answer. */}
       <Pressable accessibilityRole="search" onPress={() => router.push('/(tabs)/ask')} style={styles.askBar}>
         <Ionicons color="#1E4F8C" name="sparkles" size={18} />
@@ -93,6 +98,19 @@ export default function TodayScreen() {
             <Ionicons color="#163A6B" name={session.kind === 'quiz' ? 'help-circle' : session.kind === 'none' ? 'checkmark-done' : 'book'} size={24} />
           </View>
         </View>
+      ) : null}
+
+      {assignedTotal > 0 ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/assignments' as Href)} style={styles.teamCard}>
+          <View style={[styles.teamIcon, overdueCount > 0 && styles.teamIconAlert]}>
+            <Ionicons color={overdueCount > 0 ? '#B42318' : '#163A6B'} name="calendar" size={22} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.teamText}>{t('assign.homeCardTitle')}</Text>
+            <Text style={styles.teamSub}>{t('assign.homeCard', { overdue: overdueCount, today: todayCount })}</Text>
+          </View>
+          <Ionicons color="#8A97A8" name="chevron-forward" size={20} />
+        </Pressable>
       ) : null}
 
       {/* Quick access tiles (colour blocks, reference: category tiles). */}
@@ -229,4 +247,6 @@ const styles = StyleSheet.create({
   },
   teamIcon: { alignItems: 'center', backgroundColor: '#EEF4FB', borderRadius: 14, height: 44, justifyContent: 'center', width: 44 },
   teamText: { color: '#163A6B', flex: 1, fontSize: 16, fontWeight: '700' },
+  teamSub: { color: '#6B7A8D', fontSize: 13, marginTop: 2 },
+  teamIconAlert: { backgroundColor: '#FDE8E8' },
 });

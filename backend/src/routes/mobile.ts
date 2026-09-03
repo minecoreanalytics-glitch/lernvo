@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 
 import { authenticate } from '../middleware/auth';
+import { signMediaCookie } from '../middleware/media';
 import { ChatAssistantError, generateChatReply } from './chat';
 import {
   ingestMobileEvents,
@@ -180,6 +181,17 @@ router.post('/inbox/read', authenticate, async (req, res) => {
 router.get('/leaderboard', authenticate, async (req, res) => {
   const result = await loadLeaderboard(req.user!.userId, req.user!.role);
   return sendEnvelope(req, res, result);
+});
+
+// Media access for native clients: the web relies on the httpOnly `lernvo_media` cookie;
+// the app appends this token as `?t=` on /uploads URLs (same signed payload, same checks).
+router.get('/media-token', authenticate, async (req, res) => {
+  const token = signMediaCookie({
+    userId: req.user!.userId,
+    tenantId: req.user!.tenantId,
+    superAdmin: req.user!.role === 'SUPER_ADMIN',
+  });
+  return sendEnvelope(req, res, { token, expiresInSeconds: 7 * 24 * 3600 });
 });
 
 router.get('/team', authenticate, async (req, res) => {

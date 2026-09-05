@@ -62,7 +62,11 @@
           "resizeMode": "contain",
           "backgroundColor": "#0E1116"
         }
-      ]
+      ],
+      "expo-sharing",
+      "expo-video",
+      "expo-audio",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

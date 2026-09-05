@@ -192,6 +192,22 @@ export type KbArticleDetail = Readonly<{
   updatedAt: string;
 }>;
 
+export type LeaderboardPayload = Readonly<{
+  scope: 'company' | 'department';
+  me: { rank: number | null; totalPoints: number; currentStreak: number } | null;
+  entries: Array<{
+    rank: number;
+    userId: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string | null;
+    totalPoints: number;
+    currentStreak: number;
+    department: string | null;
+    isMe: boolean;
+  }>;
+}>;
+
 export const learnerApi = {
   bootstrap: () => mobileApi.request<BootstrapPayload>('/bootstrap'),
   today: () => mobileApi.request<{ session: TodaySession }>('/today'),
@@ -224,4 +240,5 @@ export const learnerApi = {
     }),
   me: () => mobileApi.request<ProfilePayload>('/me'),
   team: () => mobileApi.request<TeamPayload>('/team'),
+  leaderboard: () => mobileApi.request<LeaderboardPayload>('/leaderboard'),
 };

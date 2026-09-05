@@ -37,7 +37,7 @@ export default function AskScreen() {
   }
 
   return (
-    <ScreenScaffold eyebrow={t('ask.eyebrow')} title={t('ask.title')}>
+    <ScreenScaffold accountBar eyebrow={t('ask.eyebrow')} title={t('ask.title')}>
       <Text style={styles.copy}>{t('ask.copy')}</Text>
       {turns.map((turn, index) => (
         <View key={`${turn.role}-${index}`} style={[styles.bubble, turn.role === 'user' ? styles.user : styles.assistant]}>

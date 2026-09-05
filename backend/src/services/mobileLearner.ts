@@ -266,20 +266,52 @@ export async function startModuleForLearner(userId: string, moduleId: string) {
   })
   if (!module) return null
 
-  return prisma.enrollment.upsert({
-    where: { userId_moduleId: { userId, moduleId } },
-    create: {
+  // Explicit "start": create the enrollment or move NOT_STARTED to IN_PROGRESS.
+  // Never downgrade a COMPLETED enrollment and never reset an existing startedAt.
+  const existing = await prisma.enrollment.findFirst({
+    where: { userId, moduleId },
+    select: { id: true, status: true, startedAt: true },
+  })
+  if (existing) {
+    if (existing.status !== 'NOT_STARTED') return existing
+    return prisma.enrollment.update({
+      where: { id: existing.id },
+      data: { status: 'IN_PROGRESS', startedAt: existing.startedAt ?? new Date() },
+    })
+  }
+  return prisma.enrollment.create({
+    data: {
       tenantId: getTenantId(),
       userId,
       moduleId,
       status: 'IN_PROGRESS',
       startedAt: new Date(),
     },
-    update: {
-      status: 'IN_PROGRESS',
-      startedAt: new Date(),
-    },
   })
+}
+
+async function updateModuleCompletion(userId: string, moduleId: string) {
+  const required = await prisma.content.findMany({
+    where: { moduleId, isRequired: true },
+    select: { id: true },
+  })
+  const completedCount = await prisma.progressLog.count({
+    where: { userId, contentId: { in: required.map(row => row.id) }, completed: true },
+  })
+  const pendingQuizzes = await prisma.quiz.count({
+    where: { moduleId, status: 'PUBLISHED', attempts: { none: { userId, passed: true, sectionIndex: null } } },
+  })
+  const complete = completedCount === required.length && pendingQuizzes === 0
+  const progressPct = required.length ? Math.round(completedCount / required.length * 100) : 100
+  const updated = await prisma.enrollment.updateMany({
+    where: { userId, moduleId, status: { not: 'COMPLETED' } },
+    data: complete
+      ? { status: 'COMPLETED', progressPct: 100, completedAt: new Date() }
+      : { status: 'IN_PROGRESS', progressPct, completedAt: null },
+  })
+  if (complete && updated.count > 0) {
+    OnboardingService.onModuleCompleted(userId, moduleId).catch(() => undefined)
+  }
 }
 
 export async function recordContentProgress(
@@ -308,33 +340,7 @@ export async function recordContentProgress(
     update: { progressPct: clamped, completed },
   })
 
-  if (completed) {
-    const required = await prisma.content.findMany({
-      where: { moduleId: content.moduleId, isRequired: true },
-      select: { id: true },
-    })
-    const completedLogs = await prisma.progressLog.findMany({
-      where: {
-        userId,
-        contentId: { in: required.map((row) => row.id) },
-        completed: true,
-      },
-      select: { contentId: true },
-    })
-    const progress = required.length === 0
-      ? 100
-      : Math.round((completedLogs.length / required.length) * 100)
-    await prisma.enrollment.updateMany({
-      where: { userId, moduleId: content.moduleId },
-      data:
-        required.length > 0 && completedLogs.length === required.length
-          ? { status: 'COMPLETED', progressPct: 100, completedAt: new Date() }
-          : { status: 'IN_PROGRESS', progressPct: progress },
-    })
-    if (required.length > 0 && completedLogs.length === required.length) {
-      OnboardingService.onModuleCompleted(userId, content.moduleId).catch(() => undefined)
-    }
-  }
+  if (completed) await updateModuleCompletion(userId, content.moduleId)
 
   return log
 }
@@ -381,7 +387,7 @@ export async function loadQuizForLearner(userId: string, quizId: string) {
     passingScore: quiz.passingScore,
     maxAttempts: quiz.maxAttempts,
     userAttemptCount: attempts.length,
-    canAttempt: !attempts.some((attempt) => attempt.passed),
+    canAttempt: attempts.length < quiz.maxAttempts && !attempts.some((attempt) => attempt.passed),
     questions: questions.map((question) => ({
       id: question.id,
       text: question.text,
@@ -416,7 +422,24 @@ export async function submitQuizForLearner(
   const alreadyPassed = await findPassedFullQuizAttempt(quizId, userId)
   if (alreadyPassed) return { error: 'ALREADY_PASSED' as const }
 
-  let totalPoints = 0
+  const attempts = await findQuizAttempts({ quizId, userId, sectionIndex: null })
+  if (attempts.length >= quiz.maxAttempts) return { error: 'MAX_ATTEMPTS' as const }
+
+  const questionIds = new Set(answers.map(answer => answer.questionId))
+  if (!quiz.questions.length || answers.length !== quiz.questions.length || questionIds.size !== answers.length ||
+    answers.some(answer => {
+      const question = quiz.questions.find(row => row.id === answer.questionId)
+      return !question || !(question.options as Array<{ id: string }>).some(option => option.id === answer.selectedOptionId)
+    })) return { error: 'INVALID_ANSWERS' as const }
+
+  if (quiz.module) {
+    const remaining = await prisma.content.count({
+      where: { moduleId: quiz.module.id, isRequired: true, progressLogs: { none: { userId, completed: true } } },
+    })
+    if (remaining > 0) return { error: 'CONTENT_INCOMPLETE' as const }
+  }
+
+  const totalPoints = quiz.questions.reduce((sum, question) => sum + question.points, 0)
   let earnedPoints = 0
   const gradedAnswers = answers.map((answer) => {
     const question = quiz.questions.find((row) => row.id === answer.questionId)
@@ -424,7 +447,6 @@ export async function submitQuizForLearner(
     const options = question.options as Array<{ id: string; text: string; isCorrect: boolean }>
     const selected = options.find((option) => option.id === answer.selectedOptionId)
     const isCorrect = selected?.isCorrect ?? false
-    totalPoints += question.points
     if (isCorrect) earnedPoints += question.points
     return {
       ...answer,
@@ -455,6 +477,7 @@ export async function submitQuizForLearner(
 
   if (passed) {
     await GamificationService.awardPoints(userId, earnedPoints, 'quiz_completion', attempt.id)
+    if (quiz.module) await updateModuleCompletion(userId, quiz.module.id)
   }
   NotificationService.sendQuizResult(userId, quiz.title, score, passed).catch(() => undefined)
 
@@ -670,5 +693,57 @@ export async function loadKbArticle(id: string) {
     tags: a.tags,
     category: a.category?.name ?? null,
     updatedAt: a.updatedAt.toISOString(),
+  }
+}
+
+// ── Leaderboard ("Top" tab) ───────────────────────────────────────────────────
+// Same tenant-scoped ranking as the web /leaderboard page (GamificationService,
+// cached 60 s in Redis). Managers/supervisors are scoped to their department
+// tree like on the web; agents see the whole company.
+export async function loadLeaderboard(userId: string, role: string, limit = 20) {
+  let departmentId: string | undefined
+  if (['MANAGER', 'SUPERVISOR'].includes(role)) {
+    const me = await prisma.user.findFirst({ where: { id: userId }, select: { departmentId: true } })
+    if (me?.departmentId) {
+      const dept = await prisma.department.findFirst({
+        where: { id: me.departmentId },
+        select: { id: true, parentId: true },
+      })
+      departmentId = dept?.parentId ?? me.departmentId
+    }
+  }
+
+  const [entries, self] = await Promise.all([
+    GamificationService.getLeaderboard(limit, departmentId) as Promise<Array<{
+      rank: number
+      id: string
+      firstName: string
+      lastName: string
+      avatarUrl: string | null
+      role: string
+      totalPoints: number
+      currentStreak: number
+      department: { name: string } | null
+    }>>,
+    prisma.user.findFirst({ where: { id: userId }, select: { totalPoints: true, currentStreak: true } }),
+  ])
+  const rank = self
+    ? (await prisma.user.count({ where: { totalPoints: { gt: self.totalPoints }, isActive: true } })) + 1
+    : null
+
+  return {
+    scope: departmentId ? ('department' as const) : ('company' as const),
+    me: self ? { rank, totalPoints: self.totalPoints, currentStreak: self.currentStreak } : null,
+    entries: entries.map((row) => ({
+      rank: row.rank,
+      userId: row.id,
+      firstName: row.firstName,
+      lastName: row.lastName,
+      avatarUrl: row.avatarUrl,
+      totalPoints: row.totalPoints,
+      currentStreak: row.currentStreak,
+      department: row.department?.name ?? null,
+      isMe: row.id === userId,
+    })),
   }
 }

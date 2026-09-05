@@ -271,4 +271,35 @@ describe('mobile learner facades', () => {
     })
     expect(response.body.data.certificates).toEqual([])
   })
+
+  it('ranks the tenant on the leaderboard and flags the caller', async () => {
+    const res = await request(app)
+      .get('/api/mobile/v1/leaderboard')
+      .set('Authorization', `Bearer ${accessToken()}`)
+    expect(res.status).toBe(200)
+    expect(res.body.data.scope).toBe('company')
+    expect(res.body.data.me.rank).toBeGreaterThanOrEqual(1)
+    const rows = res.body.data.entries as Array<{ userId: string; isMe: boolean; rank: number }>
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows.every((row, i) => row.rank === i + 1)).toBe(true)
+    expect(rows.some((row) => row.userId === userId && row.isMe)).toBe(true)
+    // answer keys / emails never leak
+    expect(JSON.stringify(res.body)).not.toContain('@lernvo.test')
+  })
+
+
+  it('never downgrades a completed enrollment when a module is started again', async () => {
+    await tenantStore.run({ tenantId, superAdmin: false }, async () => {
+      await prisma.enrollment.updateMany({ where: { userId, moduleId }, data: { status: 'COMPLETED', progressPct: 100, completedAt: new Date() } })
+    })
+    const res = await request(app)
+      .post(`/api/mobile/v1/modules/${moduleId}/start`)
+      .set('Authorization', `Bearer ${accessToken()}`)
+    expect(res.status).toBe(200)
+    expect(res.body.data.enrollment.status).toBe('COMPLETED')
+    await tenantStore.run({ tenantId, superAdmin: false }, async () => {
+      await prisma.enrollment.updateMany({ where: { userId, moduleId }, data: { status: 'IN_PROGRESS', progressPct: 0, completedAt: null } })
+    })
+  })
+
 })

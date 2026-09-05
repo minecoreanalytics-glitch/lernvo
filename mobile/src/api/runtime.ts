@@ -9,9 +9,12 @@ const shared = {
   refreshAccessToken: async () => {
     try {
       return await authService.refreshAccessToken();
-    } catch {
-      await authStore.getState().signOut();
-      return null;
+    } catch (error) {
+      if (!(await authService.restore())) {
+        await authStore.getState().signOut();
+        return null;
+      }
+      throw error;
     }
   },
 };

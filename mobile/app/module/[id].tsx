@@ -11,14 +11,14 @@ import { MediaSection } from '../../src/components/MediaSection';
 import { SlideDeck } from '../../src/components/SlideDeck';
 import { ScreenScaffold } from '../../src/components/ScreenScaffold';
 import { StatusCopy } from '../../src/components/StatusCopy';
-import { useAsync } from '../../src/hooks/useAsync';
+import { describeError, useAsync } from '../../src/hooks/useAsync';
 import { t } from '../../src/i18n';
 import { hasSlideMarkers } from '../../src/slides/parseSlides';
 
 /** Content URLs are stored relative (/uploads/...) or absolute. Protected uploads need the media token. */
 function authorize(url: string, token: string | null) {
   const absolute = /^https?:\/\//i.test(url) ? url : `${getPublicEnvironment().apiUrl}${url.startsWith('/') ? '' : '/'}${url}`;
-  if (!token || !/\/uploads\//.test(absolute)) return absolute;
+  if (!token || !absolute.startsWith(`${getPublicEnvironment().apiUrl.replace(/\/$/, '')}/uploads/`)) return absolute;
   return `${absolute}${absolute.includes('?') ? '&' : '?'}t=${encodeURIComponent(token)}`;
 }
 
@@ -27,13 +27,17 @@ export default function ModuleScreen() {
   const router = useRouter();
   const { data, error, loading, reload } = useAsync(() => (id ? learnerApi.module(id) : Promise.resolve(null)), [id]);
   const [starting, setStarting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function start() {
     if (!id) return;
     setStarting(true);
+    setActionError(null);
     try {
       await learnerApi.startModule(id);
       await reload();
+    } catch (caught) {
+      setActionError(describeError(caught));
     } finally {
       setStarting(false);
     }
@@ -41,21 +45,27 @@ export default function ModuleScreen() {
   const media = useAsync(() => web.mediaToken().then((r) => r.token).catch(() => null), []);
 
   async function completeContent(contentId: string) {
-    await learnerApi.markContent(contentId, 100);
-    await reload();
+    setActionError(null);
+    try {
+      await learnerApi.markContent(contentId, 100);
+      await reload();
+    } catch (caught) {
+      setActionError(describeError(caught));
+    }
   }
 
   const total = data?.contents.length ?? 0;
   const done = data?.contents.filter((c) => c.progress?.completed).length ?? 0;
   const enrolled = Boolean(data?.enrollment) && data?.enrollment?.status !== 'NOT_STARTED';
   const requiredLeft = data?.contents.filter((c) => c.isRequired && !c.progress?.completed).length ?? 0;
-  const quizUnlocked = enrolled && requiredLeft === 0 && total > 0;
+  const quizUnlocked = enrolled && requiredLeft === 0;
 
   return (
     <>
       <Stack.Screen options={{ headerShown: true, headerBackButtonDisplayMode: 'minimal', title: data?.category?.name ?? t('module.title') }} />
       <ScreenScaffold eyebrow={data?.category?.name ?? t('module.title')} title={data?.title ?? t('module.title')} onRefresh={reload}>
         <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
+        <StatusCopy error={actionError} />
         {data ? (
           <View style={styles.summary}>
             <View style={styles.summaryBlob} />
@@ -94,7 +104,7 @@ export default function ModuleScreen() {
                 type={content.type}
                 url={content.url}
                 authorizedUrl={authorize(content.url, media.data ?? null)}
-                onCompleted={() => void completeContent(content.id)}
+                onCompleted={() => { if (enrolled) void completeContent(content.id); }}
               />
             ) : null}
             {enrolled && !content.progress?.completed && !(content.body && (content.type === 'PRESENTATION' || hasSlideMarkers(content.body))) ? (
@@ -102,9 +112,9 @@ export default function ModuleScreen() {
                 <Ionicons color="#1E4F8C" name="checkmark-circle-outline" size={18} />
                 <Text style={styles.secondaryText}>{t('module.markDone')}</Text>
               </Pressable>
-            ) : (
+            ) : content.progress?.completed ? (
               <Text style={styles.doneText}>{t('module.done')}</Text>
-            )}
+            ) : null}
           </View>
         ))}
         {data?.quizzes.map((quiz) => (

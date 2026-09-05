@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createAuthService, type AuthTransport } from './authService';
 import type { CredentialBundle, CredentialStore } from './credentialStore';
+import { AuthTransportError } from './authTransport';
 
 class MemoryCredentialStore implements CredentialStore {
   value: CredentialBundle | null = null;
@@ -121,7 +122,7 @@ describe('auth service', () => {
       store,
       transport: transport({
         refresh: async () => {
-          throw new Error('refresh rejected');
+          throw new AuthTransportError(401, 'refresh rejected');
         },
       }),
     });
@@ -132,6 +133,24 @@ describe('auth service', () => {
     expect(store.value).toBeNull();
     await expect(service.getAccessToken()).resolves.toBeNull();
   });
+
+  it.each([new TypeError('Network request failed'), new AuthTransportError(503, 'Unavailable')])(
+    'retains secure credentials after a transient refresh failure', async (failure) => {
+      const store = new MemoryCredentialStore();
+      store.value = signedIn;
+      let unavailable = true;
+      const service = createAuthService({ store, transport: transport({
+        refresh: async () => {
+          if (unavailable) throw failure;
+          return { accessToken: 'access-2', refreshToken: 'refresh-2' };
+        },
+      }) });
+      await expect(service.refreshAccessToken()).rejects.toThrow();
+      expect(store.value).toEqual(signedIn);
+      unavailable = false;
+      await expect(service.refreshAccessToken()).resolves.toBe('access-2');
+    },
+  );
 
   it('clears local credentials even when remote sign-out is unavailable', async () => {
     const store = new MemoryCredentialStore();

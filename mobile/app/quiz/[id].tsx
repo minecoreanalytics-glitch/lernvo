@@ -43,7 +43,7 @@ export default function QuizScreen() {
       <ScreenScaffold eyebrow={t('quiz.eyebrow')} title={data?.title ?? t('quiz.title')}>
         <StatusCopy loading={loading} error={error} onRetry={() => void reload()} />
         {data && !data.canAttempt && !result ? (
-          <Text style={styles.copy}>{t('quiz.alreadyPassed')}</Text>
+          <Text style={styles.copy}>{t(data.userAttemptCount >= data.maxAttempts ? 'quiz.attemptLimit' : 'quiz.alreadyPassed')}</Text>
         ) : null}
         {data?.questions.map((question, index) => {
           const outcome = resultByQuestion.get(question.id);

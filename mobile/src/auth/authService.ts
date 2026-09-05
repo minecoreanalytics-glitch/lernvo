@@ -1,4 +1,5 @@
 import type { CredentialBundle, CredentialStore } from './credentialStore';
+import { AuthTransportError } from './authTransport';
 
 export type SignInInput = Readonly<{
   email: string;
@@ -60,8 +61,11 @@ export function createAuthService(options: {
         session = updated;
         return updated.accessToken;
       } catch (error) {
-        await options.store.clear();
-        session = null;
+        // A dropped connection or unavailable server is not a revoked session.
+        if (error instanceof AuthTransportError && (error.status === 401 || error.status === 403)) {
+          await options.store.clear();
+          session = null;
+        }
         throw error;
       }
     })();

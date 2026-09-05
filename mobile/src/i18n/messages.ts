@@ -129,6 +129,7 @@ const en = {
 
   'quiz.eyebrow': 'Knowledge check',
   'quiz.title': 'Quiz',
+  'quiz.attemptLimit': 'Attempt limit reached. Contact your manager.',
   'quiz.alreadyPassed': 'This quiz is already passed.',
   'quiz.question': 'Question {n}',
   'quiz.correct': 'Correct',
@@ -358,6 +359,7 @@ const fr: Record<MessageKey, string> = {
 
   'quiz.eyebrow': 'Vérification des connaissances',
   'quiz.title': 'Quiz',
+  'quiz.attemptLimit': 'Nombre maximal de tentatives atteint. Contactez votre responsable.',
   'quiz.alreadyPassed': 'Ce quiz est déjà réussi.',
   'quiz.question': 'Question {n}',
   'quiz.correct': 'Correct',

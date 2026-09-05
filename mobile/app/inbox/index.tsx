@@ -8,7 +8,7 @@ import { web } from '../../src/api/web';
 import { ScreenScaffold } from '../../src/components/ScreenScaffold';
 import { Segmented } from '../../src/components/Segmented';
 import { StatusCopy } from '../../src/components/StatusCopy';
-import { useAsync } from '../../src/hooks/useAsync';
+import { describeError, useAsync } from '../../src/hooks/useAsync';
 import { formatDate, t } from '../../src/i18n';
 
 type Segment = 'notifications' | 'announcements';
@@ -25,6 +25,12 @@ const typeIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
 /** Behind the bell: personal notifications (reminders, results, badges) and company announcements. */
 export default function InboxScreen() {
   const router = useRouter();
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  async function mutate(action: () => Promise<unknown>) {
+    setActionError(null);
+    try { await action(); } catch (caught) { setActionError(describeError(caught)); }
+  }
   const [segment, setSegment] = useState<Segment>('notifications');
   const notifications = useAsync(() => web.notifications(), []);
   const announcements = useAsync(() => learnerApi.inbox(), []);
@@ -32,7 +38,7 @@ export default function InboxScreen() {
   const unreadNotifications = notifications.data?.filter((n) => !n.isRead).length ?? 0;
 
   async function openNotification(id: string, link: string | null, isRead: boolean) {
-    if (!isRead) await web.markNotificationRead(id).catch(() => undefined);
+    if (!isRead) await web.markNotificationRead(id);
     await notifications.reload();
     if (link) {
       const target = link.replace(/^\/modules\//, '/module/').replace(/^\/kb\?slug=/, '/kb/');
@@ -62,12 +68,13 @@ export default function InboxScreen() {
           ]}
         />
         <StatusCopy loading={active.loading} error={active.error} onRetry={() => void active.reload()} />
+        <StatusCopy error={actionError} />
 
         {segment === 'notifications' ? (
           <>
             {notifications.data && notifications.data.length === 0 ? <Text style={styles.copy}>{t('notif.empty')}</Text> : null}
             {unreadNotifications > 0 ? (
-              <Pressable accessibilityRole="button" onPress={() => void web.markAllNotificationsRead().then(() => notifications.reload())} style={styles.markAll}>
+              <Pressable accessibilityRole="button" onPress={() => void mutate(() => web.markAllNotificationsRead().then(() => notifications.reload()))} style={styles.markAll}>
                 <Text style={styles.markAllText}>{t('notif.markAll')}</Text>
               </Pressable>
             ) : null}
@@ -75,7 +82,7 @@ export default function InboxScreen() {
               <Pressable
                 key={item.id}
                 accessibilityRole="button"
-                onPress={() => void openNotification(item.id, item.link, item.isRead)}
+                onPress={() => void mutate(() => openNotification(item.id, item.link, item.isRead))}
                 style={[styles.card, !item.isRead && styles.cardUnread]}
               >
                 <View style={[styles.iconWrap, !item.isRead && styles.iconWrapUnread]}>
@@ -101,7 +108,7 @@ export default function InboxScreen() {
                   </Text>
                   {item.body ? <Text style={styles.body}>{item.body}</Text> : null}
                   {item.isUnread ? (
-                    <Pressable accessibilityRole="button" onPress={() => void acknowledge(item.id)} style={styles.ack}>
+                    <Pressable accessibilityRole="button" onPress={() => void mutate(() => acknowledge(item.id))} style={styles.ack}>
                       <Text style={styles.ackText}>{t('inbox.acknowledge')}</Text>
                     </Pressable>
                   ) : (

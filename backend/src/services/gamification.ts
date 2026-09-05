@@ -14,7 +14,9 @@ export const GamificationService = {
 
     // Invalidate leaderboard cache
     // invalidate every cached leaderboard variant of this tenant
-    try { const keys = await redis.keys(`leaderboard:${getTenantId()}:*`); if (keys.length) await redis.del(...keys) } catch { /* cache only */ }
+    if (redis.status === 'ready') {
+      try { const keys = await redis.keys(`leaderboard:${getTenantId()}:*`); if (keys.length) await redis.del(...keys) } catch { /* cache only */ }
+    }
 
     // Check badge conditions
     await this.checkAndAwardBadges(userId, reason)
@@ -118,9 +120,14 @@ export const GamificationService = {
   },
 
   async getLeaderboard(limit = 20, departmentId?: string) {
-    const cacheKey = `leaderboard:${getTenantId()}:${departmentId || 'all'}`
-    const cached = await redis.get(cacheKey)
-    if (cached) return JSON.parse(cached)
+    const cacheKey = `leaderboard:${getTenantId()}:${departmentId || 'all'}:${limit}`
+    // Redis is an optional cache. Never queue a learner request during a reconnect.
+    if (redis.status === 'ready') {
+      try {
+        const cached = await redis.get(cacheKey)
+        if (cached) return JSON.parse(cached)
+      } catch { /* fall through to the authoritative database */ }
+    }
 
     const where: Record<string, unknown> = { isActive: true }
     if (departmentId) {
@@ -143,7 +150,9 @@ export const GamificationService = {
     })
 
     const leaderboard = users.map((u, i) => ({ rank: i + 1, ...u }))
-    await redis.setex(cacheKey, 60, JSON.stringify(leaderboard))
+    if (redis.status === 'ready') {
+      try { await redis.setex(cacheKey, 60, JSON.stringify(leaderboard)) } catch { /* cache only */ }
+    }
     return leaderboard
   }
 }

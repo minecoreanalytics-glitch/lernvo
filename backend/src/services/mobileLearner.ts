@@ -290,6 +290,30 @@ export async function startModuleForLearner(userId: string, moduleId: string) {
   })
 }
 
+async function updateModuleCompletion(userId: string, moduleId: string) {
+  const required = await prisma.content.findMany({
+    where: { moduleId, isRequired: true },
+    select: { id: true },
+  })
+  const completedCount = await prisma.progressLog.count({
+    where: { userId, contentId: { in: required.map(row => row.id) }, completed: true },
+  })
+  const pendingQuizzes = await prisma.quiz.count({
+    where: { moduleId, status: 'PUBLISHED', attempts: { none: { userId, passed: true, sectionIndex: null } } },
+  })
+  const complete = completedCount === required.length && pendingQuizzes === 0
+  const progressPct = required.length ? Math.round(completedCount / required.length * 100) : 100
+  const updated = await prisma.enrollment.updateMany({
+    where: { userId, moduleId, status: { not: 'COMPLETED' } },
+    data: complete
+      ? { status: 'COMPLETED', progressPct: 100, completedAt: new Date() }
+      : { status: 'IN_PROGRESS', progressPct, completedAt: null },
+  })
+  if (complete && updated.count > 0) {
+    OnboardingService.onModuleCompleted(userId, moduleId).catch(() => undefined)
+  }
+}
+
 export async function recordContentProgress(
   userId: string,
   contentId: string,
@@ -316,33 +340,7 @@ export async function recordContentProgress(
     update: { progressPct: clamped, completed },
   })
 
-  if (completed) {
-    const required = await prisma.content.findMany({
-      where: { moduleId: content.moduleId, isRequired: true },
-      select: { id: true },
-    })
-    const completedLogs = await prisma.progressLog.findMany({
-      where: {
-        userId,
-        contentId: { in: required.map((row) => row.id) },
-        completed: true,
-      },
-      select: { contentId: true },
-    })
-    const progress = required.length === 0
-      ? 100
-      : Math.round((completedLogs.length / required.length) * 100)
-    await prisma.enrollment.updateMany({
-      where: { userId, moduleId: content.moduleId },
-      data:
-        required.length > 0 && completedLogs.length === required.length
-          ? { status: 'COMPLETED', progressPct: 100, completedAt: new Date() }
-          : { status: 'IN_PROGRESS', progressPct: progress },
-    })
-    if (required.length > 0 && completedLogs.length === required.length) {
-      OnboardingService.onModuleCompleted(userId, content.moduleId).catch(() => undefined)
-    }
-  }
+  if (completed) await updateModuleCompletion(userId, content.moduleId)
 
   return log
 }
@@ -389,7 +387,7 @@ export async function loadQuizForLearner(userId: string, quizId: string) {
     passingScore: quiz.passingScore,
     maxAttempts: quiz.maxAttempts,
     userAttemptCount: attempts.length,
-    canAttempt: !attempts.some((attempt) => attempt.passed),
+    canAttempt: attempts.length < quiz.maxAttempts && !attempts.some((attempt) => attempt.passed),
     questions: questions.map((question) => ({
       id: question.id,
       text: question.text,
@@ -424,7 +422,24 @@ export async function submitQuizForLearner(
   const alreadyPassed = await findPassedFullQuizAttempt(quizId, userId)
   if (alreadyPassed) return { error: 'ALREADY_PASSED' as const }
 
-  let totalPoints = 0
+  const attempts = await findQuizAttempts({ quizId, userId, sectionIndex: null })
+  if (attempts.length >= quiz.maxAttempts) return { error: 'MAX_ATTEMPTS' as const }
+
+  const questionIds = new Set(answers.map(answer => answer.questionId))
+  if (!quiz.questions.length || answers.length !== quiz.questions.length || questionIds.size !== answers.length ||
+    answers.some(answer => {
+      const question = quiz.questions.find(row => row.id === answer.questionId)
+      return !question || !(question.options as Array<{ id: string }>).some(option => option.id === answer.selectedOptionId)
+    })) return { error: 'INVALID_ANSWERS' as const }
+
+  if (quiz.module) {
+    const remaining = await prisma.content.count({
+      where: { moduleId: quiz.module.id, isRequired: true, progressLogs: { none: { userId, completed: true } } },
+    })
+    if (remaining > 0) return { error: 'CONTENT_INCOMPLETE' as const }
+  }
+
+  const totalPoints = quiz.questions.reduce((sum, question) => sum + question.points, 0)
   let earnedPoints = 0
   const gradedAnswers = answers.map((answer) => {
     const question = quiz.questions.find((row) => row.id === answer.questionId)
@@ -432,7 +447,6 @@ export async function submitQuizForLearner(
     const options = question.options as Array<{ id: string; text: string; isCorrect: boolean }>
     const selected = options.find((option) => option.id === answer.selectedOptionId)
     const isCorrect = selected?.isCorrect ?? false
-    totalPoints += question.points
     if (isCorrect) earnedPoints += question.points
     return {
       ...answer,
@@ -463,6 +477,7 @@ export async function submitQuizForLearner(
 
   if (passed) {
     await GamificationService.awardPoints(userId, earnedPoints, 'quiz_completion', attempt.id)
+    if (quiz.module) await updateModuleCompletion(userId, quiz.module.id)
   }
   NotificationService.sendQuizResult(userId, quiz.title, score, passed).catch(() => undefined)
 

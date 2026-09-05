@@ -1,6 +1,9 @@
 # Lernvo native app: App Store and Google Play release runbook
 
-Last updated: 2026-09-02
+Last updated: 2026-09-05
+
+**Current verified blockers and build evidence:** [Launch status](LAUNCH_STATUS_2026-09-05.md).
+`/privacy` currently redirects to sign-in; do not submit it as a working privacy policy.
 
 This is the operational checklist to take the Expo/React Native app in `mobile/`
 from the repository to TestFlight, the App Store, and Google Play. It separates

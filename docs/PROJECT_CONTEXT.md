@@ -1,6 +1,6 @@
 # Lernvo Project Context
 
-Last updated: 2026-09-02
+Last updated: 2026-09-05
 
 ## Current objective
 
@@ -36,10 +36,35 @@ briefcase-and-check mark).
 
 - Product and architecture spec: `docs/superpowers/specs/2026-08-28-lernvo-native-mobile-design.md`
 - Store release runbook: `docs/mobile/STORE_RELEASE.md`
-- Code: `main` (the `codex/lernvo-mobile-foundation` branch and its worktree
-  `.worktrees/mobile-foundation` are merged; start new work from `main`)
+- Latest mobile feature work: `feat/account-topright-nav` (`a0933ab`, PR #4), ahead of `main`
+  (`660ee46`). The historical `.worktrees/mobile-foundation` path now holds this feature branch.
+- Launch hardening takeover: `codex/lernvo-launch-hardening`, based on the full PR #4 branch.
+  Preserve the original worktree; see `docs/mobile/LAUNCH_STATUS_2026-09-05.md`.
 - GitHub repository: `https://github.com/minecoreanalytics-glitch/lernvo`
 - EAS project: `@tbijou/lernvo` (id `90319661-35ba-47b7-b461-3e7bcee601a5`)
+
+## Verified takeover (2026-09-05)
+
+- Inspected canonical checkout, feature worktree, GitHub PRs/CI, and EAS build history.
+- The last feature commit passed Mobile CI but failed backend CI because leaderboard caching
+  waited on unavailable Redis and rejected outside Express error handling.
+- Corrected optional leaderboard caching, async mobile route failures, complete/unique quiz-answer
+  validation, server-side required-section and attempt-limit enforcement, and module completion
+  after published exams pass. Added 8 backend integration regression cases.
+- Mobile refresh now retains secure credentials after network/503 failures and clears them only
+  after explicit auth rejection. Module/inbox mutation errors are visible; unfinished sections
+  are no longer labelled done; media tokens are limited to Lernvo uploads.
+- Verified locally: 89 backend tests against a disposable PostgreSQL database with Redis absent;
+  54 mobile tests; TypeScript builds; iOS and Android JavaScript bundles. No production DB used.
+- Expo compatibility check required three SDK 57 patch updates (expo/router/sharing).
+- Public health endpoint reports PostgreSQL and Redis healthy. `/privacy` redirects to `/login`
+  in a fresh browser, so the privacy policy is NOT publicly available.
+- Existing Android internal APK is a successful older build at `801b799`, not the latest feature
+  revision. No iOS build was returned in the project build history inspected.
+- Offline outbox infrastructure exists but learner mutations are not connected to it and screen
+  queries have no durable content cache. Full offline learning remains unimplemented.
+- No assertion of store readiness: signing/submission, real-device journeys, public privacy,
+  push/deep links, reinforcement and coaching still require work. See the launch-status report.
 
 ## Current implementation state (2026-09-02)
 
@@ -74,7 +99,8 @@ Done and verified:
   localizations verified in the built bundle. Building from an iCloud-synced checkout needs the
   `xattr -cr` workaround documented in `mobile/README.md`.
 - PR #2 merged into `main` (squash `7c31f4e`) with CI green (backend, frontend, tenant-neutral,
-  mobile, mobile-api-contract). `main` now matches production.
+  mobile, mobile-api-contract). This is a historical deployment record, not proof that current
+  main or the latest feature branch matches production.
 
 In progress / next:
 

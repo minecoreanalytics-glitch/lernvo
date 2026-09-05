@@ -37,6 +37,36 @@ Repository: https://github.com/minecoreanalytics-glitch/lernvo
 - Browser check: `https://lernvo.com/privacy` redirected to `/login`.
 - Original failed CI: https://github.com/minecoreanalytics-glitch/lernvo/actions/runs/33758324941
 
+## Current build and access status (verified 2026-09-05)
+
+- Takeover PR: https://github.com/minecoreanalytics-glitch/lernvo/pull/5 (draft).
+- All seven observed GitHub checks passed for code revision `361b229` (backend, frontend,
+  tenant-neutral, mobile and mobile-api-contract including push/PR runs).
+- New Android preview build **FINISHED** at 2026-09-05 22:26:42 UTC, code revision `361b229`.
+  Build: https://expo.dev/accounts/tbijou/projects/lernvo/builds/80f763c8-9c4d-4b84-8657-5bd93fd588ce
+  APK: https://expo.dev/artifacts/eas/w40d0YiExp-wQhL67gZE2SXjCSowRVeVr1Pyee5x3XA.apk
+  Native build completion is verified; installation and learner journeys on an Android phone
+  are not yet verified. The APK points to the existing production API, which has not received
+  the backend fixes in this branch.
+- iOS production build stopped before compilation: EAS reports distribution credentials are
+  not configured and requires interactive Apple authentication. Remote build number initialized
+  to 1; no iOS artifact or TestFlight submission was created.
+- Production DNS resolves to `187.77.215.98`. Read-only SSH through `accesshaiti-vps` failed with
+  `Permission denied (publickey,password)`. No production changes were attempted.
+- Durable worktree is `.worktrees/launch-hardening`; its mobile npm dependencies are installed.
+
+### Next owner action for Apple signing
+
+Run in your terminal, then complete the Apple authentication prompts yourself:
+
+```sh
+cd ~/Documents/Minecore-Group/Projects/Active/lernvo/.worktrees/launch-hardening/mobile
+COREPACK_ENABLE_AUTO_PIN=0 eas build --platform ios --profile production
+```
+
+For backend deployment, restore valid SSH authentication for the existing Lernvo host. Do not
+paste private keys, Apple passwords or verification codes into project files or chat.
+
 ## Existing Android artifact
 
 Successful internal build `36d3519b-e8e9-479b-a8e7-3068d4e8e78e`, commit `801b799`,
@@ -49,7 +79,7 @@ Build page: https://expo.dev/accounts/tbijou/projects/lernvo/builds/36d3519b-e8e
 1. Verify CI for the takeover branch; merge the intended release through review.
 2. Deploy the reviewed backend with the existing backup/rollback process and `-p lernvo`.
    No deployment was performed during the initial hardening checks.
-3. Build updated Android preview APK and iOS store candidate. EAS project remains
+3. Android preview APK is built; complete iOS signing and build the iOS store candidate. EAS project remains
    `@tbijou/lernvo`, ID `90319661-35ba-47b7-b461-3e7bcee601a5`.
 4. Verify actual device journeys: company sign-in, content/media, final quiz, announcements,
    expiry/refresh, logout/relaunch, FR/EN, and interrupted network writes.

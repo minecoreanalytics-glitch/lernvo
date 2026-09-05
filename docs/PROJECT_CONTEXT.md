@@ -63,6 +63,9 @@ briefcase-and-check mark).
   revision. No iOS build was returned in the project build history inspected.
 - Offline outbox infrastructure exists but learner mutations are not connected to it and screen
   queries have no durable content cache. Full offline learning remains unimplemented.
+- Takeover PR #5 has all GitHub checks green. Android build `80f763c8-9c4d-4b84-8657-5bd93fd588ce`
+  completed at 22:26 UTC on September 5; APK linked in the launch report. iOS is blocked on
+  interactive Apple distribution credential setup. Production SSH authentication was refused.
 - No assertion of store readiness: signing/submission, real-device journeys, public privacy,
   push/deep links, reinforcement and coaching still require work. See the launch-status report.
 
